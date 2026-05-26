@@ -8,7 +8,7 @@ export class UserService{
         })
     }
 
-    static getUserInfo(params: string){
+    static getUserInfo(params: Api.User.UserInfo){
         return request.get<Api.User.UserInfo>({
             url: "/api/user",
             params
@@ -18,6 +18,13 @@ export class UserService{
     static passwordChange(data: Api.PasswordChange.Change){
         return request.put({
             url: "/api/user/password",
+            data
+        })
+    }
+    // 更新用户信息
+    static updataUser(data: Api.User.UserInfo){
+        return request.put<Api.User.UserInfo>({
+            url: "/api/user",
             data
         })
     }

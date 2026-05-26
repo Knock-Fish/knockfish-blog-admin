@@ -6,11 +6,12 @@
 
     .form-content {
         border: 1px solid var(--border-color);
+        margin-top: 10px;
+        border-radius: 7px;
 
         .form-wrap {
             box-sizing: border-box;
             padding: 20px;
-            margin-top: 20px;
             background-color: var(--card-color);
             border-top-left-radius: 7px;
             border-top-right-radius: 7px;

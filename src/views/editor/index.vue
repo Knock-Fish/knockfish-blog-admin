@@ -184,7 +184,7 @@
             </div>
             <template #footer>
                 <div class="drawer-footer-tip">
-                    ⚡ 最多存储 <strong>10</strong> 条草稿，点击草稿可快速加载编辑
+                    最多存储 <strong>10</strong> 条草稿，点击草稿可快速加载编辑
                 </div>
             </template>
         </ElDrawer>
@@ -406,7 +406,11 @@ const saveOrPublish = async () => {
         await ArticleService.addArticle(formData)
         ElMessage.success('提交成功')
     }
-     // 保存成功后同步快照
+    // 获取旧图片url的key
+    let urlKey = new URL(originalData.value.cover).pathname
+    // 删除旧图片
+    R2FileService.delR2File(urlKey)
+    // 保存成功后同步快照
     originalData.value = {
         title: formData.title,
         cover: formData.cover,
@@ -490,10 +494,14 @@ const uploadProps = ref<Record<string, any>>({
     headers: {
         'Authorization': `Bearer ${accessToken}`,
     },
-    action: import.meta.env.VITE_API_URL + '/api/r2-file'
+    action: import.meta.env.VITE_API_URL + '/api/r2-file',
 })
 /** 封面上传成功的回调函数 */
 const handleSuccess = (response: any, file: UploadFile) => {
+    // 获取旧图片url的key
+    let urlKey = new URL(formData.cover).pathname
+    // 删除旧图片
+    R2FileService.delR2File(urlKey)
     console.log("上传成功！", response, file)
     console.log("图片地址：", formData.cover)
 }

@@ -48,7 +48,7 @@ const formData = reactive<Category>({})
 const formItems = ref([
     {
         type: 'Input',
-        prop: 'siteName',
+        prop: 'categoryName',
         label: '名称',
         slot: "ico",
         props: {

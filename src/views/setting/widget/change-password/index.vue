@@ -2,19 +2,31 @@
 <template>
     <div class="change-password">
         <h3>修改密码</h3>
-        <DynamicForm v-model="formData" :form-items="formItems"
-            :form-props="formProps" :show-submit="true" submit-text="保存修改" />
+        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems"
+            :form-props="formProps" />
+        <ElButton @click="handleUpdata">保存修改</ElButton>
     </div>
 </template>
 
 <script setup lang="ts">
 type PasswordChange = Api.PasswordChange.Change
-import { type FormProps } from "element-plus"
+import { type FormProps, ElMessage } from "element-plus"
+import { useUserStore } from "@/store/modules/user"
+import { UserService } from "@/api/userApi"
+const formRef = ref()
 const formData = reactive<PasswordChange>({
     oldPassword: '',
     newPassword: '',
     confirmPassword: ''
 })
+const handleUpdata = async () => {
+    await UserService.passwordChange(formData)
+    ElMessage.success("修改成功")
+    // 清除表单数据，重置表单校验
+    if (formRef.value) {
+        formRef.value.resetForm()
+    }
+}
 // 自定义确认密码校验函数
 const validateConfirmPassword = (rule: any, value: string, callback: any) => {
     if (value === '') {
@@ -59,7 +71,7 @@ const formItems = ref([
             type: "password",
             showPassword: true
         },
-         rules: [
+        rules: [
             { required: true, message: '请再次输入新密码', trigger: 'blur' },
             { validator: validateConfirmPassword, trigger: ['blur', 'change'] }
         ]

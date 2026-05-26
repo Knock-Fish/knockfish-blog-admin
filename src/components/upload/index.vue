@@ -55,6 +55,7 @@ const getComponentEvents = {
             ElMessage.error("上传失败：未获取到图片地址")
             return
         }
+        // 获取新上传图片url
         cover.value = response.data.url
         emit("success", response, file)
         ElMessage.success("图片上传成功")
@@ -83,9 +84,7 @@ const getComponentEvents = {
     },
     // 进度
     progress: (event: any) => emit("progress", event),
-    // 超出数量
     exceed: (files: File[]) => {
-        ElMessage.warning("最多只能上传1张图片")
         emit("exceed", files)
     },
 }

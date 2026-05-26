@@ -108,11 +108,11 @@ declare namespace Api {
     namespace User {
         interface UserInfo {
             userId?: number
-            username: string
+            username?: string
             email?: string
-            avatar: string
-            nickname: string
-            description: string
+            avatar?: string
+            nickname?: string
+            description?: string
         }
         type UserListData = Api.Common.PaginatingParams<UserInfo>
     }
