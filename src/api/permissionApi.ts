@@ -24,4 +24,11 @@ export class PermissionService {
             url: `/api/permission/role/ids/${params}`
         })
     }
+    // 添加权限信息
+    static addPermission(data: Api.Permission.PermissionInfo){
+        return request.post({
+            url: "/api/permission",
+            data
+        })
+    }
 }

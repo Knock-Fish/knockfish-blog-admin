@@ -1,21 +1,19 @@
 <template>
     <div class="page">
-        <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
-            :search-list="searchList" :keyword="query" />
-        <PageTable class="table" :columns="columns" :table-data="tableData"
-            :page="page" slot-header="header" @current-page="getUserListData"
-            @page-size="getUserListData">
+        <SearchBar class="search" @submit="handleSearch" @reset="handleReset" :search-list="searchList"
+            :keyword="query" />
+        <PageTable class="table" :columns="columns" :table-data="tableData" :page="page" slot-header="header"
+            @current-page="getUserListData" @page-size="getUserListData">
             <template #header>
-                <DialogButton @submit="handleAdd" @closed="clearData">
+                <DialogButton @submit="handleAdd" @closed="clearData" @click="isUsername = false">
                     新增角色
                     <template #content>
-                        <DynamicForm ref="formRef" v-model="formData"
-                            :form-items="formItems">
+                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
                             <template #upload="{ model }">
                                 <!-- 头像上传 -->
-                                <Upload v-model="model.avatar"
-                                    :props="uploadProps" tip="建议尺寸1:1"
-                                    width="100px" height="100px" />
+                                <Upload v-model="model.avatar" :props="uploadProps" tip="建议尺寸1:1" 
+                                :width="100"
+                                :height="100" />
                             </template>
                         </DynamicForm>
                     </template>
@@ -33,15 +31,14 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton @click="getData(row)">
+                <DialogButton @click="getData(row)" @closed="clearData">
                     编辑
                     <template #content>
-                        <DynamicForm v-model="formData" :form-items="formItems">
+                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
                             <template #upload="{ model }">
                                 <!-- 头像上传 -->
-                                <Upload v-model="model.avatar"
-                                    :props="uploadProps" tip="建议尺寸1:1"
-                                    width="100px" height="100px" />
+                                <Upload v-model="model.avatar" :props="uploadProps" tip="建议尺寸1:1" width="100px"
+                                    height="100px" />
                             </template>
                         </DynamicForm>
                     </template>
@@ -63,6 +60,7 @@ type Query = {
     username?: string
     nickname?: string
 }
+const formRef = ref()
 const userStore = useUserStore()
 const { accessToken } = userStore
 const query = reactive<Query>({})
@@ -80,7 +78,7 @@ const page = reactive({ // 分页参数
     pageSize: 10
 })
 /** 新增/编辑 表单配置 */
-const formItems = ref([
+const formItems = computed(() => [
     {
         type: 'Input',
         prop: 'username',
@@ -168,6 +166,14 @@ const getData = (row: User) => {
     Object.assign(formData, { userId, username, nickname, email, description, avatar })
 }
 const clearData = () => {
+    // 清除表单数据，重置表单校验
+    if (formRef.value) {
+        formRef.value.resetForm()
+    }
+    // 清空formData数据
+    Object.keys(formData).forEach((key) => {
+        (formData[key as keyof User] as any) = ""
+    })
 
 }
 /** 搜索 */

@@ -40,7 +40,7 @@ export class TagService {
         })
     }
     // 删除标签
-    static delTag(params:string){
+    static delTag(params:number){
         return request.del({
             url:`/api/tag/${params}`
         })
