@@ -6,7 +6,7 @@
         <!-- 权限树表格 -->
         <ElCard class="table" shadow="never">
             <template #header>
-                <DialogButton @click="handleAdd" @open="clearData">
+                <DialogButton @click="handleClick" @submit="handleAdd" @open="clearData">
                     新增权限
                     <template #content>
                         <DynamicForm ref="formRef" v-model="formData"
@@ -133,8 +133,16 @@ const clearData = () => {
     })
 
 }
-const handleAdd = async () => {
+const handleClick = () => {
     isPermissionCode.value = false
+}
+const handleAdd = async () => {
+    await PermissionService.addPermission(formData)
+     ElMessage({
+        message: '提交成功',
+        type: 'success',
+    })
+    getPermissionListData()
 }
 // 监听搜索
 // watch(filterText, (val) => {
@@ -201,7 +209,9 @@ const menuFormItems = reactive([
         label: '父级权限',
         props: {
             placeholder: '请选择父级权限（不选则为顶级）',
-            data: unref(treeData),
+            get data() {
+                return unref(treeData)
+            },
             nodeKey: 'permissionId',
             props: {
                 label: 'permissionName',
@@ -209,7 +219,10 @@ const menuFormItems = reactive([
                 children: 'children',
                 clearable: true,
             },
-            modelValue: null,
+            // 动态获取当前选中的值
+            get modelValue() {
+                return formData.parentId
+            },
             checkStrictly: true,
             renderAfterExpand: false,
         },

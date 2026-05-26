@@ -1,8 +1,6 @@
 <template>
     <div class="upload-container">
-        <ElUpload class="cover-uploader" v-bind="componentProps"
-            v-on="getComponentEvents"
-            :style="{ width: typeof width === 'number' ? width + 'px' : width }">
+        <ElUpload class="cover-uploader" v-bind="componentProps" v-on="getComponentEvents">
             <div v-if="!cover" class="upload-placeholder">
                 <ElIcon class="upload-icon">
                     <SvgIcon icon="mdi:add" />
@@ -10,11 +8,7 @@
                 <div v-if="props.text" class="upload-text">{{ props.text }}
                 </div>
             </div>
-            <img v-else :src="cover" class="cover-image"
-                :style="{
-                    width: typeof width === 'number' ? width + 'px' : width,
-                    height: typeof height === 'number' ? height + 'px' : height
-                }" />
+            <img v-else :src="cover" class="cover-image" />
             <template #tip>
                 <div class="upload-tip">
                     {{ props.tip }}
@@ -107,6 +101,8 @@ const getComponentEvents = {
             justify-content: center;
             border: 1px dashed #d9d9d9;
             border-radius: 6px;
+            width: v-bind('typeof width === "number" ? width + "px" : width');
+            height: v-bind('typeof height === "number" ? height + "px" : height');
 
             .upload-icon {
                 font-size: 28px;
@@ -123,6 +119,8 @@ const getComponentEvents = {
         .cover-image {
             display: block;
             object-fit: contain;
+            width: v-bind('typeof width === "number" ? width + "px" : width');
+            height: v-bind('typeof height === "number" ? height + "px" : height');
         }
     }
 

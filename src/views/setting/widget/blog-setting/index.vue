@@ -3,11 +3,11 @@
     <div class="blog-setting">
         <h3>博客设置</h3>
         <!-- 博客设置内容 -->
-        <DynamicForm v-model="formData" :form-items="formItems" :form-props="formProps"
-        :show-submit="true" submit-text="保存修改">
-        <template>
+        <DynamicForm v-model="formData" :form-items="formItems" :form-props="formProps" :show-submit="true"
+            submit-text="保存修改">
+            <template>
 
-        </template>
+            </template>
         </DynamicForm>
     </div>
 </template>
@@ -25,7 +25,8 @@ const formProps = reactive<FormProps>({
 <style lang="scss" scoped>
 .blog-setting {
     padding: 20px;
-    h3{
+
+    h3 {
         padding-bottom: 20px;
     }
 }

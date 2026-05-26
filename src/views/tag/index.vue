@@ -1,18 +1,16 @@
 <template>
     <div class="page">
         <!-- 搜索栏 -->
-        <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
-            :search-list="searchList" :keyword="query" />
-        <PageTable class="table" :columns="columns" :table-data="tableData"
-            :page="page" slot-header="header" @current-page="getTagListData"
-            @page-size="getTagListData">
+        <SearchBar class="search" @submit="handleSearch" @reset="handleReset" :search-list="searchList"
+            :keyword="query" />
+        <PageTable class="table" :columns="columns" :table-data="tableData" :page="page" slot-header="header"
+            @current-page="getTagListData" @page-size="getTagListData">
             <!-- 自定义头部 -->
             <template #header>
                 <DialogButton @submit="handleAdd" @closed="clearData">
                     <SvgIcon icon="mdi:add">New Tag</SvgIcon>
                     <template #content>
-                        <DynamicForm ref="formRef" v-model="formData"
-                            :form-items="formItems">
+                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
                             <template #colorSlot>
                                 <div style="margin-left: 10px;">
                                     {{ formData.color || "暂无" }}
@@ -33,17 +31,14 @@
                 </div>
             </template>
             <template #preview="{ row }">
-                <ElTag :color="row.color"
-                    style="color: #fff; font-weight: bold;">
+                <ElTag :color="row.color" style="color: #fff; font-weight: bold;">
                     {{ row.tagName }}
                 </ElTag>
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton :button-props="buttonProps"
-                    :dialog-props="dialogProps" @click="getData(row)"
-                    @submit="handleUpdate"
-                    @closed="clearData">
+                <DialogButton :button-props="buttonProps" :dialog-props="dialogProps" @click="getData(row)"
+                    @submit="handleUpdate" @closed="clearData">
                     编辑
                     <template #content>
                         <DynamicForm v-model="formData" :form-items="formItems">
@@ -55,7 +50,7 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <ElButton size="small" type="danger">
+                <ElButton size="small" type="danger" @click="handleDel(row)">
                     删除
                 </ElButton>
             </template>
@@ -66,7 +61,7 @@
 <script setup lang='ts'>
 import SearchBar from "@comps/search-bar/index.vue"
 import { TagService } from "@/api/tagApi"
-import { ElMessage, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
+import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
 type Tag = Api.Tag.TagInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 const formRef = ref()
@@ -125,6 +120,28 @@ const handleAdd = async () => {
         type: 'success',
     })
     getTagListData()
+}
+const handleDel = async (row: Tag) => {
+    if (!row.tagId) {
+        ElMessage.warning('无效的标签ID')
+        return
+    }
+    try {
+        await ElMessageBox.confirm('确定要删除该文章吗？删除后无法恢复！', '警告', {
+            confirmButtonText: '确定删除',
+            cancelButtonText: '取消',
+            type: 'warning',
+            appendTo: document.body,
+        })
+
+        // 确认后才执行
+        await TagService.delTag(row.tagId)
+        ElMessage.success('删除成功')
+        getTagListData()
+
+    } catch (error) {
+        ElMessage.info('已取消')
+    }
 }
 /** 编辑 */
 const handleUpdate = async () => {
