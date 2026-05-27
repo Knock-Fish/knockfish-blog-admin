@@ -11,9 +11,9 @@ export interface RouteMeta {
     /** 角色权限 */
     roles?: string[]
     /** 是否隐藏 */ 
-    hidden?: boolean
+    hidden?: number | boolean
     /** 是否缓存 */
-    keepAlive?: boolean
+    keepAlive?: number | boolean
     /** 登录认证 */
     requiresAuth?: boolean
     /** 权限编码 */

@@ -6,11 +6,24 @@
         <!-- 权限树表格 -->
         <ElCard class="table" shadow="never">
             <template #header>
-                <DialogButton @click="handleClick" @submit="handleAdd" @open="clearData">
+                <DialogButton @click="handleClick" @submit="handleAdd"
+                    @open="clearData">
                     新增权限
                     <template #content>
                         <DynamicForm ref="formRef" v-model="formData"
-                            :form-items="formItems" />
+                            :form-items="formItems">
+                            <template #switchList>
+                                <div
+                                    style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 50px;">
+                                    <ElSwitch v-model="formData.hidden"
+                                        :active-value="1" :inactive-value="0"
+                                        inactive-text="是否隐藏" />
+                                    <ElSwitch v-model="formData.keepAlive"
+                                        :active-value="1" :inactive-value="0"
+                                        inactive-text="是否缓存" />
+                                </div>
+                            </template>
+                        </DynamicForm>
                     </template>
                 </DialogButton>
             </template>
@@ -27,10 +40,9 @@
                         <!-- 名称 -->
                         <span class="node-name">{{ data.permissionName }}</span>
                         <!-- 类型标签 -->
-                        <ElTag
-                            :type="data.type === 'MENU' ? 'primary' : 'success'"
-                            size="small" effect="plain">
-                            {{ data.type === 'MENU' ? '菜单' : '按钮' }}
+                        <ElTag type='primary' size="small" effect="plain">
+                            {{ permissionType[data.type as keyof typeof
+                                permissionType] }}
                         </ElTag>
                         <!-- 权限编码 -->
                         <span class="node-code">{{ data.permissionCode }}</span>
@@ -47,6 +59,21 @@
                                     <DynamicForm ref="formRef"
                                         v-model="formData"
                                         :form-items="formItems">
+                                        <template #switchList>
+                                            <div
+                                                style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 50px;">
+                                                <ElSwitch
+                                                    v-model="formData.hidden"
+                                                    :active-value="1"
+                                                    :inactive-value="0"
+                                                    inactive-text="是否隐藏" />
+                                                <ElSwitch
+                                                    v-model="formData.keepAlive"
+                                                    :active-value="1"
+                                                    :inactive-value="0"
+                                                    inactive-text="是否缓存" />
+                                            </div>
+                                        </template>
                                     </DynamicForm>
                                 </template>
                             </DialogButton>
@@ -64,7 +91,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ElMessage, ElMessageBox, type ButtonProps } from 'element-plus'
+import { ElMessage, ElMessageBox, type ButtonProps, type FormProps } from 'element-plus'
 
 type Permission = Api.Permission.PermissionInfo
 defineOptions({ name: 'Permission' })
@@ -74,6 +101,12 @@ const tableData = ref<Permission[]>([])
 const defaultExpandedKeys = ref<number[]>([])
 const isPermissionCode = ref<boolean>(false)
 const query = ref({})
+const permissionType = {
+    DIRECTORY: '目录',
+    MENU: '菜单',
+    BUTTON: '按钮',
+    API: '外链'
+} as const
 const formData = reactive<Permission>({
     permissionId: 0,
     permissionName: '',
@@ -81,6 +114,8 @@ const formData = reactive<Permission>({
     parentId: 0,
     type: 'API',
     sortOrder: 0,
+    hidden: 0,
+    keepAlive: 0,
     status: 'ENABLE'
 })
 const buttonProps = ref<ButtonProps>({
@@ -138,7 +173,7 @@ const handleClick = () => {
 }
 const handleAdd = async () => {
     await PermissionService.addPermission(formData)
-     ElMessage({
+    ElMessage({
         message: '提交成功',
         type: 'success',
     })
@@ -164,104 +199,19 @@ const handleNodeClick = (data: any) => {
     console.log('点击节点:', data)
 }
 // 基础表单项
-const baseFormItems = computed(() => [
-    {
-        type: 'Input',
-        prop: 'permissionName',
-        label: '权限名称',
-        props: { placeholder: '请输入权限名称' },
-        rules: { required: true, message: '名称不能为空', trigger: 'blur' }
-    },
-    {
-        type: 'Input',
-        prop: 'permissionCode',
-        label: '权限编码',
-        props: {
-            placeholder: '请输入权限编码，如：blog:xxx:xxx',
-            disabled: isPermissionCode.value
-        },
-        rules: { required: true, message: '编码不能为空', trigger: 'blur' }
-    },
-    {
-        type: 'Select',
-        prop: 'type',
-        label: '权限类型',
-        props: { placeholder: '请选择权限类型', multiple: false, clearable: true },
-        options: [
-            { value: "MENU", label: "菜单" },
-            { value: "BUTTON", label: "按钮" },
-            { value: "API", label: "接口" },
-        ],
-        rules: { required: true, message: '类型不能为空', trigger: 'blur' }
-    },
-    {
-        type: 'Input',
-        prop: 'sortOrder',
-        label: '排序号',
-        props: { placeholder: '请输入排序号' }
-    },
-])
-// 菜单专用的表单项
-const menuFormItems = reactive([
-    {
-        type: 'TreeSelect',
-        prop: 'parentId',
-        label: '父级权限',
-        props: {
-            placeholder: '请选择父级权限（不选则为顶级）',
-            get data() {
-                return unref(treeData)
-            },
-            nodeKey: 'permissionId',
-            props: {
-                label: 'permissionName',
-                value: 'permissionId',
-                children: 'children',
-                clearable: true,
-            },
-            // 动态获取当前选中的值
-            get modelValue() {
-                return formData.parentId
-            },
-            checkStrictly: true,
-            renderAfterExpand: false,
-        },
-    },
-    {
-        type: 'Input',
-        prop: 'routeName',
-        label: '路由名称',
-        props: {
-            placeholder: '请输入路由名称',
-        }
-    },
-    {
-        type: 'Input',
-        prop: 'path',
-        label: '访问路径',
-        props: {
-            placeholder: '请输入访问路径',
-        }
-    },
-    {
-        type: 'Input',
-        prop: 'icon',
-        label: '图标',
-        props: {
-            placeholder: '请输入图标名（Material Design Icons）',
-        }
-    },
-    {
-        type: 'Input',
-        prop: 'component',
-        label: '组件路径',
-        props: {
-            placeholder: '请输入组件路径',
-        }
-    }
-])
-// 根据类型动态计算表单项
-// const formItems = ref([
+// const baseFormItems = computed(() => [
+//     {
+//         type: 'Select',
+//         prop: 'type',
+//         label: '权限类型',
+//         props: { placeholder: '请选择权限类型', multiple: false, clearable: true },
+//         options: [
+//             { value: "MENU", label: "菜单" },
+//             { value: "BUTTON", label: "按钮" },
+//             { value: "API", label: "接口" },
+//         ],
+//         rules: { required: true, message: '类型不能为空', trigger: 'blur' }
+//     },
 //     {
 //         type: 'Input',
 //         prop: 'permissionName',
@@ -280,30 +230,23 @@ const menuFormItems = reactive([
 //         rules: { required: true, message: '编码不能为空', trigger: 'blur' }
 //     },
 //     {
-//         type: 'Select',
-//         prop: 'type',
-//         label: '权限类型',
-//         props: { placeholder: '请选择权限类型', multiple: false, clearable: true },
-//         options: [
-//             { value: "MENU", label: "菜单" },
-//             { value: "BUTTON", label: "按钮" },
-//             { value: "API", label: "接口" },
-//         ],
-//         rules: { required: true, message: '类型不能为空', trigger: 'blur' }
-//     },
-//     {
 //         type: 'Input',
 //         prop: 'sortOrder',
 //         label: '排序号',
 //         props: { placeholder: '请输入排序号' }
 //     },
+// ])
+// // 菜单专用的表单项
+// const menuFormItems = reactive([
 //     {
 //         type: 'TreeSelect',
 //         prop: 'parentId',
 //         label: '父级权限',
 //         props: {
 //             placeholder: '请选择父级权限（不选则为顶级）',
-//             data: unref(treeData),
+//             get data() {
+//                 return unref(treeData)
+//             },
 //             nodeKey: 'permissionId',
 //             props: {
 //                 label: 'permissionName',
@@ -311,7 +254,10 @@ const menuFormItems = reactive([
 //                 children: 'children',
 //                 clearable: true,
 //             },
-//             modelValue: null,
+//             // 动态获取当前选中的值
+//             get modelValue() {
+//                 return formData.parentId
+//             },
 //             checkStrictly: true,
 //             renderAfterExpand: false,
 //         },
@@ -347,20 +293,115 @@ const menuFormItems = reactive([
 //         props: {
 //             placeholder: '请输入组件路径',
 //         }
-//     }
+//     },
+//     {
+//         slot: 'swithList',
+//     },
 // ])
-const formItems = computed(() => {
-    const items = [...unref(baseFormItems)]
-    switch (formData.type) {
-        case 'MENU':
-            items.push(...menuFormItems)
-            break
-        default:
-            // 未选择类型时，不显示额外的表单项
-            break
+// 根据类型动态计算表单项
+const formItems = ref([
+    {
+        type: 'Select',
+        prop: 'type',
+        label: '权限类型',
+        props: { placeholder: '请选择权限类型', multiple: false, clearable: true },
+        options: [
+            { value: "MENU", label: "菜单" },
+            { value: "BUTTON", label: "按钮" },
+            { value: "API", label: "接口" },
+        ],
+        rules: { required: true, message: '类型不能为空', trigger: 'blur' }
+    },
+    {
+        type: 'Input',
+        prop: 'permissionName',
+        label: '权限名称',
+        props: { placeholder: '请输入权限名称' },
+        rules: { required: true, message: '名称不能为空', trigger: 'blur' }
+    },
+    {
+        type: 'Input',
+        prop: 'permissionCode',
+        label: '权限编码',
+        props: {
+            placeholder: '请输入权限编码，如：blog:xxx:xxx',
+            disabled: isPermissionCode.value
+        },
+        rules: { required: true, message: '编码不能为空', trigger: 'blur' }
+    },
+    {
+        type: 'Input',
+        prop: 'sortOrder',
+        label: '排序号',
+        props: { placeholder: '请输入排序号' }
+    },
+    {
+        type: 'TreeSelect',
+        prop: 'parentId',
+        label: '父级权限',
+        props: {
+            placeholder: '请选择父级权限（不选则为顶级）',
+            data: unref(treeData),
+            nodeKey: 'permissionId',
+            props: {
+                label: 'permissionName',
+                value: 'permissionId',
+                children: 'children',
+                clearable: true,
+            },
+            modelValue: null,
+            checkStrictly: true,
+            renderAfterExpand: false,
+        },
+    },
+    {
+        type: 'Input',
+        prop: 'routeName',
+        label: '路由名称',
+        props: {
+            placeholder: '请输入路由名称',
+        }
+    },
+    {
+        type: 'Input',
+        prop: 'path',
+        label: '访问路径',
+        props: {
+            placeholder: '请输入访问路径',
+        }
+    },
+    {
+        type: 'Input',
+        prop: 'icon',
+        label: '图标',
+        props: {
+            placeholder: '请输入图标名（Material Design Icons）',
+        }
+    },
+    {
+        type: 'Input',
+        prop: 'component',
+        label: '组件路径',
+        props: {
+            placeholder: '请输入组件路径',
+        }
+    },
+    {
+        slot: 'switchList'
     }
-    return items
-})
+])
+// const formItems = computed(() => {
+//     const items = [...unref(baseFormItems)]
+//     switch (formData.type) {
+//         case 'MENU':
+//             items.push(...menuFormItems)
+//             break
+//         default:
+//             // 未选择类型时，不显示额外的表单项
+//             break
+//     }
+//     return items
+// })
 /** 搜索栏配置 */
 const searchList = [
     {

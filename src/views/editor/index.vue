@@ -296,9 +296,10 @@ watch(
     { deep: true }
 )
 // 路由离开前拦截
-onBeforeRouteLeave((to, from, next) => {
+onBeforeRouteLeave((to, from) => {
     if (hasUnsavedChanges.value) {
-        ElMessageBox.confirm(
+        // 关键：直接返回 ElMessageBox.confirm() 这个 Promise
+        return ElMessageBox.confirm(
             '当前内容尚未保存，确定要离开吗？未保存的内容将会丢失。',
             '提示',
             {
@@ -308,12 +309,12 @@ onBeforeRouteLeave((to, from, next) => {
                 appendTo: document.body,
             }
         ).then(() => {
-            next() // 确认离开
+            return true  // 确认离开
         }).catch(() => {
-            next(false) // 取消离开
+            return false // 取消离开
         })
     } else {
-        next() // 无修改，直接离开
+        return true
     }
 })
 const showInput = () => {

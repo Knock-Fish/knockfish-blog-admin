@@ -39,7 +39,8 @@ watch(
     () => route.matched,
     (matched) => {
         const matchedEnd = route.matched.length - 1
-        if(route.matched[matchedEnd]?.meta.hidden){
+        const hidden = route.matched[matchedEnd]?.meta.hidden
+        if(hidden === 1 || hidden){
             return
         }
         tabStore.isActiveTab(matched[matchedEnd]?.path as string)

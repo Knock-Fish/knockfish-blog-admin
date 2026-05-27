@@ -120,7 +120,7 @@ const handleLogin = async () => {
     userStore.setLoginStatus(true)
     userStore.setUserInfo({ userId, username, description, nickname, email, avatar })
     ElMessage.success(`登录成功`)
-    router.push("/dashboard")
+    router.push("/dashboard/workbench")
 }
 </script>
 <style lang="scss" scoped>
