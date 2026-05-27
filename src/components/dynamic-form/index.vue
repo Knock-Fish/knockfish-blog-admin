@@ -2,9 +2,9 @@
   <ElForm ref="formRef" :model="formModel" v-bind="formProps">
     <template v-for="(item, index) in formItems" :key="item.prop || index">
       <ElFormItem v-bind="item">
-        <component :class="item.class" :is="`El${item.type}`"
+        <component v-if="item.prop" :class="item.class" :is="`El${item.type}`"
           v-model="formModel[item.prop]" v-bind="item.props"
-          :ref="(el: any) => setItemRef(el, item.prop)">
+          :ref="(el: any) => setItemRef(el, item.prop || '')">
 
           <!-- select 选项 -->
           <template v-if="item.type === 'Select'">
@@ -80,7 +80,7 @@ const setItemRef = (el: any, prop: string) => {
 
 interface FormItem extends Partial<FormItemProps> {
   type?: string
-  prop: string
+  prop?: string
   class?: string
   props?: InputProps
   | SelectProps

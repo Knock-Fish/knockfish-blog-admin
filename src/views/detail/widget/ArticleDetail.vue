@@ -2,6 +2,7 @@
     <div class="article-detail">
         <h1>{{ article?.title }}</h1>
         <div class="meta">
+            <span class="author">作者：{{ article?.username }}</span>
             <time class="publish-time">时间：{{ article?.publishTime }}</time>
             <time class="updated-time" v-if="article?.updatedTime">最后修改时间：{{
                 article?.updatedTime }}</time>
@@ -65,12 +66,18 @@ const processedHtml = computed(() => {
     }
 
     .meta {
+        display: flex;
         margin-bottom: 20px;
+        gap: 5px;
 
+        .author,
         .publish-time,
         .updated-time {
             margin-right: 20px;
             color: #8a919f;
+        }
+        @media screen and (max-width: $screen-medium) {
+            flex-direction: column;
         }
     }
 }

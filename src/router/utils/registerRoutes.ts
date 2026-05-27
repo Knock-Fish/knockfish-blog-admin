@@ -19,7 +19,6 @@ export async function registerDynamicRoutes(router: Router, routes: AppRouteReco
 
       if (route.children && route.children.length > 0) {
         // 先注册父路由（挂到 Layout 下）
-        // router.addRoute('Layout', route as RouteRecordRaw)
         router.addRoute(route as RouteRecordRaw)
         // 再注册子路由（挂到父路由名下）
         route.children.forEach(child => {
@@ -29,7 +28,7 @@ export async function registerDynamicRoutes(router: Router, routes: AppRouteReco
           router.addRoute(routeName, child as RouteRecordRaw)
         })
       } else {
-        // children → 挂到 Layout 下
+        // children 挂到 Layout 下
         router.addRoute('Layout', route as RouteRecordRaw)
       }
     }

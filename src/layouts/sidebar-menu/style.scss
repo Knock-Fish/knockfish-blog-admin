@@ -9,7 +9,9 @@
     // ???
     // user-select: none;
     // scrollbar-width: none;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
 
     .el-menu-item {
         color: #000;

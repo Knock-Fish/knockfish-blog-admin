@@ -96,11 +96,14 @@ declare namespace Api {
             publishTime?: string
             updatedTime?: string
             tags?: number[]
+            userId?: number
+            username?: string
         }
         interface ArticleDetailInfo extends ArticleInfo {
             tagIds: string
             tagNames: string
             tagColors: string
+            username: string
         }
         type ArticleListData = Api.Common.PaginatingParams<ArticleInfo>
     }
@@ -137,6 +140,8 @@ declare namespace Api {
             parentId: number
             routeName?: string
             path?: string | null
+            hidden: number | boolean
+            keepAlive: number | boolean
             icon?: string  | null
             component?: string | null
             sortOrder: number

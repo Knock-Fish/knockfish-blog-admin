@@ -96,6 +96,8 @@ function convertToMenuItem(permissions: Permission[]): AppRouteRecord[] {
         title: permission.permissionName,
         permissionCode: permission.permissionCode ,
         icon: permission.icon || undefined,
+        hidden: permission.hidden,
+        keepAlive: permission.keepAlive
       },
       children: permission.children && permission.children.length > 0
         ? convertToMenuItem(permission.children)

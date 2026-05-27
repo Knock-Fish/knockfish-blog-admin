@@ -3,7 +3,7 @@
         <div>
             <RouterView v-slot="{ Component }">
                 <Transition name="fade" mode="out-in">
-                    <keep-alive :include="keepAliveComponents">
+                    <keep-alive :include="cacheList">
                         <component :is="Component" />
                     </keep-alive>
                 </Transition>
@@ -19,15 +19,18 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const menuStore = useMenuStore()
 const menuWidth = computed(() => menuStore.menuWidth)
-// 需要缓存的组件列表
-const keepAliveComponents = computed(() => {
-    // 可以根据路由元信息动态添加
-    const components = ['Dashboard'] // 首页的 name
-    if (route.meta.keepAlive) {
-        components.push(route.name as string)
-    }
-    return components
-})
+const cacheSet = ref<Set<string>>(new Set())
+const cacheList = computed(() => Array.from(cacheSet.value))
+watch(() => route,
+    (newRoute) => {
+        // 检查是否需要缓存
+        if (newRoute.meta?.keepAlive === 1 || newRoute.meta?.keepAlive === true) {
+            const routeName = newRoute.name as string
+            if (routeName && !cacheSet.value.has(routeName)) {
+                cacheSet.value.add(routeName)
+            }
+        }
+    }, { immediate: true, deep: true })
 </script>
 
 <style lang="scss" scoped>
@@ -42,7 +45,7 @@ const keepAliveComponents = computed(() => {
 /* 淡入淡出动画 */
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .fade-enter-from {
