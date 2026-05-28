@@ -4,8 +4,8 @@
             <h3 class="header-title">快捷功能</h3>
         </div>
         <div class="actions-grid">
-            <div class="action-item" v-for="action in quickActions" :key="action.title" @click="handleAction(action)">
-                <div class="action-icon" :class="action.bgClass">
+            <div class="action-item" v-permission="`blog:${action.permission}`" v-for="action in quickActions" :key="action.title" @click="handleAction(action)">
+                <div class="action-icon">
                     <SvgIcon :icon="action.icon" />
                 </div>
                 <div class="action-text">
@@ -24,38 +24,38 @@ const quickActions = ref([
     {
         title: '写文章',
         icon: 'mdi:file-edit',
-        bgClass: 'action-blue',
-        description: '写一篇新文章'
+        description: '写一篇新文章',
+        permission: 'article:add'
     },
     {
         title: '站点分类',
         icon: 'mdi:folder',
-        bgClass: 'action-green',
-        description: '管理站点分类'
+        description: '管理站点分类',
+        permission: 'category:manage'
     },
     {
         title: '文章标签',
         icon: 'mdi:tag',
-        bgClass: 'action-purple',
-        description: '文章相关标签'
+        description: '文章相关标签',
+        permission: 'tag:manage'
     },
     {
         title: '文件管理',
         icon: 'mdi:folder-open',
-        bgClass: 'action-orange',
-        description: '管理文章文件'
+        description: '管理文章文件',
+        permission: 'file:manage'
     },
     {
         title: '系统设置',
         icon: 'mdi:settings',
-        bgClass: 'action-gray',
-        description: '配置管理系统参数'
+        description: '配置管理系统参数',
+        permission: 'setting:manage'
     },
     {
         title: '用户管理',
         icon: 'mdi:users',
-        bgClass: 'action-cyan',
-        description: '管理系统用户'
+        description: '管理系统用户',
+        permission: 'user:manage'
     }
 ])
 

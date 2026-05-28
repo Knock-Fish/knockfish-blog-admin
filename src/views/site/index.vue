@@ -1,5 +1,5 @@
 <template>
-    <div class="page">
+    <div ref="divRef" class="page">
         <!-- 搜索栏 -->
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
@@ -8,12 +8,14 @@
             @page-size="getSiteListData">
             <!-- 自定义头部 -->
             <template #header>
-                <DialogButton @submit="handleAdd" @closed="clearData">
-                    <SvgIcon icon="mdi:add">New Site</SvgIcon>
-                    <template #content>
-                        <DynamicForm v-model="formData" :form-items="formItems">
-                            <template #ico>
-                                <img style="
+                <div class="table-header">
+                    <DialogButton permission="site:add" @submit="handleAdd" @closed="clearData">
+                        新增站点
+                        <template #content>
+                            <DynamicForm v-model="formData"
+                                :form-items="formItems">
+                                <template #ico>
+                                    <img style="
                             position: absolute;
                             right: 20px;
                             top: -5px;
@@ -21,16 +23,28 @@
                             height: 40px;
                             margin-left: 30px;
                             vertical-align: middle;" :src="formData.ico">
-                            </template>
-                        </DynamicForm>
-                    </template>
-                </DialogButton>
+                                </template>
+                            </DynamicForm>
+                        </template>
+                    </DialogButton>
+                    <div class="icon-list">
+                        <!-- 刷新数据 -->
+                        <DataRefresh @click="getSiteListData" />
+                        <!-- 页面全屏 -->
+                        <FullScreenPage :target-ref="divRef" />
+                        <!-- 导出excel -->
+                        <ExcelExport :table-data="tableData" />
+                    </div>
+                </div>
             </template>
             <template #ico="{ row }">
-                <img :src="row.ico" alt=""
-                    style="width: 24px; height: 24px; vertical-align: middle;" />
-                <span class="table-font" style="margin-left: 5px;">{{
-                    row.siteName }} </span>
+                <div class="site">
+                    <img :src="row.ico" alt="" />
+                    <div class="info">
+                        <p class="site-name">{{ row.siteName }} </p>
+                        <p class="description">{{ row.description }}</p>
+                    </div>
+                </div>
             </template>
             <template #siteUrl="{ row }">
                 <a style="color: #7893FE;" :href="row.siteUrl"
@@ -39,12 +53,13 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton :button-props="buttonProps"
+                <DialogButton permission="site:edit" :button-props="editButtonProps"
                     :dialog-props="dialogProps" @click="getData(row)"
                     @closed="clearData">
                     编辑
                     <template #content>
-                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
+                        <DynamicForm ref="formRef" v-model="formData"
+                            :form-items="formItems">
                             <template #ico>
                                 <img style="
                             position: absolute;
@@ -58,9 +73,9 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <ElButton size="small" type="danger" @click="handleDel(row)">
+                <DialogButton permission="site:delete" :button-props="delButtonProps" @click="handleDel(row)">
                     删除
-                </ElButton>
+                </DialogButton>
             </template>
         </PageTable>
     </div>
@@ -79,6 +94,7 @@ interface CategoryOptions {
 }
 const query = reactive<Site>({})
 const formRef = ref()
+const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
 const tableData = ref<Site[]>([])
 const categoryOptions = ref<CategoryOptions[]>([])
 const loadCategoryOptions = () => {
@@ -95,8 +111,12 @@ const page = reactive({ // 分页参数
     pageSize: 10
 })
 const formData = reactive<Site>({})
-const buttonProps = ref<ButtonProps>({
+const editButtonProps = ref<ButtonProps>({
     size: "small"
+})
+const delButtonProps = ref<ButtonProps>({
+    size: "small",
+    type: "danger"
 })
 const dialogProps = ref<DialogProps>({
     title: "站点信息"
@@ -177,11 +197,11 @@ const formItems = computed(() => [
 ])
 const columns = ref([
     { type: 'index', label: '序号' },
-    { prop: 'siteName', label: '站点名称', slot: 'ico', minWidth: '150' },
-    { prop: 'description', label: '站点描述', minWidth: '200', showOverflowTooltip: true },
-    { slot: 'siteUrl', label: '站点链接', minWidth: '200', showOverflowTooltip: true },
+    { prop: 'siteName', label: '站点名称', slot: 'ico', minWidth: '200', showOverflowTooltip: true },
+    // { prop: 'description', label: '站点描述', minWidth: '200', showOverflowTooltip: true },
+    { slot: 'siteUrl', label: 'URL', minWidth: '180', showOverflowTooltip: true },
     { prop: 'createTime', label: '创建时间', minWidth: '140' },
-    { prop: 'categoryName', label: '所属分类', minWidth: '80' },
+    { prop: 'categoryName', label: '所属分类', minWidth: '90' },
     { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
 ])
 const getSiteListData = async () => {
@@ -283,6 +303,42 @@ onMounted(() => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .icon-list {
+                display: flex;
+            }
+        }
     }
+}
+
+.site {
+    display: flex;
+    align-items: center;
+
+    img {
+        width: 30px;
+        height: 30px;
+        /* vertical-align: middle; */
+    }
+
+    .info {
+        margin-left: 10px;
+
+        .site-name {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .description {
+            font-size: 11px;
+            color: #5f7f9e;
+        }
+    }
+
 }
 </style>

@@ -1,12 +1,12 @@
 <template>
-  <div class="dialog-btn-content">
+  <div v-permission="`blog:${permission}`" class="dialog-btn-content">
     <!-- 按钮：使用默认插槽 -->
     <ElButton v-bind="finalButtonProps" @click.stop="handleClick">
       <slot></slot>
     </ElButton>
 
     <!-- 弹窗 -->
-    <ElDialog v-model="dialogVisible" v-bind="finalDialogProps"
+    <ElDialog v-if="type === 'dialog'" v-model="dialogVisible" v-bind="finalDialogProps"
       v-on="componentsEmit">
       <!-- 弹窗内容插槽 -->
       <slot name="content"></slot>
@@ -31,9 +31,16 @@
 import { type ButtonProps, type DialogProps } from 'element-plus'
 defineOptions({ inheritAttrs: false })
 interface Props {
+  /** 按钮类型：dialog-弹窗按钮，button-普通按钮，confirm-确认框按钮 */
+  type?: 'dialog' | 'button'
+  /** 权限码，如 'blog:article:add' */
+  permission?: string
+   /** 按钮属性 */
   buttonProps?: ButtonProps
+  /** 弹窗属性（仅在 type 为 dialog 时生效） */
   dialogProps?: DialogProps
 }
+const dialogVisible = ref(false)
 const DEFAULT_BUTTON_PROPS: ButtonProps = {
   // size: 'small',
 }
@@ -43,8 +50,9 @@ const DEFAULT_DIALOG_PROPS: DialogProps = {
   zIndex: 10001,
   appendToBody: true,
 }
-const props = defineProps<Props>()
-
+const props = withDefaults(defineProps<Props>(), {
+  type: 'dialog'  // 默认为弹窗按钮，保持原有行为
+})
 const finalButtonProps = computed(() => ({
   ...DEFAULT_BUTTON_PROPS,
   ...(props.buttonProps || {}),
@@ -78,10 +86,11 @@ const handleSubmit = () => {
   dialogVisible.value = !dialogVisible.value
   emit('submit')
 }
-const dialogVisible = ref(false)
-
-const handleClick = () => {
-  dialogVisible.value = !dialogVisible.value
+const handleClick = (event: Event) => {
+  if(props.type =='dialog'){
+      dialogVisible.value = !dialogVisible.value
+  }
+  event?.stopPropagation()
   emit('click')
 }
 </script>

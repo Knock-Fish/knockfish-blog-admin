@@ -15,10 +15,19 @@
                 target="_blank"
                 rel="noopener noreferrer"
             >
-                <div class="link-icon" :class="link.bgClass">
-                    <SvgIcon :icon="link.icon" />
+                <div class="link-icon">
+                    <img :src="link.icon" alt="">
                 </div>
                 <span class="link-name">{{ link.name }}</span>
+            </a>
+            <a
+                class="link-item"
+                rel="noopener noreferrer"
+            >
+                <div class="link-icon" style="background-color: gray;">
+                    <SvgIcon icon="mdi:add" />
+                </div>
+                <span class="link-name">添加外链</span>
             </a>
         </div>
     </div>
@@ -29,58 +38,52 @@ interface LinkItem {
     name: string
     url: string
     icon: string
-    bgClass: string
 }
-
+const icon = ref({
+    GitHub: new URL('../../../../assets/svg/github.svg', import.meta.url).href,
+    Bilibili: new URL('../../../../assets/svg/bilibili.svg', import.meta.url).href,
+    Juejin: new URL('../../../../assets/svg/juejin.svg', import.meta.url).href,
+    CSDN: new URL('../../../../assets/svg/csdn.svg', import.meta.url).href,
+    Zhihu: new URL('../../../../assets/svg/zhihu.svg', import.meta.url).href,
+    Bokeyuan: new URL('../../../../assets/svg/Bokeyuan.svg', import.meta.url).href,
+    Gitee: new URL('../../../../assets/svg/gitee.svg', import.meta.url).href,
+})
 const links = ref<LinkItem[]>([
     {
         name: 'GitHub',
         url: 'https://github.com',
-        icon: 'mdi:github',
-        bgClass: 'bg-github'
+        icon: icon.value.GitHub,
     },
     {
         name: '哔哩哔哩',
-        url: 'https://www.bilibili.com',
-        icon: 'mdi:bilibili',
-        bgClass: 'bg-bilibili'
-    },
-    {
-        name: '掘金',
-        url: 'https://juejin.cn',
-        icon: 'mdi:gold',
-        bgClass: 'bg-juejin'
-    },
-    {
-        name: '思否',
-        url: 'https://segmentfault.com',
-        icon: 'mdi:forum',
-        bgClass: 'bg-segmentfault'
+        url: '@/assets/svg/bilibili.svg',
+        icon: icon.value.Bilibili,
     },
     {
         name: 'CSDN',
         url: 'https://www.csdn.net',
-        icon: 'mdi:language-css3',
-        bgClass: 'bg-csdn'
+        icon: icon.value.CSDN,
     },
     {
         name: '知乎',
         url: 'https://www.zhihu.com',
-        icon: 'mdi:zhihu',
-        bgClass: 'bg-zhihu'
+        icon: icon.value.Zhihu,
     },
     {
-        name: 'npm',
-        url: 'https://www.npmjs.com',
-        icon: 'mdi:npm',
-        bgClass: 'bg-npm'
+        name: '掘金',
+        url: 'https://juejin.cn',
+        icon: icon.value.Juejin,
     },
     {
-        name: 'Vue',
-        url: 'https://vuejs.org',
-        icon: 'mdi:vuejs',
-        bgClass: 'bg-vue'
-    }
+        name: '博客园',
+        url: 'https://www.cnblogs.com',
+        icon: icon.value.Bokeyuan,
+    },
+    {
+        name: 'Gitee',
+        url: 'https://gitee.com',
+        icon: icon.value.Gitee,
+    },
 ])
 </script>
 
@@ -138,36 +141,10 @@ const links = ref<LinkItem[]>([
                 font-size: 20px;
                 color: #fff;
 
-                &.bg-github {
-                    background: linear-gradient(135deg, #333 0%, #666 100%);
-                }
-
-                &.bg-bilibili {
-                    background: linear-gradient(135deg, #fb7299 0%, #ffaabb 100%);
-                }
-
-                &.bg-juejin {
-                    background: linear-gradient(135deg, #007fff 0%, #00aaff 100%);
-                }
-
-                &.bg-segmentfault {
-                    background: linear-gradient(135deg, #009c49 0%, #00d65d 100%);
-                }
-
-                &.bg-csdn {
-                    background: linear-gradient(135deg, #fc5531 0%, #ff6b3d 100%);
-                }
-
-                &.bg-zhihu {
-                    background: linear-gradient(135deg, #0066ff 0%, #0088ff 100%);
-                }
-
-                &.bg-npm {
-                    background: linear-gradient(135deg, #cb0000 0%, #ff0000 100%);
-                }
-
-                &.bg-vue {
-                    background: linear-gradient(135deg, #42b883 0%, #35495e 100%);
+                img {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 10px;
                 }
             }
 

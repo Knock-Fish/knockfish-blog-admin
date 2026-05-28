@@ -9,7 +9,14 @@ export const staticRoutes: RouteRecordRaw[] = [
         name: "Layout",
         component: () => import("@views/index/index.vue"),
         meta: { requiresAuth: true },
-        children: []
+        children: [
+            {
+                path: RoutesAlias.FileList,
+                name: "FileList",
+                component: () => import("@views/file-list/index.vue"),
+                meta: { requiresAuth: true }
+            }
+        ]
     },
     {
         path: RoutesAlias.Login,

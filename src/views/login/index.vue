@@ -31,15 +31,12 @@ import { useUserStore } from "@/store/modules/user"
 import { useMenuStore } from "@/store/modules/menu"
 import { AuthService } from "@/api/authApi"
 import { PermissionService } from '@/api/permissionApi'
-import { flatPermissionsToMenuTree, transformPermissionToMenu } from "@/utils/tree/menuHelper"
-import { buildDynamicRoutes } from "@/utils/tree/routeHelper"
+import { flatPermissionsToMenuTree } from "@/utils/tree/menuHelper"
+import { extractPermissions } from "@/utils/tree/extractPermissions"
 import { ElMessage } from "element-plus"
-import { type MenuItem } from "@/types/store/index"
-import type { RouteRecordRaw } from "vue-router"
 import { type AppRouteRecord } from '@/types'
 type LoginParasm = Api.Auth.LoginParams
 type Permission = Api.Permission.PermissionInfo
-type User = Api.User.UserInfo
 const router = useRouter()
 const userStore = useUserStore()
 const menuStore = useMenuStore()
@@ -115,9 +112,11 @@ const handleLogin = async () => {
     }
     userStore.setToken(token)
     const permissionData = await PermissionService.getUserPermissions(Number(userId))
+    
     const menuList: AppRouteRecord[] = flatPermissionsToMenuTree(permissionData.list)
     menuStore.setMenuList(menuList)
     userStore.setLoginStatus(true)
+    userStore.setPermissions(extractPermissions(permissionData.list))
     userStore.setUserInfo({ userId, username, description, nickname, email, avatar })
     ElMessage.success(`登录成功`)
     router.push("/dashboard/workbench")

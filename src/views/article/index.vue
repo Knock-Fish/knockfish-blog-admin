@@ -10,9 +10,9 @@
                 </ElInput>
             </ElCol>
             <ElCol :span="1.5">
-                <ElButton @click="handleAdd">
+                <DialogButton type="button" permission="article:add" @click="handleAdd">
                     新增文章
-                </ElButton>
+                </DialogButton>
             </ElCol>
         </ElRow>
         <ElEmpty v-if="!articleList" description="description" />
@@ -31,14 +31,18 @@
                             </SvgIcon>
                         </span>
                         <span class="action-btn">
-                            <ElButton size="small"
-                                @click.stop="goToArticleEditor(article)">
+                            <DialogButton type="button"
+                                :button-props="editButtonProps"
+                                permission="article:edit"
+                                @click="goToArticleEditor(article)">
                                 编辑
-                            </ElButton>
-                            <ElButton size="small" type="danger"
-                                @click.stop="handleDel(article)">
+                            </DialogButton>
+                            <DialogButton type="button"
+                                :button-props="delButtonProps"
+                                permission="article:delete"
+                                @click="handleDel(article)">
                                 删除
-                            </ElButton>
+                            </DialogButton>
                         </span>
                     </div>
                 </div>
@@ -50,7 +54,7 @@
 <script setup lang='ts'>
 import { useRouter } from "vue-router"
 import { ArticleService } from "@/api/articleApi"
-import { ElEmpty, ElMessage, ElMessageBox } from "element-plus"
+import { ElEmpty, ElMessage, ElMessageBox, type ButtonProps } from "element-plus"
 type Article = Api.Article.ArticleInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 interface ArticleQuery {
@@ -65,6 +69,13 @@ const page = reactive({ // 分页参数
     pageNum: 1,
     pageSize: 10
 })
+const editButtonProps: ButtonProps = {
+    size: "small"
+}
+const delButtonProps: ButtonProps = {
+    size: "small",
+    type: "danger"
+}
 const handleAdd = () => {
     router.push({ name: 'Publish' })
 }
@@ -128,7 +139,8 @@ onMounted(() => {
     border: 1px solid var(--border-color);
     background-color: var(--card-color);
     min-height: calc(100vh - 160px);
-    .el-empty{
+
+    .el-empty {
         height: calc(100vh - 200px);
     }
 
@@ -179,7 +191,7 @@ onMounted(() => {
             }
 
             &:hover {
-                .el-button {
+                :deep(.dialog-btn-content) {
                     opacity: 1 !important;
                 }
             }
@@ -228,7 +240,7 @@ onMounted(() => {
                     }
 
                     .action-btn {
-                        .el-button {
+                        :deep(.dialog-btn-content) {
                             opacity: 0;
                             transition: all 0.3s;
                         }

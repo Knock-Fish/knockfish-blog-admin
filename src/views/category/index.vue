@@ -1,28 +1,36 @@
 <template>
-    <div class="page">
+    <div ref="divRef" class="page">
         <!-- 搜索栏 -->
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
         <PageTable class="table" slot-header="header" :table-data="tableData"
-            :columns="columns">
+            :columns="columns" :page="page" @current-page="getCategoryListData"
+            @page-size="getCategoryListData">
             <!-- 自定义头部 -->
             <template #header>
-                <DialogButton @submit="handleAdd" @closed="clearData">
-                    <SvgIcon icon="mdi:add">New Category</SvgIcon>
-                    <template #content>
-                        <DynamicForm v-model="formData"
-                            :form-items="formItems" />
-                    </template>
-                </DialogButton>
+                <div class="table-header">
+                    <DialogButton permission="category:add" @submit="handleAdd" @closed="clearData">
+                        新增分类
+                        <template #content>
+                            <DynamicForm v-model="formData"
+                                :form-items="formItems" />
+                        </template>
+                    </DialogButton>
+                    <div class="icon-list">
+                        <DataRefresh @click="getCategoryListData" />
+                        <FullScreenPage :target-ref="divRef" />
+                        <ExcelExport :table-data="tableData" />
+                    </div>
+                </div>
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton :button-props="buttonProps">
+                <DialogButton permission="category:edit" :button-props="editButtonProps">
                     编辑
                 </DialogButton>
-                <ElButton size="small" type="danger">
+                <DialogButton permission="category:delete" :button-props="delButtonProps">
                     删除
-                </ElButton>
+                </DialogButton>
             </template>
         </PageTable>
     </div>
@@ -35,14 +43,19 @@ type Category = Api.Category.CategoryInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 const query = reactive<Category>({})
 const formRef = ref()
+const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
 const tableData = ref<Category[]>([])
 const page = reactive({ // 分页参数
     total: 0,
     pageNum: 1,
     pageSize: 10
 })
-const buttonProps = ref<ButtonProps>({
+const editButtonProps = ref<ButtonProps>({
     size: "small"
+})
+const delButtonProps = ref<ButtonProps>({
+    size: "small",
+    type: "danger"
 })
 const formData = reactive<Category>({})
 const formItems = ref([
@@ -133,6 +146,16 @@ onMounted(() => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .icon-list {
+                display: flex;
+            }
+        }
     }
 }
 </style>

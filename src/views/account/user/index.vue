@@ -1,23 +1,28 @@
 <template>
-    <div class="page">
+    <div ref="divRef" class="page">
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset" :search-list="searchList"
             :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData" :page="page" slot-header="header"
             @current-page="getUserListData" @page-size="getUserListData">
             <template #header>
-                <DialogButton @submit="handleAdd" @closed="clearData" @click="isUsername = false">
-                    新增角色
-                    <template #content>
-                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
-                            <template #upload="{ model }">
-                                <!-- 头像上传 -->
-                                <Upload v-model="model.avatar" :props="uploadProps" tip="建议尺寸1:1" 
-                                :width="100"
-                                :height="100" />
-                            </template>
-                        </DynamicForm>
-                    </template>
-                </DialogButton>
+                <div class="table-header">
+                    <DialogButton permission="user:add" @submit="handleAdd" @closed="clearData" @click="isUsername = false">
+                        新增角色
+                        <template #content>
+                            <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
+                                <template #upload="{ model }">
+                                    <Upload v-model="model.avatar" :props="uploadProps" tip="建议尺寸1:1"
+                                        :width="100" :height="100" />
+                                </template>
+                            </DynamicForm>
+                        </template>
+                    </DialogButton>
+                    <div class="icon-list">
+                        <DataRefresh @click="getUserListData" />
+                        <FullScreenPage :target-ref="divRef" />
+                        <ExcelExport :table-data="tableData" />
+                    </div>
+                </div>
             </template>
             <!-- 自定义列内容 -->
             <template #username="{ row }">
@@ -31,21 +36,20 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton @click="getData(row)" @closed="clearData">
+                <DialogButton permission="user:edit" @click="getData(row)" @closed="clearData" :button-props="editButtinProps">
                     编辑
                     <template #content>
                         <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
                             <template #upload="{ model }">
-                                <!-- 头像上传 -->
                                 <Upload v-model="model.avatar" :props="uploadProps" tip="建议尺寸1:1" width="100px"
                                     height="100px" />
                             </template>
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <ElButton size="small" type="danger">
+                <DialogButton permission="user:delete" :button-props="delButtonProps">
                     删除
-                </ElButton>
+                </DialogButton>
             </template>
         </PageTable>
     </div>
@@ -54,6 +58,7 @@
 <script setup lang='ts'>
 import { UserService } from "@/api/userApi"
 import { useUserStore } from "@/store/modules/user"
+import { type ButtonProps } from "element-plus"
 type User = Api.User.UserInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 type Query = {
@@ -61,6 +66,7 @@ type Query = {
     nickname?: string
 }
 const formRef = ref()
+const divRef = ref<HTMLElement | null>(null)
 const userStore = useUserStore()
 const { accessToken } = userStore
 const query = reactive<Query>({})
@@ -76,6 +82,13 @@ const page = reactive({ // 分页参数
     total: 0,
     pageNum: 1,
     pageSize: 10
+})
+const editButtinProps = ref<ButtonProps>({
+    size: "small",
+})
+const delButtonProps = ref<ButtonProps>({
+    size: "small",
+    type: "danger"
 })
 /** 新增/编辑 表单配置 */
 const formItems = computed(() => [
@@ -236,6 +249,16 @@ onMounted(() => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .icon-list {
+                display: flex;
+            }
+        }
     }
 }
 

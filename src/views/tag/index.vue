@@ -1,5 +1,5 @@
 <template>
-    <div class="page">
+    <div ref="divRef" class="page">
         <!-- 搜索栏 -->
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset" :search-list="searchList"
             :keyword="query" />
@@ -7,18 +7,25 @@
             @current-page="getTagListData" @page-size="getTagListData">
             <!-- 自定义头部 -->
             <template #header>
-                <DialogButton @submit="handleAdd" @closed="clearData">
-                    <SvgIcon icon="mdi:add">New Tag</SvgIcon>
-                    <template #content>
-                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
-                            <template #colorSlot>
-                                <div style="margin-left: 10px;">
-                                    {{ formData.color || "暂无" }}
-                                </div>
-                            </template>
-                        </DynamicForm>
-                    </template>
-                </DialogButton>
+                <div class="table-header">
+                    <DialogButton permission="tag:add" @submit="handleAdd" @closed="clearData">
+                        新增标签
+                        <template #content>
+                            <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
+                                <template #colorSlot>
+                                    <div style="margin-left: 10px;">
+                                        {{ formData.color || "暂无" }}
+                                    </div>
+                                </template>
+                            </DynamicForm>
+                        </template>
+                    </DialogButton>
+                    <div class="icon-list">
+                        <DataRefresh @click="getTagListData" />
+                        <FullScreenPage :target-ref="divRef" />
+                        <ExcelExport :table-data="tableData" />
+                    </div>
+                </div>
             </template>
             <template #color="{ row }">
                 <div style="display: flex; gap: 5px;">
@@ -37,8 +44,8 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton :button-props="buttonProps" :dialog-props="dialogProps" @click="getData(row)"
-                    @submit="handleUpdate" @closed="clearData">
+                <DialogButton permission="tag:edit" :button-props="editButtonProps" :dialog-props="dialogProps"
+                    @click="getData(row)" @submit="handleUpdate" @closed="clearData">
                     编辑
                     <template #content>
                         <DynamicForm v-model="formData" :form-items="formItems">
@@ -50,9 +57,9 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <ElButton size="small" type="danger" @click="handleDel(row)">
+                <DialogButton type="button" permission="tag:del" @click="handleDel(row)" :button-props="delButtonProps">
                     删除
-                </ElButton>
+                </DialogButton>
             </template>
         </PageTable>
     </div>
@@ -65,6 +72,7 @@ import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps, type Dialo
 type Tag = Api.Tag.TagInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 const formRef = ref()
+const divRef = ref<HTMLElement | null>(null)
 const query = reactive<Tag>({})
 const page = reactive({ // 分页参数
     total: 0,
@@ -83,6 +91,13 @@ const columns = ref([
     { prop: 'createTime', label: '创建时间', minWidth: '150' },
     { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
 ])
+const editButtonProps = ref<ButtonProps>({
+    size: "small"
+})
+const delButtonProps = ref<ButtonProps>({
+    size: "small",
+    type: "danger"
+})
 const formItems = ref([
     {
         type: 'Input',
@@ -211,6 +226,16 @@ onMounted(() => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .icon-list {
+                display: flex;
+            }
+        }
     }
 }
 </style>

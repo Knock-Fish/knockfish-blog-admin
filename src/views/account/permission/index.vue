@@ -6,7 +6,7 @@
         <!-- 权限树表格 -->
         <ElCard class="table" shadow="never">
             <template #header>
-                <DialogButton @click="handleClick" @submit="handleAdd"
+                <DialogButton permission="permission:add" @click="handleClick" @submit="handleAdd"
                     @open="clearData">
                     新增权限
                     <template #content>
@@ -50,7 +50,7 @@
                         <span class="node-id">ID: {{ data.permissionId }}</span>
                         <!-- 操作按钮 -->
                         <div class="node-actions">
-                            <DialogButton :button-props="buttonProps"
+                            <DialogButton permission="permission:edit" :button-props="editButtonProps"
                                 @click="getData(data)" @closed="clearData">
                                 <SvgIcon icon="mdi:file-edit-outline">
                                     编辑
@@ -77,11 +77,11 @@
                                     </DynamicForm>
                                 </template>
                             </DialogButton>
-                            <ElButton type="danger" link size="small">
+                            <DialogButton type="button" permission="permission:delete" :button-props="delButtonProps">
                                 <SvgIcon icon="mdi:delete-outline">
                                     删除
                                 </SvgIcon>
-                            </ElButton>
+                            </DialogButton>
                         </div>
                     </div>
                 </template>
@@ -118,10 +118,15 @@ const formData = reactive<Permission>({
     keepAlive: 0,
     status: 'ENABLE'
 })
-const buttonProps = ref<ButtonProps>({
+const editButtonProps = ref<ButtonProps>({
     size: 'small',
     link: true,
     type: 'primary'
+})
+const delButtonProps = ref<ButtonProps>({
+    size: 'small',
+    link: true,
+    type: 'danger'
 })
 // 树形配置
 const treeProps = {

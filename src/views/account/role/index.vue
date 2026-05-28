@@ -1,5 +1,5 @@
 <template>
-    <div class="page">
+    <div ref="divRef" class="page">
         <!-- 搜索栏 -->
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
@@ -7,17 +7,23 @@
             :page="page" slot-header="header" @current-page="getRoleListData"
             @page-size="getRoleListData">
             <template #header>
-                <DialogButton @submit="handleAdd">
-                    新增角色
-                    <template #content>
-                        <DynamicForm v-model="formData"
-                            :form-items="formItems" />
-                    </template>
-                </DialogButton>
+                <div class="table-header">
+                    <DialogButton permission="role:add" @submit="handleAdd">
+                        新增角色
+                        <template #content>
+                            <DynamicForm v-model="formData"
+                                :form-items="formItems" />
+                        </template>
+                    </DialogButton>
+                    <div class="icon-list">
+                        <DataRefresh @click="getRoleListData" />
+                        <FullScreenPage :target-ref="divRef" />
+                        <ExcelExport :table-data="tableData" />
+                    </div>
+                </div>
             </template>
             <template #permission="{ row }">
-                <DialogButton :button-props="permissionButtonProps"
-                    :dialog-props="dialogProps"
+                <DialogButton permission="role:edit" :button-props="permissionButtonProps"
                     @open="handleOpenPermission(row)"
                     @closed="clearPermissionIds" @submit="handleSubmit">
                     <span class="permissionText">
@@ -29,6 +35,7 @@
                         <ElScrollbar height="300px">
                             <ElTree :data="treeData" node-key="permissionId"
                                 :props="treeProps" show-checkbox
+                                :check-strictly="true"
                                 ref="permissionTreeRef"
                                 @check="handleTreeCheck">
                                 <template #default="{ node, data }">
@@ -46,16 +53,16 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton :button-props="buttonProps" @click="getData(row)">
+                <DialogButton permission="role:edit" :button-props="editButtonProps" @click="getData(row)">
                     编辑
                     <template #content>
                         <DynamicForm v-model="formData"
                             :form-items="formItems" />
                     </template>
                 </DialogButton>
-                <ElButton size="small" type="danger">
+                <DialogButton type="button" permission="role:delete" :button-props="delButtonProps">
                     删除
-                </ElButton>
+                </DialogButton>
             </template>
         </PageTable>
     </div>
@@ -70,6 +77,7 @@ type Role = Api.Role.RoleInfo
 type Permission = Api.Permission.PermissionInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 const query = ref({})
+const divRef = ref<HTMLElement | null>(null)
 const tableData = ref<Role[]>([])
 const permissionTreeRef = ref()
 const currentCheckedIds = ref<number[]>([])
@@ -118,6 +126,7 @@ const handleOpenPermission = async (row: Role) => {
     // 获取当前角色的权限ID列表
     const data = await PermissionService.getRolePermissionIds(row.roleId)
     selectPermissionIds.value = data.list
+    console.log(selectPermissionIds.value)
 
     // 重要：同时更新 currentCheckedIds
     // 因为勾选的ID就是当前角色拥有的权限ID
@@ -168,11 +177,12 @@ const permissionButtonProps = ref<ButtonProps>({
     size: "small",
     link: true
 })
-const buttonProps = ref<ButtonProps>({
+const editButtonProps = ref<ButtonProps>({
     size: "small",
 })
-const dialogProps = ref<DialogProps>({
-
+const delButtonProps =  ref<ButtonProps>({
+    size: "small",
+    type: "danger"
 })
 const columns = ref([
     { type: 'index', label: '序号' },
@@ -274,6 +284,16 @@ onMounted(() => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
+
+        .table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            .icon-list {
+                display: flex;
+            }
+        }
     }
 
     .permissionText {
