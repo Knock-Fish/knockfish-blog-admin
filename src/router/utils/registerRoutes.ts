@@ -16,7 +16,6 @@ export async function registerDynamicRoutes(router: Router, routes: AppRouteReco
         const url = `../../views${route.component}/index.vue`
         route.component = modules[url]
 
-
       if (route.children && route.children.length > 0) {
         // 先注册父路由（挂到 Layout 下）
         router.addRoute(route as RouteRecordRaw)

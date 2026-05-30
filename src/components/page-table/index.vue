@@ -3,18 +3,19 @@
         <template #header v-if="slotHeader">
             <slot :name="slotHeader"></slot>
         </template>
-        <ElTable :data="tableData" height="100%">
+        <ElTable :data="tableData" height="100%" v-on="componentsEmit">
             <template v-for="item in columns" :key="item.prop">
                 <!-- 选择列 -->
-                <ElTableColumn v-if="item.type === 'selection'"
-                    type="selection" min-width="40" />
+                <ElTableColumn v-if="item.type === 'selection'" type="selection" />
 
                 <!-- 序号列 -->
                 <ElTableColumn v-else-if="item.type === 'index'" type="index"
                     :width="item.width || '80'" :label="item.label || '序号'" />
 
                 <!-- 普通列 -->
-                <ElTableColumn v-else-if="!item.permission" :prop="item.prop" :label="item.label" :show-overflow-tooltip="item.showOverflowTooltip"
+                <ElTableColumn v-else-if="!item.permission" :prop="item.prop"
+                    :label="item.label"
+                    :show-overflow-tooltip="item.showOverflowTooltip"
                     :width="item.width" :min-width="item.minWidth"
                     :align="item.align || 'left'" :fixed="item.fixed"
                     :formatter="item.formatter">
@@ -26,15 +27,14 @@
             </template>
         </ElTable>
         <template #footer>
-            <div
+            <div v-if="pagination"
                 style="display: flex; justify-content: center; align-items: center;">
-                <el-pagination background layout="prev, pager, next"
-                    :total="page.total" 
-                    v-model:page-size="page.pageSize"
+                <ElPagination background layout="prev, pager, next"
+                    :total="page.total" v-model:page-size="page.pageSize"
                     v-model:current-page="page.pageNum"
                     @update:current-page="handleCurrentPageChange"
                     @update:page-size="handlePageSizeChange">
-                </el-pagination>
+                </ElPagination>
             </div>
         </template>
     </ElCard>
@@ -55,7 +55,7 @@ interface TableColumn {
     align?: string  // 'left' | 'center' | 'right'
     showOverflowTooltip?: boolean
     formatter?: Function
-    permission?:boolean
+    permission?: boolean
 }
 interface TableData {
     [key: string]: any
@@ -63,6 +63,7 @@ interface TableData {
 const porps = withDefaults(defineProps<{
     columns: TableColumn[]
     tableData: TableData[]
+    pagination?: boolean    // 是否开启分页
     slotHeader?: string
     page?: {
         total?: number
@@ -75,7 +76,13 @@ const porps = withDefaults(defineProps<{
 const emit = defineEmits<{
     (e: 'currentPage', page: number): void
     (e: 'pageSize', size: number): void
+    (e: 'row-click', row: any, column: any, event: MouseEvent): void
 }>()
+const componentsEmit = computed(() => {
+  return {
+    rowClick: (row: any, column: any, event: MouseEvent) => emit('row-click', row, column, event)
+  }
+})
 /** 更新当前页面 */
 const handleCurrentPageChange = (newPage: number): void => {
     porps.page.pageNum = newPage
@@ -91,7 +98,7 @@ const handlePageSizeChange = (newSize: number): void => {
 
 <style lang="scss" scoped>
 .card-tag {
-    padding: 0 10px;
+    /* padding: 0 10px; */
     border-radius: 10px;
     transition: none;
 

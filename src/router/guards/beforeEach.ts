@@ -57,7 +57,7 @@ async function handleRouterGuard(
 
     // 处理根路径跳转到首页
     if (userStore.isLogin && to.path === '/') {
-        return RoutesAlias.Dashboard
+        return RoutesAlias.Workbench
     }
 
     return true
@@ -87,7 +87,7 @@ async function handleDynamicRoutes(
         // 注册动态路由
         isRouteRegistered.value = true // 标记为已注册
         // 确保重定向的目标路径是已注册的路由
-        const targetPath = to.matched.length > 0 ? to.path : RoutesAlias.Dashboard
+        const targetPath = to.matched.length > 0 ? to.path : RoutesAlias.Workbench
         return { ...to, path: targetPath, replace: true }
     }
     return true

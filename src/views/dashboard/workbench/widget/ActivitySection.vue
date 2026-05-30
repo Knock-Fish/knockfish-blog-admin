@@ -7,15 +7,22 @@
             <ElButton type="text" class="more-btn">查看全部</ElButton>
         </div>
         <div class="activity-list">
-            <div class="activity-item" v-for="(activity, index) in activities" :key="index">
-                <div class="activity-icon" :class="activity.type">
-                    <SvgIcon :icon="activity.icon" />
-                </div>
-                <div class="activity-content">
-                    <p class="activity-desc">{{ activity.description }}</p>
-                    <p class="activity-time">{{ activity.time }}</p>
-                </div>
-            </div>
+            <ElTimeline>
+                <ElTimelineItem :timestamp="activity.time"
+                    v-for="(activity, index) in activities" :key="index"
+                    placement="top">
+                    <div class="activity-item">
+                        <div class="activity-icon" :class="activity.type">
+                            <SvgIcon :icon="activity.icon" />
+                        </div>
+                        <div class="activity-content">
+                            <p class="activity-desc">{{ activity.description }}
+                            </p>
+                            <p class="activity-time">{{ activity.time }}</p>
+                        </div>
+                    </div>
+                </ElTimelineItem>
+            </ElTimeline>
         </div>
     </div>
 </template>
@@ -51,16 +58,20 @@ const activities = ref([
         icon: 'mdi:settings',
         description: '系统配置已更新',
         time: '2小时前'
-    }
+    },
 ])
 </script>
 
 <style lang="scss" scoped>
 .activity-section {
+    box-sizing: border-box;
     background: var(--card-color);
+    height: 505px;
     border-radius: 12px;
     padding: 15px;
     border: 1px solid var(--border-color);
+    overflow-y: auto;
+    scrollbar-width: none;
 }
 
 .section-header {
@@ -82,17 +93,20 @@ const activities = ref([
 }
 
 .activity-list {
+    margin-top: 20px;
+    :deep(.el-timeline){
+        padding-left: 0;
+    }
     .activity-item {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px 0;
-        border-bottom: 1px solid var(--border-color);
+        /* border-bottom: 1px solid var(--border-color); */
 
 
         .activity-icon {
-            width: 36px;
-            height: 36px;
+            width: 35px;
+            height: 35px;
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -119,14 +133,14 @@ const activities = ref([
             flex: 1;
 
             .activity-desc {
-                font-size: 14px;
+                font-size: 13px;
                 color: var(--text-color);
                 margin: 0;
                 margin-bottom: 4px;
             }
 
             .activity-time {
-                font-size: 12px;
+                font-size: 11px;
                 color: var(--text-color-secondary);
                 margin: 0;
             }

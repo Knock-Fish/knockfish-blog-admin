@@ -10,7 +10,8 @@
                 </ElInput>
             </ElCol>
             <ElCol :span="1.5">
-                <DialogButton type="button" permission="article:add" @click="handleAdd">
+                <DialogButton type="button" permission="article:add"
+                    @click="handleAdd">
                     新增文章
                 </DialogButton>
             </ElCol>
@@ -109,7 +110,6 @@ const handleDel = async (row: Article) => {
         ElMessage.warning('无效的文章ID')
         return
     }
-
     try {
         await ElMessageBox.confirm('确定要删除该文章吗？删除后无法恢复！', '警告', {
             confirmButtonText: '确定删除',

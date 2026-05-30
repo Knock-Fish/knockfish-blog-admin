@@ -7,7 +7,8 @@ export const RoutesAlias = {
     Layout : '/', // 布局容器
     Login : '/login',   // 登录
     Setting: '/setting',   // 系统设置
-    Dashboard : '/dashboard',   // 仪表盘
+    Workbench : '/dashboard/workbench',   // 工作台
+    Overview: '/dashboard/overview',    // 分析页
     Article : '/article',
     Editor : '/editor/:id', // 编辑
     Publish : '/publish',   // 发布
@@ -18,7 +19,9 @@ export const RoutesAlias = {
     Archive : '/archive',    // 归档
     Link : '/link',  // 友链
     FileList: '/file-list', // 文件
-    User: '/account/user',
+    FileDetail: '/file-detail', // 文件详情
+    User: '/account/user',  // 用户
+    Role: '/account/role',  // 角色
     Permission: '/account/permission',   // 权限
     Exception404 : '/404',   // 404
 } as const

@@ -166,11 +166,11 @@
                         </div>
                         <div class="draft-info">
                             <div class="draft-title">{{ draft.title || '无标题草稿'
-                                }}</div>
+                            }}</div>
                             <div class="draft-desc">{{ (draft.description ||
                                 '暂无摘要').slice(0, 80) }}</div>
                             <div class="draft-time">🕒 更新于 {{ draft.updatedTime
-                            }}</div>
+                                }}</div>
                         </div>
                         <div class="draft-actions">
                             <ElButton text type="danger" size="small"
@@ -227,9 +227,9 @@ const tagList = ref<Tag[]>([])  // 存储所有标签
 const selectTagList = ref<Tag[]>([])    // 存储已选择的标签
 const tagTemp = ref<Tag[]>([])  // 存储临时已选择的标签
 const originImageList = ref<string[]>([])     // 存储编辑文章的原始图片url
-// const editorImageList = ref<string[]>([])    // 存储编辑器的所有图片url
 const uploadImageList = ref<string[]>([])    // 存储上传的图片url
 const hasUnsavedChanges = ref(false)    // 标记是否有未保存的修改
+const tempCoverList = ref<string[]>([])
 const draftCount = ref<number>(0)
 const draftList = ref<Article[]>([])
 const draftLoaded = ref<boolean>(false)
@@ -410,7 +410,7 @@ const saveOrPublish = async () => {
     // 获取旧图片url的key
     let urlKey = new URL(originalData.value.cover).pathname
     // 删除旧图片
-    R2FileService.delR2File(urlKey)
+    R2FileService.delR2File({key: urlKey})
     // 保存成功后同步快照
     originalData.value = {
         title: formData.title,
@@ -432,6 +432,9 @@ const handlePublish = async () => {
     formData.status = 'PUBLISH'
     await saveOrPublish()
     delImages()
+    if (tempCoverList.value.length > 0) {
+        R2FileService.batchDelR2File(tempCoverList.value)
+    }
     onBack()
 }
 /** 加载标签 */
@@ -500,9 +503,8 @@ const uploadProps = ref<Record<string, any>>({
 /** 封面上传成功的回调函数 */
 const handleSuccess = (response: any, file: UploadFile) => {
     // 获取旧图片url的key
-    let urlKey = new URL(formData.cover).pathname
-    // 删除旧图片
-    R2FileService.delR2File(urlKey)
+    let urlKey = response.data.key
+    tempCoverList.value.push(urlKey)
     console.log("上传成功！", response, file)
     console.log("图片地址：", formData.cover)
 }
@@ -595,6 +597,10 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
     delImages()
+    if (tempCoverList.value.length != 0) {
+        // R2FileService.batchDelR2File({keys: tempCoverList.value})
+        
+    }
 })
 </script>
 

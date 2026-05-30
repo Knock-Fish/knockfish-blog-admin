@@ -71,7 +71,8 @@ service.interceptors.response.use(
 async function request<T = any>(config: AxiosRequestConfig): Promise<T> {
     // 对 POST | PUT  请求特殊处理
     if (config.method?.toUpperCase() === 'POST' ||
-        config.method?.toUpperCase() === 'PUT') {
+        config.method?.toUpperCase() === 'PUT' ||
+         config.method?.toUpperCase() === 'DELETE') {
         if (config.params && !config.data) {
             config.data = config.params
             config.params = undefined
