@@ -40,11 +40,10 @@ const stats = ref([
 <style lang="scss" scoped>
 .stats-card {
     overflow: hidden;
-    margin-bottom: 15px;
-
+    height: 100%;
     .stats-grid {
         display: flex;
-        gap: 16px;
+        gap: 10px;
         height: 100%;
 
         .stat-item {

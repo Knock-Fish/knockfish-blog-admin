@@ -17,8 +17,7 @@
                     :label="item.label"
                     :show-overflow-tooltip="item.showOverflowTooltip"
                     :width="item.width" :min-width="item.minWidth"
-                    :align="item.align || 'left'" :fixed="item.fixed"
-                    :formatter="item.formatter">
+                    :align="item.align || 'left'" :fixed="item.fixed">
                     <!-- 自定义列内容 -->
                     <template #default="scope" v-if="item.slot">
                         <slot :name="item.slot" :row="scope.row"></slot>
@@ -54,7 +53,6 @@ interface TableColumn {
     fixed?: string | boolean    // 'left' | 'right'
     align?: string  // 'left' | 'center' | 'right'
     showOverflowTooltip?: boolean
-    formatter?: Function
     permission?: boolean
 }
 interface TableData {
@@ -71,7 +69,8 @@ const porps = withDefaults(defineProps<{
         pageSize: number
     }
 }>(), {
-    page: () => ({ total: 0, pageNum: 1, pageSize: 10 })
+    page: () => ({ total: 0, pageNum: 1, pageSize: 10 }),
+    pagination: true
 })
 const emit = defineEmits<{
     (e: 'currentPage', page: number): void

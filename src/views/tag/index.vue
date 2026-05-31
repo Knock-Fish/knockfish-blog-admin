@@ -57,7 +57,7 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <DialogButton type="button" permission="tag:del" @click="handleDel(row)" :button-props="delButtonProps">
+                <DialogButton type="button" permission="tag:delete" @click="handleDel(row)" :button-props="delButtonProps">
                     删除
                 </DialogButton>
             </template>

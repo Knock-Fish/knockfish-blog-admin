@@ -84,8 +84,7 @@ onUnmounted(() => {
     border: 1px solid var(--border-color);
     border-radius: 7px;
     color: var(--text-color);
-    margin-bottom: 15px;
-    padding: 15px 20px;
+    padding: 0 20px;
 
     .greeting-section {
         display: flex;

@@ -1,5 +1,5 @@
 <template>
-    <div class="chart">
+    <div class="article-chart">
         <VChart :option="articleOption" autoresize />
     </div>
 </template>
@@ -12,6 +12,13 @@ const articleOption = {
     tooltip: { trigger: "axis" },
     xAxis: { data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"] },
     yAxis: { type: "value" },
+    grid: {
+        top: 35,      // 顶边几乎贴死
+        left: 20,     // 左边极少
+        right: 20,    // 右边极少
+        bottom: 15,   // 底边极少
+        containLabel: true
+    },
     series: [{
         type: "line",
         smooth: true,
@@ -31,9 +38,9 @@ const articleOption = {
 </script>
 
 <style lang="scss" scoped>
-.chart {
+.article-chart{
     width: 100%;
-    height: 100%;
+    height: 400px;
     @include card()
 }
 </style>

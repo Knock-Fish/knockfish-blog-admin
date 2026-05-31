@@ -95,7 +95,7 @@ const lineOption = ref({
 
     .chart-list {
         display: flex;
-        gap: 15px;
+        gap: 10px;
         width: 100%;
         box-sizing: border-box;
         margin-top: 15px;
@@ -117,7 +117,7 @@ const lineOption = ref({
         display: flex;
         width: 100%;
         margin-top: 15px;
-        gap: 15px;
+        gap: 10px;
 
         .article-latest {
             flex: 0.7;

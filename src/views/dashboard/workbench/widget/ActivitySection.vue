@@ -66,7 +66,7 @@ const activities = ref([
 .activity-section {
     box-sizing: border-box;
     background: var(--card-color);
-    height: 505px;
+    height: 557px;
     border-radius: 12px;
     padding: 15px;
     border: 1px solid var(--border-color);

@@ -13,52 +13,35 @@
             </div>
 
             <template v-else-if="file">
-                <div class="file-card">
-                    <div class="file-icon-wrapper">
-                        <SvgIcon :icon="getFileIcon(file?.key)" size="64px" class="file-icon" />
-                    </div>
-                    
-                    <div class="file-info">
-                        <h2 class="file-name">{{ getFileName(file?.key) }}</h2>
-                        <div class="file-meta">
-                            <span class="meta-item">
-                                <SvgIcon icon="mdi:folder-outline" size="16px" />
-                                {{ file?.sizeFormat || '-' }}
-                            </span>
-                            <span class="meta-item">
-                                <SvgIcon icon="mdi:clock-outline" size="16px" />
-                                {{ dayjs(file?.lastModified).format('YYYY-MM-DD HH:mm:ss') }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="info-section">
                     <h3 class="section-title">文件信息</h3>
                     <div class="info-grid">
                         <div class="info-item">
                             <span class="info-label">路径</span>
-                            <span class="info-value path-value">{{ file?.key }}</span>
+                            <span class="info-value path-value">{{ file?.key
+                                }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">文件大小</span>
-                            <span class="info-value">{{ file?.sizeFormat || '-' }}</span>
+                            <span class="info-value">{{ file?.sizeFormat || '-'
+                                }}</span>
                         </div>
                         <div class="info-item">
-                            <span class="info-label">最后修改</span>
-                            <span class="info-value">{{ dayjs(file?.lastModified).format('YYYY-MM-DD HH:mm:ss') }}</span>
+                            <span class="info-label">创建日期</span>
+                            <span class="info-value">{{
+                                dayjs(file?.lastModified).format('YYYY-MM-DDHH:mm:ss') }}</span>
                         </div>
                         <div class="info-item full-width">
                             <span class="info-label">URL</span>
                             <div class="url-wrapper">
-                                <span class="info-value url-value">{{ file?.url }}</span>
-                                <ElButton 
-                                    size="small" 
-                                    @click="copyUrl"
-                                    :disabled="!file?.url"
-                                >
-                                    <SvgIcon v-if="!copied" icon="mdi:content-copy" size="14px" />
-                                    <SvgIcon v-else icon="mdi:check" size="14px" />
+                                <span class="info-value url-value">{{ file?.url
+                                    }}</span>
+                                <ElButton size="small" @click="copyUrl"
+                                    :disabled="!file?.url">
+                                    <SvgIcon v-if="!copied"
+                                        icon="mdi:content-copy" size="14px" />
+                                    <SvgIcon v-else icon="mdi:check"
+                                        size="14px" />
                                     {{ copied ? '已复制' : '复制' }}
                                 </ElButton>
                             </div>
@@ -69,14 +52,11 @@
                 <div v-if="file?.url" class="preview-section">
                     <h3 class="section-title">文件预览</h3>
                     <div class="preview-wrapper">
-                        <img 
-                            v-if="isImageFile(file?.key)" 
-                            :src="file?.url" 
-                            :alt="file?.key"
-                            class="preview-image"
-                        />
+                        <img v-if="isImageFile(file?.key)" :src="file?.url"
+                            :alt="file?.key" class="preview-image" />
                         <div v-else class="preview-placeholder">
-                            <SvgIcon :icon="getFileIcon(file?.key)" size="48px" />
+                            <SvgIcon :icon="getFileIcon(file?.key)"
+                                size="48px" />
                             <span>暂无预览</span>
                         </div>
                     </div>
@@ -115,15 +95,10 @@ const getFileByKey = async () => {
     loading.value = false
 }
 
-const getFileName = (key?: string) => {
-    if (!key) return '-'
-    return key.split('/').pop() || key
-}
-
 const getFileIcon = (key?: string) => {
     if (!key) return 'mdi:file-outline'
     const ext = key.split('.').pop()?.toLowerCase() || ''
-    
+
     const iconMap: Record<string, string> = {
         jpg: 'mdi:file-image',
         jpeg: 'mdi:file-image',
@@ -146,7 +121,7 @@ const getFileIcon = (key?: string) => {
         txt: 'mdi:file-document-outline',
         md: 'mdi:language-markdown'
     }
-    
+
     return iconMap[ext] || 'mdi:file-outline'
 }
 
@@ -181,7 +156,7 @@ onMounted(() => {
 }
 
 .detail-container {
-    max-width: 900px;
+    width: 100%;
     margin: 0 auto;
 }
 
@@ -193,59 +168,6 @@ onMounted(() => {
     background: var(--card-color);
     border-radius: 8px;
     padding: 20px;
-}
-
-.file-card {
-    background: var(--card-color);
-    border-radius: 12px;
-    padding: 24px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 20px;
-    border: 1px solid var(--border-color);
-}
-
-.file-icon-wrapper {
-    width: 100px;
-    height: 100px;
-    background: var(--hover-bg-color);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.file-icon {
-    color: var(--primary-color);
-}
-
-.file-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.file-name {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text-color);
-    margin: 0 0 12px 0;
-    word-break: break-all;
-}
-
-.file-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    color: var(--text-color-secondary);
 }
 
 .info-section,

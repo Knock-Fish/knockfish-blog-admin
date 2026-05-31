@@ -1,20 +1,19 @@
 <template>
     <div class="workbench">
         <div class="header-section">
-            <HeaderCard />
-            <StatsCard />
+            <HeaderCard style="flex: 1;"/>
+            <StatsCard style="flex: 1;"/>
         </div>
         <div class="section">
             <div class="left-section">
+                <ChartArticle />
                 <div class="activity">
-                    <div style="flex: 1;">
-                        <ChartArticle />
-                    </div>
-                    <ActivitySection style="flex: 0.5;"/>
+                    <ActivitySection style="flex: 0.8;" />
+                    <TodoList style="flex: 1;" />
                 </div>
-                <TodoList />
             </div>
             <div class="right-section">
+                <PieChart />
                 <QuickActions />
                 <QuickLinks />
             </div>
@@ -30,75 +29,76 @@ import QuickLinks from './widget/QuickLinks.vue'
 import StatsCard from './widget/StatsCard.vue'
 import TodoList from './widget/TodoList.vue'
 import ChartArticle from './widget/ChartArticle.vue'
+import PieChart from "./widget/PieChart.vue"
 </script>
 
 <style lang="scss" scoped>
 .workbench {
     box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 
     .header-section {
+        box-sizing: border-box;
+        height: 95px;
         display: flex;
-        gap: 15px;
+        gap: 10px;
 
-        .header-card {
-            flex: 1;
-        }
-
-        .stats-card {
-            flex: 1;
-        }
-
-        @media screen and (max-width: $screen-larger) {
-            gap: 0;
+        @media screen and (max-width: 1024px) {
+            height: 100%;
             flex-direction: column;
         }
     }
 
-
     .section {
         display: flex;
-        gap: 15px;
-
-        @media screen and (max-width: $screen-medium) {
-            flex-direction: column;
-        }
+        gap: 10px;
+        width: 100%;
 
         .left-section {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            flex: 1;
-            gap: 15px;
+            gap: 10px;
+            min-width: 0;
 
             .activity {
                 display: flex;
-                gap: 15px;
+                gap: 10px;
+
+                @media screen and (max-width: 768px) {
+                    flex-direction: column;
+                }
             }
         }
 
         .right-section {
+            // flex: 0.4;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            flex: 0.4;
+            gap: 10px;
+        }
 
-            @media screen and (max-width: $screen-larger) {
+        /* 小屏幕自动垂直排列 */
+        @media screen and (max-width: 1024px) {
+            flex-direction: column;
+
+            .left-section,
+            .right-section {
+                flex: 1;
+                width: 100%;
+            }
+
+            .right-section {
                 flex: 1;
             }
         }
     }
 
-    @media screen and (max-width: $screen-small) {
+    @media screen and (max-width: 768px) {
         padding: 10px;
-
-        .section {
-            flex-direction: column;
-        }
-    }
-}
-
-@media (max-width: 1024px) {
-    .workbench {
-        padding: 15px;
     }
 }
 </style>
