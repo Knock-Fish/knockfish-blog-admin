@@ -3,6 +3,18 @@
 .editor {
     max-width: 1000px;
     margin: 0 auto;
+    .btn-dropdown{
+        display: none;
+    }
+    @media screen and (max-width: 600px) {
+        .btn-dropdown{
+            display: block;
+        }
+        .btn-list{
+            display: none;
+        }
+    }
+
 
     .form-content {
         border: 1px solid var(--border-color);

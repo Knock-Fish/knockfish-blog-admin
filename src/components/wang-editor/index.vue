@@ -2,7 +2,7 @@
     <div class="editor-wrapper">
         <Toolbar class="editor-toolbar" :editor="editorRef"
             :defaultConfig="props.toolbarConfig" :mode="props.mode" />
-        <Editor style="height: 500px; overflow-y: hidden;" v-model="modelValue"
+        <Editor style="height: 1000px; overflow-y: hidden;" v-model="modelValue"
             :defaultConfig="props.editorConfig" :mode="mode"
             @onCreated="handleCreated" />
     </div>

@@ -9,7 +9,7 @@ export class ArticleService{
     }
     // 添加文章
     static addArticle(data:Api.Article.ArticleInfo){
-        return request.post({
+        return request.post<number>({
             url:`/api/article`,
             data
         })
