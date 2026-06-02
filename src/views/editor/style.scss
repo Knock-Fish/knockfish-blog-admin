@@ -3,14 +3,17 @@
 .editor {
     max-width: 1000px;
     margin: 0 auto;
-    .btn-dropdown{
+
+    .btn-dropdown {
         display: none;
     }
+
     @media screen and (max-width: 600px) {
-        .btn-dropdown{
+        .btn-dropdown {
             display: block;
         }
-        .btn-list{
+
+        .btn-list {
             display: none;
         }
     }
@@ -173,6 +176,8 @@
                         -webkit-box-orient: vertical;
                         overflow: hidden;
                         word-break: break-all;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
                     }
 
                     .draft-time {
@@ -216,4 +221,59 @@
     background-color: #e6f7ff !important;
     color: #1890ff !important;
     border-color: #91caff !important;
+}
+
+.is-editor {
+    position: relative;
+    background-color: #f5f7fa;
+    border: 1px solid #409eff;
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(64, 158, 255, 0.08);
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    &::before {
+        content: "✎ 正在编辑";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(64, 158, 255, 0.9);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        z-index: 2;
+        pointer-events: none;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+}
+
+.custom-tag-input {
+    width: 150px;
+    /* 控制输入框整体宽度 */
+    height: 24px;
+
+    :deep(.el-color-picker.el-color-picker--small) {
+        .el-color-picker__trigger {
+            border: none !important;
+            background: transparent !important;
+        }
+    }
+}
+
+.custom-tag-input :deep(.el-input__wrapper) {
+    padding-left: 1px;
+    /* 给右侧颜色选择器留出空间 */
 }

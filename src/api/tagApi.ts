@@ -27,7 +27,7 @@ export class TagService {
     }
     // 添加标签信息
     static addTag(data: Api.Tag.TagInfo) {
-        return request.post({
+        return request.post<number>({
             url: "/api/tag",
             data
         })

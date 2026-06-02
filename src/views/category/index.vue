@@ -9,7 +9,8 @@
             <!-- 自定义头部 -->
             <template #header>
                 <div class="table-header">
-                    <DialogButton permission="category:add" @submit="handleAdd" @closed="clearData">
+                    <DialogButton permission="category:add" @submit="handleAdd"
+                        @closed="clearData">
                         新增分类
                         <template #content>
                             <DynamicForm v-model="formData"
@@ -25,10 +26,17 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton permission="category:edit" :button-props="editButtonProps">
+                <DialogButton permission="category:edit"
+                    :button-props="editButtonProps" @click="getData(row)"
+                    @submit="handleUpdate" @closed="clearData">
                     编辑
+                    <template #content>
+                        <DynamicForm v-model="formData"
+                            :form-items="formItems" />
+                    </template>
                 </DialogButton>
-                <DialogButton permission="category:delete" :button-props="delButtonProps">
+                <DialogButton permission="category:delete"
+                    @click="handleDel(row)" :button-props="delButtonProps">
                     删除
                 </DialogButton>
             </template>
@@ -38,7 +46,7 @@
 
 <script setup lang='ts'>
 import { CategoryService } from '@/api/categoryApi'
-import { ElMessage, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
+import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
 type Category = Api.Category.CategoryInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 const query = reactive<Category>({})
@@ -66,9 +74,6 @@ const formItems = ref([
         slot: "ico",
         props: {
             placeholder: '请输入分类名称',
-            style: {
-                width: '80%'
-            }
         },
         rules: {
             required: true,
@@ -100,6 +105,42 @@ const handleAdd = async () => {
         type: 'success',
     })
     getCategoryListData()
+}
+const handleDel = async (row: Category) => {
+    if (!row.categoryId) {
+        ElMessage.warning('无效的标签ID')
+        return
+    }
+    try {
+        await ElMessageBox.confirm('确定要删除该文章吗？删除后无法恢复！', '警告', {
+            confirmButtonText: '确定删除',
+            cancelButtonText: '取消',
+            type: 'warning',
+            appendTo: document.body,
+        })
+
+        // 确认后才执行
+        await CategoryService.delCategory(row.categoryId)
+        ElMessage.success('删除成功')
+        getCategoryListData()
+
+    } catch (error) {
+        ElMessage.info('已取消')
+    }
+}
+/** 编辑 */
+const handleUpdate = async () => {
+    await CategoryService.updateCategory(formData)
+    ElMessage({
+        message: '编辑成功',
+        type: 'success',
+    })
+    getCategoryListData()
+}
+/** 编辑前获取数据 */
+const getData = (row: Category) => {
+    const { categoryId, categoryName } = row
+    Object.assign(formData, { categoryId, categoryName })
 }
 const clearData = () => {
     // 清空formData数据

@@ -55,15 +55,6 @@ defineExpose({
     border: var(--border-color);
     border-radius: 6px;
     overflow: hidden;
-
-    // :deep(.w-e-text-container),
-    // :deep(.w-e-bar) {
-    //     background-color: var(--card-color);
-    //     color: var(--text-color);
-    // }
-
-    // :deep(.w-e-bar-divider) {
-    //     background-color: var(--border-color);
-    // }
+    z-index: 10000;
 }
 </style>

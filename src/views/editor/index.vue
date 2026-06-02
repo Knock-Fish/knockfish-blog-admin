@@ -131,10 +131,23 @@
                         </ElPopover>
                     </div>
                     <div>
-                        <ElInput v-if="inputVisible" ref="InputRef"
-                            v-model="inputValue" class="w-20" size="small"
-                            @keyup.enter="handleInputConfirm"
-                            @blur="handleInputConfirm" />
+                        <div v-if="inputVisible">
+                            <ElInput class="custom-tag-input" ref="InputRef"
+                                v-model="tag.tagName" size="small"
+                                @keyup.enter="handleInputConfirm">
+                                <template #prefix>
+                                    <ElColorPicker v-model="tag.color"
+                                        @click.stop @mousedown.stop
+                                        size="small" />
+                                </template>
+                                <template #append>
+                                    <ElButton size="small"
+                                        @click="handleInputConfirm">添加
+                                    </ElButton>
+                                </template>
+                            </ElInput>
+
+                        </div>
                         <ElButton v-else class="button-new-tag" size="small"
                             @click="showInput">
                             + New Tag
@@ -186,6 +199,7 @@
                 <div v-else class="draft-list">
                     <div v-for="draft in draftList" :key="draft.articleId"
                         class="draft-item"
+                        :class="{ 'is-editor': formData.articleId == draft.articleId }"
                         @click.stop="handleSelectDraft(draft)">
                         <div class="draft-cover">
                             <img v-if="draft.cover" :src="draft.cover"
@@ -249,19 +263,23 @@ const { accessToken } = userStore
 const query = reactive<Tag>({})    // 搜索关键词
 const inputVisible = ref<boolean>(false)
 const drawer = ref<boolean>(false)
-const inputValue = ref<string>('')
+const tag = reactive<Tag>({
+    tagName: '',
+    color: '#f4f4f5'
+})
 const InputRef = ref<InputInstance>()
 const tagList = ref<Tag[]>([])  // 存储所有标签
 const selectTagList = ref<Tag[]>([])    // 存储已选择的标签
 const tagTemp = ref<Tag[]>([])  // 存储临时已选择的标签
 const originImageList = ref<string[]>([])     // 存储编辑文章的原始图片url
 const uploadImageList = ref<string[]>([])    // 存储上传的图片url
-const hasUnsavedChanges = ref(false)    // 标记是否有未保存的修改
 const tempCoverList = ref<string[]>([]) // 记录已上传的封面
 const draftCount = ref<number>(0)   // 草稿数量
 const draftList = ref<Article[]>([])    // 草稿列表
 const draftLoaded = ref<boolean>(false) // 草稿是否已经加载
 const tagLoaded = ref<boolean>(false)   // 标签数据是否已经加载过（用于缓存）
+// const hasUnsavedChanges = ref(false)    // 标记是否有未保存的修改
+const hasUnsavedChanges = computed(() => !_.isEqual(originalData, formData))
 // 分页参数
 const page = reactive({
     total: 0,
@@ -278,11 +296,11 @@ const formData = reactive<Article>({
     tags: []
 })
 // 原始表单数据
-const originalData = ref<Article>({
+const originalData = reactive<Article>({
     title: "",
     cover: "",
     description: "",
-    content: "",
+    content: '<p><br></p>',
     status: 'DRAFT',
     tags: []
 })
@@ -298,7 +316,8 @@ const toolbarConfig = ref({
         'bulletedList', 'numberedList', 'todo', '|',
         'insertLink', 'insertImage', 'uploadImage', 'insertVideo', 'uploadVideo', '|',
         'insertTable', 'codeBlock', '|',
-        'undo', 'redo', 'clearStyle'
+        'undo', 'redo', 'clearStyle',
+        'fullScreen'
     ],
     // 将弹窗添加到body，避免被容器遮挡
     modalAppendToBody: true
@@ -306,6 +325,7 @@ const toolbarConfig = ref({
 /** 编辑器配置 */
 const editorConfig = ref({
     placeholder: '请输入内容...',
+
     MENU_CONF: {
         insertImage: {
             // 插入图片后的回调
@@ -353,16 +373,9 @@ const saveOrPublish = async () => {
         ElMessage.success('提交成功')
     }
     // 每次新增/更新保存当前快照
-    originalData.value = {
-        title: formData.title,
-        cover: formData.cover,
-        description: formData.description,
-        content: formData.content,
-        status: formData.status,
-        tags: formData.tags ? [...formData.tags] : []
-    }
+    Object.assign(originalData, _.cloneDeep(formData))
     // 清除脏标记
-    hasUnsavedChanges.value = false
+    // hasUnsavedChanges.value = false
 }
 /** 加载文章 */
 const loadArticle = async (articleId: number) => {
@@ -371,28 +384,11 @@ const loadArticle = async (articleId: number) => {
         articleId
     )
     // 将数据赋值到表单
-    Object.assign(formData, {
-        ...article,
-        description: article.description || ''
-    })
+    Object.assign(formData, { ...article, })
     // 清空当前选择的标签项
     selectTagList.value = []
     // 清空当前临时选择的标签项
     tagTemp.value = []
-    await nextTick()
-    // 将表单的数据保存为原始数据
-    originalData.value = {
-        title: formData.title,
-        cover: formData.cover,
-        description: formData.description,
-        content: formData.content,
-        status: formData.status,
-        tags: formData.tags ? [...formData.tags] : []
-    }
-    // 获取编辑器的所有图片
-    const imageElements = wangEditorRef.value?.getElemsByType('image')
-    // 存储文章内容初始图片
-    originImageList.value = _.map(imageElements, 'src')
     if (article.tagIds && article.tagNames) {
         const tagIdArr = article.tagIds.split(',')
         const tagNameArr = article.tagNames.split(',')
@@ -409,6 +405,13 @@ const loadArticle = async (articleId: number) => {
         tagTemp.value = [...tagList] // 同步弹窗选中
         formData.tags = tagList.map(t => t.tagId!) // 提交用的ID数组
     }
+    // 将表单的数据保存为原始数据
+    _.assign(originalData, _.cloneDeep(formData))
+    await nextTick()
+    // 获取编辑器的所有图片
+    const imageElements = wangEditorRef.value?.getElemsByType('image')
+    // 存储文章内容初始图片
+    originImageList.value = _.map(imageElements, 'src')
     ElMessage.success('加载文章成功')
 }
 /** 返回上一级路由 */
@@ -416,24 +419,17 @@ const onBack = () => {
     router.back()
 }
 /** 对比数据是否有变化 */
-const checkDirty = () => {
-    const orig = originalData.value
-    const cur = formData
-    hasUnsavedChanges.value =
-        orig.title !== cur.title ||
-        orig.cover !== cur.cover ||
-        orig.description !== cur.description ||
-        orig.content !== cur.content ||
-        orig.status !== cur.status ||
-        JSON.stringify(orig.tags) !== JSON.stringify(cur.tags)
-}
+// const checkDirty = () => {
+//     const isEqual = _.isEqual(originalData, formData)
+//     console.log(isEqual)
+//     hasUnsavedChanges.value = !isEqual
+// }
 // 监听表单变化
-watch(() => [formData.title, formData.cover, formData.description, formData.content, formData.status, formData.tags],
-    () => checkDirty(),)
+// watch(() => [formData.title, formData.cover, formData.description, formData.content, formData.status, formData.tags],
+//     () => checkDirty(), { deep: true })
 /** 路由离开前拦截 */
 onBeforeRouteLeave((to, from) => {
     if (hasUnsavedChanges.value) {
-        // 关键：直接返回 ElMessageBox.confirm() 这个 Promise
         return ElMessageBox.confirm(
             '当前内容尚未保存，确定要离开吗？未保存的内容将会丢失。',
             '提示',
@@ -484,14 +480,18 @@ const isTagSelected = (tag: Tag) => {
     return tagTemp.value.some(item => item.tagId === tag.tagId)
 }
 /** 新增标签 */
-const handleInputConfirm = () => {
-    if (inputValue.value) {
+const handleInputConfirm = async () => {
+    if (tag.tagName != '' && tag.color != '') {
+        const tagId = await TagService.addTag(tag)
         tagList.value?.push({
-            tagName: inputValue.value
+            tagId,
+            tagName: tag.tagName,
+            color: tag.color
         })
     }
     inputVisible.value = false
-    inputValue.value = ''
+    tag.tagName = ''
+    tag.color = '#f4f4f5'
 }
 /** 删除已选中的临时标签 */
 const handleClose = (tag: Tag) => {
@@ -587,9 +587,15 @@ const getdraftCount = async () => {
 }
 /** 保存草稿 */
 const handleDraft = async () => {
-    draftLoaded.value = false
-    formData.status = 'DRAFT'
-    await saveOrPublish()
+    if (hasUnsavedChanges.value) {
+        draftLoaded.value = false
+        formData.status = 'DRAFT'
+        await saveOrPublish()
+        draftCount.value += 1
+    } else {
+        ElMessage.success('文章已经保存')
+    }
+
 }
 /** 获取10条草稿 */
 const getArticleDraftList = async () => {
@@ -619,10 +625,33 @@ const delArticleDraft = async (article: Article) => {
             type: 'warning',
             appendTo: document.body,
         })
+        if (formData.articleId === article.articleId) {
+            await ElMessageBox.confirm('当前文章正处于编辑，确定要删除该文章吗？', '警告', {
+                confirmButtonText: '确定删除',
+                cancelButtonText: '取消',
+                type: 'warning',
+                appendTo: document.body,
+            })
+            // 清空当前正在编辑的文章
+            formData.articleId = undefined
+            formData.title = ""
+            formData.cover = ""
+            formData.description = ""
+            formData.content = ""
+            formData.status = 'DRAFT'
+            formData.tags = []
+            Object.assign(originalData, _.cloneDeep(formData))
+            selectTagList.value = []
+            tagTemp.value = []
+            router.replace({
+                name: "Publish",
+            })
+        }
 
         // 确认后才执行
         await ArticleService.delArticle(article.articleId)
         ElMessage.success('删除成功')
+        draftCount.value -= 1
         draftLoaded.value = false
         getArticleDraftList()
 
@@ -633,9 +662,9 @@ const delArticleDraft = async (article: Article) => {
 /** 选择草稿进行编辑 */
 const handleSelectDraft = async (draft: Article) => {
     // 检查是否有未保存的内容
-    if (hasUnsavedChanges.value) {
+    if (!_.isEqual(originalData, formData)) {
         try {
-            // 提示用户是否保存当前内容
+            // 提示是否保存当前内容
             await ElMessageBox.confirm(
                 '当前有未保存的内容，是否先保存未草稿？',
                 '提示',
@@ -643,37 +672,58 @@ const handleSelectDraft = async (draft: Article) => {
                     confirmButtonText: '保存当前草稿',
                     cancelButtonText: '不保存，直接打开',
                     type: 'warning',
-                    appendTo: document.body
+                    appendTo: document.body,
+                    distinguishCancelAndClose: true
                 }
             )
-            // 用户选择保存，先保存当前内容
+            // 点击"保存当前草稿"
             await handleDraft()
+            // 保存成功后跳转
+            router.replace({
+                name: "Editor",
+                params: { id: draft.articleId }
+            })
+            drawer.value = false
         } catch (error) {
-            console.log('用户选择不保存当前内容')
+            // 点击"不保存，直接打开"（action === 'cancel'）
+            if (error === 'cancel') {
+                router.replace({
+                    name: "Editor",
+                    params: { id: draft.articleId }
+                })
+                drawer.value = false
+            }
         }
+    } else {
+        router.replace({
+            name: "Editor",
+            params: { id: draft.articleId }
+        })
+        // 关闭抽屉
+        drawer.value = false
     }
-    // 加载选中的草稿数据
-    await loadArticle(Number(draft.articleId))
-    // 关闭抽屉
-    drawer.value = false
 }
 
 onMounted(() => {
     getArticleById()
     getdraftCount()
+
 })
 onBeforeUnmount(() => {
     delImages()
     if (tempCoverList.value.length != 0) {
         R2FileService.batchDelR2File(tempCoverList.value)
-
     }
+})
+watch(() => route.params.id, (newId) => {
+    if (newId) loadArticle(Number(newId))
 })
 </script>
 
 <style lang="scss" scoped>
 @use "./style.scss";
-.wang{
+
+.wang {
     position: fixed;
     left: 0;
     top: 0;
@@ -683,5 +733,31 @@ onBeforeUnmount(() => {
 <style lang="scss">
 .popper-z-index {
     z-index: 10000 !important;
+}
+
+// 强制修复 wangEditor 弹窗位置 - 不加 scoped
+.w-e-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    z-index: 10001 !important;
+}
+
+.w-e-modal-container,
+.w-e-modal-mask {
+    position: fixed !important;
+    z-index: 10000 !important;
+}
+
+// 针对链接插入弹窗
+.w-e-link-dialog,
+.w-e-insert-link-modal,
+.w-e-insert-image-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
 }
 </style>
