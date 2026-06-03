@@ -12,11 +12,26 @@
 import '@wangeditor-next/editor/dist/css/style.css'
 import { Boot } from '@wangeditor-next/editor'
 import markdownModule from '@wangeditor-next/plugin-markdown'
+import '@wangeditor-next/code-highlight'
+import formulaModule from '@wangeditor-next/plugin-formula'                                        // 👈 核心库
+import 'prismjs/themes/prism-tomorrow.css'
+import 'katex/dist/katex.min.css'
+// 按需引入你要的语言
+import 'prismjs/components/prism-typescript'
+import 'prismjs/components/prism-java'
+import 'prismjs/components/prism-python'
+import 'prismjs/components/prism-go'
+import 'prismjs/components/prism-sql'
+import 'prismjs/components/prism-bash'
+import 'prismjs/components/prism-json'
+import 'prismjs/components/prism-yaml'
+
 import type {
     IDomEditor,
     IToolbarConfig,
     IEditorConfig,
 } from '@wangeditor-next/editor'
+
 const modelValue = defineModel<string>({ required: true, default: '' })  // 与父组件双向绑定
 // 必须用 shallowRef，避免 Vue 深度追踪
 const editorRef = shallowRef<IDomEditor>()  // 编辑器实例
@@ -34,6 +49,7 @@ const handleCreated = (editor: IDomEditor) => {
 }
 onMounted(() => {
     Boot.registerModule(markdownModule)
+    Boot.registerModule(formulaModule)
 })
 // 组件销毁时，也及时销毁编辑器
 onBeforeUnmount(() => {

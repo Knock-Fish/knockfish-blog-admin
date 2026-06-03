@@ -308,25 +308,48 @@ const originalData = reactive<Article>({
 /** 工具栏配置 */
 const toolbarConfig = ref({
     toolbarKeys: [
-        'headerSelect', 'blockquote', '|',
+        'headerSelect', 'blockquote', '|', 
         'bold', 'italic', 'underline', 'through', '|',
         'color', 'bgColor', 'fontSize', 'fontFamily', '|',
         'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyJustify', '|',
         'indent', 'delIndent', '|',
         'bulletedList', 'numberedList', 'todo', '|',
         'insertLink', 'insertImage', 'uploadImage', 'insertVideo', 'uploadVideo', '|',
-        'insertTable', 'codeBlock', '|',
+        'insertTable', 'codeBlock', 'code', 'insertFormula', '|',
         'undo', 'redo', 'clearStyle',
         'fullScreen'
     ],
+    hoverbarKeys: {
+        formula: { menuKeys: ['editFormula'] }
+    },
     // 将弹窗添加到body，避免被容器遮挡
     modalAppendToBody: true
 })
 /** 编辑器配置 */
 const editorConfig = ref({
     placeholder: '请输入内容...',
-
+    plugins: ['codeHighlight'],
     MENU_CONF: {
+        codeSelectLang: {
+            codeLangs: [
+                { text: 'JavaScript', value: 'javascript' },
+                { text: 'TypeScript', value: 'typescript' },
+                { text: 'Java', value: 'java' },
+                { text: 'Python', value: 'python' },
+                { text: 'Go', value: 'go' },
+                { text: 'SQL', value: 'sql' },
+                { text: 'Shell', value: 'bash' },
+                { text: 'JSON', value: 'json' },
+                { text: 'YAML', value: 'yaml' },
+                { text: 'Plain Text', value: 'plain' },
+            ]
+        },
+        codeHighlight: {
+            languages: [
+                'javascript', 'typescript', 'java', 'python',
+                'go', 'sql', 'bash', 'json', 'yaml', 'plain'
+            ]
+        },
         insertImage: {
             // 插入图片后的回调
             onInsertedImage: (imgNode: ImageElement) => {
@@ -418,15 +441,27 @@ const loadArticle = async (articleId: number) => {
 const onBack = () => {
     router.back()
 }
-/** 对比数据是否有变化 */
-// const checkDirty = () => {
-//     const isEqual = _.isEqual(originalData, formData)
-//     console.log(isEqual)
-//     hasUnsavedChanges.value = !isEqual
-// }
-// 监听表单变化
-// watch(() => [formData.title, formData.cover, formData.description, formData.content, formData.status, formData.tags],
-//     () => checkDirty(), { deep: true })
+const delCover = () => {
+    if (tempCoverList.value.length != 0) {
+        // 如果封面已经被使用（formData.cover 在 tempCoverList 中）
+        if (formData.cover && tempCoverList.value.includes(formData.cover)) {
+            // 方案1：删除除了当前封面以外的所有临时封面
+            const coverToKeep = formData.cover
+            const coversToDelete = tempCoverList.value.filter(
+                url => url !== coverToKeep
+            )
+            if (coversToDelete.length > 0) {
+                R2FileService.batchDelR2File(coversToDelete)
+            }
+            // 清空数组（保留正在使用的封面）
+            tempCoverList.value = [coverToKeep]
+        } else {
+            // 封面没有被使用，全部删除
+            R2FileService.batchDelR2File(tempCoverList.value)
+            tempCoverList.value = []
+        }
+    }
+}
 /** 路由离开前拦截 */
 onBeforeRouteLeave((to, from) => {
     if (hasUnsavedChanges.value) {
@@ -567,9 +602,7 @@ const handlePublish = async () => {
     formData.status = 'PUBLISH'
     await saveOrPublish()
     delImages()
-    if (tempCoverList.value.length > 0) {
-        R2FileService.batchDelR2File(tempCoverList.value)
-    }
+    delCover()
     onBack()
 }
 /** 组件处于编辑则根据路由参数获取指定文章 */
@@ -709,11 +742,11 @@ onMounted(() => {
     getdraftCount()
 
 })
+
 onBeforeUnmount(() => {
     delImages()
-    if (tempCoverList.value.length != 0) {
-        R2FileService.batchDelR2File(tempCoverList.value)
-    }
+    delCover()
+    
 })
 watch(() => route.params.id, (newId) => {
     if (newId) loadArticle(Number(newId))

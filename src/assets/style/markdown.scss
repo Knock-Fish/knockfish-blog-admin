@@ -358,15 +358,17 @@ $font-color: #24292e;
   margin-left: 0;
 }
 
-.markdown-body code,
+.markdown-body p code,
 .markdown-body pre,
 .markdown-body .line-number {
   font-size: 14px !important;
   border-radius: 8px;
   background-color: #282c34;
+  color: #ffffff;
 }
 
 .dark {
+
   .markdown-body code,
   .markdown-body pre,
   .markdown-body .line-number {
@@ -386,7 +388,7 @@ $font-color: #24292e;
   appearance: none;
 }
 
-.markdown-body :checked + .radio-label {
+.markdown-body :checked+.radio-label {
   position: relative;
   z-index: 1;
   border-color: #0366d6;
@@ -714,11 +716,11 @@ $font-color: #24292e;
   clear: both;
 }
 
-.markdown-body > :first-child {
+.markdown-body> :first-child {
   margin-top: 0 !important;
 }
 
-.markdown-body > :last-child {
+.markdown-body> :last-child {
   margin-bottom: 0 !important;
 }
 
@@ -746,11 +748,11 @@ $font-color: #24292e;
   border: 0;
 }
 
-.markdown-body blockquote > :first-child {
+.markdown-body blockquote> :first-child {
   margin-top: 0;
 }
 
-.markdown-body blockquote > :last-child {
+.markdown-body blockquote> :last-child {
   margin-bottom: 0;
 }
 
@@ -775,11 +777,11 @@ $font-color: #24292e;
   margin-left: 10px;
 }
 
-.markdown-body li > p {
+.markdown-body li>p {
   margin-top: 16px;
 }
 
-.markdown-body li + li {
+.markdown-body li+li {
   margin-top: 0.25em;
 }
 
@@ -821,6 +823,23 @@ $font-color: #24292e;
   border-top: 1px solid #c6cbd1;
 }
 
+.dark .markdown-body table td,
+.dark .markdown-body table th {
+  padding: 6px 13px;
+  color: #cfcfcf;
+  border: 1px solid #1f1f1f;
+}
+
+.dark .markdown-body table tr {
+  background-color: #383838;
+  color: #fff;
+  border-top: 1px solid #c6cbd1;
+}
+
+.dark .markdown-body table tr:nth-child(2n) {
+  background-color: #343434;
+}
+
 .markdown-body table tr:nth-child(2n) {
   background-color: #f6f8fa;
 }
@@ -854,7 +873,7 @@ $font-color: #24292e;
   word-wrap: normal;
 }
 
-.markdown-body pre > code {
+.markdown-body pre>code {
   padding: 0;
   margin: 0;
   font-size: 100%;
@@ -1026,7 +1045,7 @@ $font-color: #24292e;
   list-style-type: none;
 }
 
-.markdown-body .task-list-item + .task-list-item {
+.markdown-body .task-list-item+.task-list-item {
   margin-top: 3px;
 }
 
