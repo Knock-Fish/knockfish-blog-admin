@@ -2,7 +2,7 @@
     <div class="page">
         <FileHeader :breadcrumbs="breadcrumbs" @navigate-to="navigateTo" />
         <PageTable class="table" :pagination="false" :columns="columns"
-            :table-data="tableData" @row-click="handleRowClick">
+            :table-data="tableData" :loading="loading" @row-click="handleRowClick">
             <template #file="{ row }">
                 <div class="col-name">
                     <div class="file-icon">
@@ -37,6 +37,7 @@ interface R2FileTree extends R2File {
 const currentPath = ref('')
 const tableData = ref<R2FileTree[]>([])
 const fileTreeCache = ref<R2FileTree[]>([]) // 缓存用
+const loading = ref(true)
 const router = useRouter()
 const columns = ref([
     { type: 'selection' },
@@ -117,34 +118,39 @@ const findFolderInTree = (key: string, list: R2FileTree[]): R2FileTree | null =>
 }
 
 const getR2FileList = async () => {
-  // 查缓存
-  if (!currentPath.value) {
-    if (fileTreeCache.value.length) {
-      tableData.value = fileTreeCache.value
-      return
+  loading.value = true
+  try {
+    // 查缓存
+    if (!currentPath.value) {
+      if (fileTreeCache.value.length) {
+        tableData.value = fileTreeCache.value
+        return
+      }
+    } else {
+      const folder = findFolderInTree(currentPath.value, fileTreeCache.value)
+      if (folder?.children) {
+        tableData.value = folder.children
+        return
+      }
     }
-  } else {
-    const folder = findFolderInTree(currentPath.value, fileTreeCache.value)
-    if (folder?.children) {
-      tableData.value = folder.children
-      return
+
+    // 请求数据
+    const data = await R2FileService.getR2FilePrefixList({ prefix: currentPath.value })
+    const list = data as R2FileTree[]
+
+    // 存入缓存
+    if (!currentPath.value) {
+      fileTreeCache.value = list
+    } else {
+      const parent = findFolderInTree(currentPath.value, fileTreeCache.value)
+      if (parent) parent.children = list
     }
+
+    // 渲染
+    tableData.value = list
+  } finally {
+    loading.value = false
   }
-
-  // 请求数据
-  const data = await R2FileService.getR2FilePrefixList({ prefix: currentPath.value })
-  const list = data as R2FileTree[]
-
-  // 存入缓存
-  if (!currentPath.value) {
-    fileTreeCache.value = list
-  } else {
-    const parent = findFolderInTree(currentPath.value, fileTreeCache.value)
-    if (parent) parent.children = list
-  }
-
-  // 渲染
-  tableData.value = list
 }
 
 onMounted(() => {

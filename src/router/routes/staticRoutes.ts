@@ -19,7 +19,7 @@ export const staticRoutes: RouteRecordRaw[] = [
     {
         path: RoutesAlias.Exception404,
         name: "Exception404",
-        component: () => import("@views/exception/404.vue")
+        component: () => import("@views/exception/404/index.vue")
     },
     // {
     //     path: '/:pathMatch(.*)*',

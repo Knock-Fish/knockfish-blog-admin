@@ -1,7 +1,24 @@
 <template>
     <div class="detail">
         <div class="article-content">
-            <ArticleDetail :article="article" />
+            <!-- 骨架屏 -->
+            <ElSkeleton v-if="loading" animated :count="1">
+                <template #template>
+                    <div style="padding: 20px;">
+                        <ElSkeletonItem variant="text" style="width: 60%; margin-bottom: 20px;" />
+                        <ElSkeletonItem variant="text" style="width: 40%; margin-bottom: 30px;" />
+                        <ElSkeletonItem variant="rect" style="width: 100%; height: 200px; margin-bottom: 30px;" />
+                        <ElSkeletonItem variant="text" style="width: 100%; margin-bottom: 10px;" />
+                        <ElSkeletonItem variant="text" style="width: 90%; margin-bottom: 10px;" />
+                        <ElSkeletonItem variant="text" style="width: 85%; margin-bottom: 10px;" />
+                        <ElSkeletonItem variant="text" style="width: 95%; margin-bottom: 10px;" />
+                        <ElSkeletonItem variant="text" style="width: 80%;" />
+                    </div>
+                </template>
+            </ElSkeleton>
+            
+            <!-- 文章内容 -->
+            <ArticleDetail v-else :article="article" />
         </div>
         <div class="article-anchor">
             <ElAffix :offset="110">
@@ -28,6 +45,7 @@
 </template>
 
 <script setup lang='ts'>
+import { ElSkeleton, ElSkeletonItem } from 'element-plus'
 import ArticleDetail from './widget/ArticleDetail.vue'
 import AnchorNav from './widget/AnchorNav.vue'
 type Article = Api.Article.ArticleInfo
@@ -37,14 +55,20 @@ const route = useRoute()
 const drawer = ref<boolean>(false)
 const article = ref<Article>()
 const headings = ref<Array<{ id: string, text: string, level: number }>>([])
+const loading = ref(true)
 const { width } = useWindowSize()
 const getArticleById = async () => {
-    if (route.name === 'Detail' && route.params.id) {
-        const articleInfo: Article = await ArticleService.getArticleInfoById(
-            Number(route.params.id)
-        )
-        article.value = articleInfo
-        headings.value = extractHeadingsFromHtml(articleInfo.content)
+    loading.value = true
+    try {
+        if (route.name === 'Detail' && route.params.id) {
+            const articleInfo: Article = await ArticleService.getArticleInfoById(
+                Number(route.params.id)
+            )
+            article.value = articleInfo
+            headings.value = extractHeadingsFromHtml(articleInfo.content)
+        }
+    } finally {
+        loading.value = false
     }
 }
 watch(width, (val) => {

@@ -8,8 +8,45 @@
                 </ElButton>
             </div>
 
+            <!-- 骨架屏 -->
             <div v-if="loading" class="loading-state">
-                <ElSkeleton :rows="5" animated />
+                <div class="skeleton-section">
+                    <ElSkeleton animated :count="1">
+                        <template #template>
+                            <div style="padding: 20px;">
+                                <ElSkeletonItem variant="text" style="width: 120px; margin-bottom: 20px;" />
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
+                                    <div>
+                                        <ElSkeletonItem variant="text" style="width: 40px; margin-bottom: 8px;" />
+                                        <ElSkeletonItem variant="text" style="width: 100%;" />
+                                    </div>
+                                    <div>
+                                        <ElSkeletonItem variant="text" style="width: 40px; margin-bottom: 8px;" />
+                                        <ElSkeletonItem variant="text" style="width: 80%;" />
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 16px;">
+                                    <ElSkeletonItem variant="text" style="width: 40px; margin-bottom: 8px;" />
+                                    <ElSkeletonItem variant="text" style="width: 60%;" />
+                                </div>
+                                <div>
+                                    <ElSkeletonItem variant="text" style="width: 40px; margin-bottom: 8px;" />
+                                    <ElSkeletonItem variant="text" style="width: 100%;" />
+                                </div>
+                            </div>
+                        </template>
+                    </ElSkeleton>
+                </div>
+                <div class="skeleton-section">
+                    <ElSkeleton animated :count="1">
+                        <template #template>
+                            <div style="padding: 20px;">
+                                <ElSkeletonItem variant="text" style="width: 120px; margin-bottom: 20px;" />
+                                <ElSkeletonItem variant="rect" style="width: 100%; height: 300px;" />
+                            </div>
+                        </template>
+                    </ElSkeleton>
+                </div>
             </div>
 
             <template v-else-if="file">
@@ -73,26 +110,29 @@ import { R2FileService } from '@/api/r2FileApi'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 
+import { ElSkeleton, ElSkeletonItem } from 'element-plus'
+
 type R2File = Api.R2File.R2FileInfo
 
 const router = useRouter()
 const route = useRoute()
 const file = ref<R2File>()
-const loading = ref(false)
+const loading = ref(true)
 const copied = ref(false)
 
 const getFileByKey = async () => {
     loading.value = true
-    const key = route.params.key as string
-    if (route.name === 'FileDetail' && key) {
-        try {
+    try {
+        const key = route.params.key as string
+        if (route.name === 'FileDetail' && key) {
             const fileInfo: R2File = await R2FileService.getFileInfo({ key })
             file.value = fileInfo
-        } catch (error) {
-            console.error('获取文件信息失败:', error)
         }
+    } catch (error) {
+        console.error('获取文件信息失败:', error)
+    } finally {
+        loading.value = false
     }
-    loading.value = false
 }
 
 const getFileIcon = (key?: string) => {
@@ -165,9 +205,12 @@ onMounted(() => {
 }
 
 .loading-state {
-    background: var(--card-color);
-    border-radius: 8px;
-    padding: 20px;
+    .skeleton-section {
+        background: var(--card-color);
+        border-radius: 12px;
+        margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+    }
 }
 
 .info-section,

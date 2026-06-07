@@ -27,7 +27,12 @@
                     </template>
                 </DialogButton>
             </template>
-            <ElTree ref="treeRef" :data="treeData" :props="treeProps"
+            
+            <!-- 骨架屏 -->
+            <ElSkeleton v-if="loading" animated :count="8" style="padding: 0 20px;" />
+            
+            <!-- 树形结构 -->
+            <ElTree v-else ref="treeRef" :data="treeData" :props="treeProps"
                 node-key="permissionId"
                 :default-expanded-keys="defaultExpandedKeys"
                 :filter-node-method="filterNode" highlight-current
@@ -92,6 +97,7 @@
 
 <script setup lang='ts'>
 import { ElMessage, ElMessageBox, type ButtonProps, type FormProps } from 'element-plus'
+import { ElSkeleton } from 'element-plus'
 
 type Permission = Api.Permission.PermissionInfo
 defineOptions({ name: 'Permission' })
@@ -101,6 +107,7 @@ const tableData = ref<Permission[]>([])
 const defaultExpandedKeys = ref<number[]>([])
 const isPermissionCode = ref<boolean>(false)
 const query = ref({})
+const loading = ref(true)
 const permissionType = {
     DIRECTORY: '目录',
     MENU: '菜单',
@@ -195,8 +202,13 @@ const handleAdd = async () => {
 
 // 获取权限列表
 const getPermissionListData = async () => {
-    const data = await PermissionService.getPermissionListData()
-    tableData.value = data.list
+    loading.value = true
+    try {
+        const data = await PermissionService.getPermissionListData()
+        tableData.value = data.list
+    } finally {
+        loading.value = false
+    }
 }
 
 // 节点点击

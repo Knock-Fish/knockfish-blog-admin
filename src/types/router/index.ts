@@ -14,8 +14,6 @@ export interface RouteMeta {
     hidden?: number | boolean
     /** 是否缓存 */
     keepAlive?: number | boolean
-    /** 登录认证 */
-    requiresAuth?: boolean
     /** 权限编码 */
     permissionCode?: string
 }

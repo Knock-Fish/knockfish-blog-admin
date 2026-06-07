@@ -43,7 +43,7 @@ const tabItems = ref([
     },
     {
         name: 'blog-setting',
-        label: '博客设置',
+        label: '系统设置',
         current: 'blogSetting',
     },
     {

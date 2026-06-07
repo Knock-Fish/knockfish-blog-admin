@@ -1,7 +1,7 @@
 <!-- setting/widget/BlogSetting.vue -->
 <template>
     <div class="blog-setting">
-        <h3>博客设置</h3>
+        <h3>系统设置</h3>
         <!-- 博客设置内容 -->
         <DynamicForm v-model="formData" :form-items="formItems" :form-props="formProps" :show-submit="true"
             submit-text="保存修改">

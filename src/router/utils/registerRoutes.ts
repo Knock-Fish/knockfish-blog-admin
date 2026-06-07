@@ -1,5 +1,4 @@
-import type { Router } from 'vue-router'
-import type { RouteRecordRaw } from "vue-router"
+import type { Router, RouteRecordRaw } from 'vue-router'
 import { type AppRouteRecord } from '@/types'
 /**
  * 注册异步路由

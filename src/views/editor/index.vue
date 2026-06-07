@@ -55,7 +55,7 @@
             </template>
         </ElPageHeader>
         <div class="form-content">
-            <ElForm :model="formData">
+            <ElForm :model="formData" style="width: 100%;">
                 <div class="form-wrap">
                     <h2>发布设置</h2>
                     <ElFormItem label="标题">
@@ -278,7 +278,6 @@ const draftCount = ref<number>(0)   // 草稿数量
 const draftList = ref<Article[]>([])    // 草稿列表
 const draftLoaded = ref<boolean>(false) // 草稿是否已经加载
 const tagLoaded = ref<boolean>(false)   // 标签数据是否已经加载过（用于缓存）
-// const hasUnsavedChanges = ref(false)    // 标记是否有未保存的修改
 const hasUnsavedChanges = computed(() => !_.isEqual(originalData, formData))
 // 分页参数
 const page = reactive({
@@ -308,14 +307,14 @@ const originalData = reactive<Article>({
 /** 工具栏配置 */
 const toolbarConfig = ref({
     toolbarKeys: [
-        'headerSelect', 'blockquote', '|', 
+        'headerSelect', 'blockquote', '|',
         'bold', 'italic', 'underline', 'through', '|',
         'color', 'bgColor', 'fontSize', 'fontFamily', '|',
         'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyJustify', '|',
         'indent', 'delIndent', '|',
         'bulletedList', 'numberedList', 'todo', '|',
         'insertLink', 'insertImage', 'uploadImage', 'insertVideo', 'uploadVideo', '|',
-        'insertTable', 'codeBlock', 'code', 'insertFormula', '|',
+        'insertTable', 'codeBlock', 'code', '|',
         'undo', 'redo', 'clearStyle',
         'fullScreen'
     ],
@@ -443,10 +442,11 @@ const onBack = () => {
 }
 const delCover = () => {
     if (tempCoverList.value.length != 0) {
+        const coverKey = new URL(formData.cover).pathname.substring(1)
         // 如果封面已经被使用（formData.cover 在 tempCoverList 中）
-        if (formData.cover && tempCoverList.value.includes(formData.cover)) {
-            // 方案1：删除除了当前封面以外的所有临时封面
-            const coverToKeep = formData.cover
+        if (formData.cover && tempCoverList.value.includes(coverKey)) {
+            // 删除除了当前封面以外的所有临时封面
+            const coverToKeep = coverKey
             const coversToDelete = tempCoverList.value.filter(
                 url => url !== coverToKeep
             )
@@ -588,8 +588,9 @@ const delImages = () => {
 }
 /** 封面上传成功的回调函数 */
 const handleSuccess = (response: any, file: UploadFile) => {
-    // 获取旧图片url的key
+    // 获取旧图片url的key，例如：blog/article-image/2026-06/ec018a64-623d-43db-8174-3eb7f330b317.webp
     let urlKey = response.data.key
+    console.log(urlKey)
     tempCoverList.value.push(urlKey)
     console.log("上传成功！", response, file)
     console.log("图片地址：", formData.cover)
@@ -746,7 +747,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
     delImages()
     delCover()
-    
+
 })
 watch(() => route.params.id, (newId) => {
     if (newId) loadArticle(Number(newId))

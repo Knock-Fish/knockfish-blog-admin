@@ -11,27 +11,32 @@
 <script setup lang="ts">
 type PasswordChange = Api.PasswordChange.Change
 import { type FormProps, ElMessage } from "element-plus"
-import { useUserStore } from "@/store/modules/user"
 import { UserService } from "@/api/userApi"
 const formRef = ref()
 const formData = reactive<PasswordChange>({
     oldPassword: '',
-    newPassword: '',
+    password: '',
     confirmPassword: ''
 })
 const handleUpdata = async () => {
-    await UserService.passwordChange(formData)
-    ElMessage.success("修改成功")
-    // 清除表单数据，重置表单校验
-    if (formRef.value) {
+    if (!formRef.value) return
+    
+    try {
+        await formRef.value.validate()
+        await UserService.passwordChange(formData)
+        ElMessage.success("修改成功")
+        // 清除表单数据，重置表单校验
         formRef.value.resetForm()
+    } catch (error) {
+        console.error('修改密码失败:', error)
+        ElMessage.error('修改密码失败，请检查原密码是否正确')
     }
 }
 // 自定义确认密码校验函数
 const validateConfirmPassword = (rule: any, value: string, callback: any) => {
     if (value === '') {
         callback(new Error('请再次输入新密码'))
-    } else if (value !== formData.newPassword) {
+    } else if (value !== formData.password) {
         callback(new Error('两次输入的新密码不一致'))
     } else {
         callback()
@@ -53,7 +58,7 @@ const formItems = ref([
     {
         type: 'Input',
         label: "新密码",
-        prop: 'newPassword',
+        prop: 'password',
         props: {
             type: "password",
             showPassword: true

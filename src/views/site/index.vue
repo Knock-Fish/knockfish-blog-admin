@@ -4,7 +4,7 @@
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData"
-            :page="page" slot-header="header" @current-page="getSiteListData"
+            :page="page" slot-header="header" :loading="loading" @current-page="getSiteListData"
             @page-size="getSiteListData">
             <!-- 自定义头部 -->
             <template #header>
@@ -96,6 +96,7 @@ const query = reactive<Site>({})
 const formRef = ref()
 const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
 const tableData = ref<Site[]>([])
+const loading = ref(true)
 const categoryOptions = ref<CategoryOptions[]>([])
 const loadCategoryOptions = () => {
     CategoryService.getCategoryOptions().then((data) => {
@@ -205,13 +206,18 @@ const columns = ref([
     { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
 ])
 const getSiteListData = async () => {
-    const data: PaginatingParams<Site> = await SiteService.getSiteListData({
-        ...query,
-        pageNum: page.pageNum,  // 当前页码
-        pageSize: page.pageSize,    // 每页条数
-    })
-    tableData.value = data.list
-    page.total = data.total
+    loading.value = true
+    try {
+        const data: PaginatingParams<Site> = await SiteService.getSiteListData({
+            ...query,
+            pageNum: page.pageNum,  // 当前页码
+            pageSize: page.pageSize,    // 每页条数
+        })
+        tableData.value = data.list
+        page.total = data.total
+    } finally {
+        loading.value = false
+    }
 }
 /** 编辑前获取数据 */
 const getData = (row: Site) => {

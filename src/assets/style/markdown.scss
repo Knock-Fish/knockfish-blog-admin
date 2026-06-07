@@ -300,12 +300,17 @@ $font-color: #24292e;
 }
 
 .markdown-body table {
+  width: 100% !important;
+  max-width: 100% !important;
   border-spacing: 0;
   border-collapse: collapse;
 }
 
 .markdown-body td,
 .markdown-body th {
+  width: auto !important;
+  white-space: normal !important;
+  word-break: break-all !important;
   padding: 0;
 }
 

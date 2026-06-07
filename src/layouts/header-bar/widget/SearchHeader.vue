@@ -8,16 +8,16 @@
             Ctrl k
         </div>
     </div>
-    <ElDialog header-class="dialog-header"
+    <ElDialog :header-class="'dialog-header'"
         :header-style="{ paddingBottom: '0', padding: '0' }" style="padding: 0;"
         v-model="dialogVisible" append-to-body :z-index="10001" width="750"
         :fullscreen="width < 750"
         :show-close="false">
         <template #header>
-            <div style="padding: 0; margin: 0;">
+            <div style="padding: 0; margin: 0; width: 100%;">
                 <ElInput
                     ref="searchInputRef"
-                    style="height: 50px;"
+                    style="height: 50px; width: 100%;"
                     v-model="query"
                     placeholder="搜索页面..."
                     @input="handleSearch"

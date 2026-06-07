@@ -3,7 +3,7 @@
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset" :search-list="searchList"
             :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData" :page="page" slot-header="header"
-            @current-page="getUserListData" @page-size="getUserListData">
+            :loading="loading" @current-page="getUserListData" @page-size="getUserListData">
             <template #header>
                 <div class="table-header">
                     <DialogButton permission="user:add" @submit="handleAdd" @closed="clearData" @click="isUsername = false">
@@ -72,6 +72,7 @@ const { accessToken } = userStore
 const query = reactive<Query>({})
 const isUsername = ref<boolean>(false)
 const tableData = ref<User[]>([])
+const loading = ref(true)
 const formData = reactive<User>({
     username: '',
     avatar: '',
@@ -162,13 +163,18 @@ const uploadProps = ref<Record<string, any>>({
     action: import.meta.env.VITE_API_URL + '/api/r2-file'
 })
 const getUserListData = async () => {
-    const data: PaginatingParams<User> = await UserService.getUserListData({
-        ...query,
-        pageNum: page.pageNum,  // 当前页码
-        pageSize: page.pageSize,    // 每页条数
-    })
-    tableData.value = data.list
-    page.total = data.total
+    loading.value = true
+    try {
+        const data: PaginatingParams<User> = await UserService.getUserListData({
+            ...query,
+            pageNum: page.pageNum,  // 当前页码
+            pageSize: page.pageSize,    // 每页条数
+        })
+        tableData.value = data.list
+        page.total = data.total
+    } finally {
+        loading.value = false
+    }
 }
 const handleAdd = () => {
     isUsername.value = false

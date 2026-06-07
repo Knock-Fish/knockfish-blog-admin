@@ -44,7 +44,7 @@ declare namespace Api {
     namespace PasswordChange {
         interface Change {
             oldPassword: string
-            newPassword: string
+            password: string
             confirmPassword: string
         }
     }
@@ -136,7 +136,7 @@ declare namespace Api {
             permissionId: number
             permissionName: string
             permissionCode: string
-            type: "MENU" | "BUTTON" | "API"
+            type: "DIRECTORY" | "MENU" | "BUTTON" | "API"
             parentId: number
             routeName?: string
             path?: string | null
@@ -147,7 +147,7 @@ declare namespace Api {
             sortOrder: number
             createTime?: string
             status: "ENABLE" | "DISABLE"
-            children?: Permission[]
+            children?: PermissionInfo[]
         }
         type PermissionListData = { list: Api.Permission.PermissionInfo[] }
     }

@@ -4,7 +4,7 @@
             <h3 class="section-title">
                 最近动态
             </h3>
-            <ElButton type="text" class="more-btn">查看全部</ElButton>
+            <ElButton link class="more-btn">查看全部</ElButton>
         </div>
         <div class="activity-list">
             <ElTimeline>

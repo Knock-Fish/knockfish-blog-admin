@@ -15,10 +15,6 @@ const permissionDirective: Directive = {
     if (!userPermissions.includes(requiredPermission)) {
       el.parentNode && el.parentNode.removeChild(el)
     }
-  },
-  // 当指令值更新时调用（如权限列表变更）
-  updated(el, binding) {
-    // 同上逻辑，可根据需求优化性能
   }
 }
 

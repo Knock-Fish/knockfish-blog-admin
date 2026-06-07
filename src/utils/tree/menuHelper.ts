@@ -1,19 +1,6 @@
 import { type MenuItem } from "@/types/store/index"
 import { type AppRouteRecord } from '@/types'
 type Permission = Api.Permission.PermissionInfo
-// export interface Permission {
-//   permissionId: number
-//   permissionName: string
-//   permissionCode: string
-//   routeName?: string  // 改为可选
-//   parentId: number
-//   path?: string | null  // 改为可选
-//   icon?: string | null
-//   component?: string | null  // 改为可选
-//   sortOrder: number
-//   status?: 'ENABLE' | 'DISABLE'  // 改为可选
-//   children?: Permission[]
-// }
 
 /**
  * 判断是否为菜单项
@@ -94,7 +81,7 @@ function convertToMenuItem(permissions: Permission[]): AppRouteRecord[] {
       component: permission.component!,
       meta: {
         title: permission.permissionName,
-        permissionCode: permission.permissionCode ,
+        permissionCode: permission.permissionCode,
         icon: permission.icon || undefined,
         hidden: permission.hidden,
         keepAlive: permission.keepAlive
@@ -112,7 +99,7 @@ function convertToMenuItem(permissions: Permission[]): AppRouteRecord[] {
 }
 
 /**
- * 扁平权限数据转菜单树（一站式函数）
+ * 扁平权限数据转菜单树
  */
 export function flatPermissionsToMenuTree(permissions: Permission[]): AppRouteRecord[] {
   return transformPermissionToMenu(permissions)

@@ -11,6 +11,7 @@ const whiteList = ['/login', '/404', '/500']
 /**
  * 设置路由全局前置守卫
  */
+
 export function setupBeforeEachGuard(router: Router): void {
     router.beforeEach(
         async (
@@ -74,6 +75,7 @@ async function handleLoginStatus(
     }
     return true
 }
+
 /** 处理动态路由 */
 async function handleDynamicRoutes(
     to: RouteLocationNormalized,
