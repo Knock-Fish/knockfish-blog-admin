@@ -4,10 +4,9 @@
 import axios from "axios"
 import type { InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from "axios"
 import { ApiStatus } from "./status"
-import { useRouter } from 'vue-router'
+import { router } from '@/router/index'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
-const router = useRouter()
 // 常量定义
 const REQUEST_TIMEOUT = 15000 // 请求超时时间(毫秒)
 const { VITE_API_URL } = import.meta.env
@@ -54,7 +53,21 @@ service.interceptors.response.use(
     (response: AxiosResponse<Api.Http.BaseResponse>) => {
         const res = response.data
         if (res.code !== ApiStatus.success) {
-            return Promise.reject(new Error(res.msg || 'Error'))
+            // 处理业务状态码错误（如 403、500 等业务错误）
+            const errorMsg = res.msg || 'Error'
+            switch (res.code) {
+                case 403:
+                    ElMessage.error('没有权限访问该资源')
+                    router.push('/exception/403')
+                    break
+                case 500:
+                    ElMessage.error('服务器错误，请稍后重试')
+                    router.push('/exception/500')
+                    break
+                default:
+                    ElMessage.error(errorMsg)
+            }
+            return Promise.reject(new Error(errorMsg))
         }
         return res.data
     },
@@ -72,7 +85,7 @@ async function request<T = any>(config: AxiosRequestConfig): Promise<T> {
     // 对 POST | PUT  请求特殊处理
     if (config.method?.toUpperCase() === 'POST' ||
         config.method?.toUpperCase() === 'PUT' ||
-         config.method?.toUpperCase() === 'DELETE') {
+        config.method?.toUpperCase() === 'DELETE') {
         if (config.params && !config.data) {
             config.data = config.params
             config.params = undefined

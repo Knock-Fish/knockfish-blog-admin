@@ -90,6 +90,11 @@ async function handleDynamicRoutes(
         isRouteRegistered.value = true // 标记为已注册
         // 确保重定向的目标路径是已注册的路由
         const targetPath = to.matched.length > 0 ? to.path : RoutesAlias.Workbench
+        router.addRoute({
+            path: '/:pathMatch(.*)*',
+            name: 'NotFound',
+            redirect: RoutesAlias.Exception404
+        })
         return { ...to, path: targetPath, replace: true }
     }
     return true

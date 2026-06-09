@@ -37,8 +37,8 @@ watch(() => route,
 .main {
     box-sizing: border-box;
     // padding-left: v-bind(menuWidth);
-    padding-top: 85px;
-    margin: 20px;
+    padding-top: 95px;
+    // margin: 15px;
     transition: padding-left 0.4s ease;
 }
 

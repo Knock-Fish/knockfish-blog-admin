@@ -60,6 +60,19 @@ declare namespace Api {
         }
         type CategoryListData = Api.Common.PaginatingParams<CategoryInfo>
     }
+    /** 友链类型 */
+    namespace Link {
+        interface LinkInfo {
+            linkId?: number
+            linkName?: string
+            linkUrl?: string
+            description?: string
+            avatar?: string
+            status?: 'HIDE' | 'DISPLAY'
+            createTime?: string
+        }
+        type LinkListData = Api.Common.PaginatingParams<LinkInfo>
+    }
     /** 网站类型 */
     namespace Site {
         interface SiteInfo {

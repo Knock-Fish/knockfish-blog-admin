@@ -1,16 +1,13 @@
 <template>
     <div class="word-cloud-card">
         <h4>博客标签词云</h4>
-        <vue3-word-cloud style=" height: 100%;" :words="words" :color="colorFn"
+        <Vue3WordCloud style=" height: 100%;" :words="words" :color="colorFn"
             font-family="Microsoft YaHei" :show-tooltip="true"
             @word-click="handleWordClick" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import Vue3WordCloud from 'vue3-word-cloud'
-
 // 格式：[文字, 权重]
 const words = ref<[string, number][]>([
     ['Vue3', 10],

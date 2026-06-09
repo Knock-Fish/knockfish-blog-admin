@@ -144,3 +144,38 @@
      margin: 0 !important;
      border-bottom: none !important;
 }
+
+.elx-conversations {
+     .elx-conversations__list {
+          background-color: var(--card-color) !important;
+
+          .elx-conversations__group-title {
+               background-color: transparent;
+          }
+
+          .elx-conversations-item {
+               .elx-conversations-item__label {
+                    color: var(--text-color) !important;
+               }
+
+               &.elx-conversations-item--active {
+                    background-color: var(--border-color);
+               }
+
+               &.elx-conversations-item--menu-opened {
+                    color: var(--text-color);
+               }
+
+               &.elx-conversations-item--hovered {
+                    color: var(--text-color);
+                    background-color: var(--border-color) !important;
+               }
+          }
+     }
+}
+
+.elx-x-sender {
+     .chat-write-input {
+          color: var(--text-color);
+     }
+}

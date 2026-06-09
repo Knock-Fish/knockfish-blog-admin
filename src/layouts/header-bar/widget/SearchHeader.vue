@@ -1,5 +1,6 @@
 <template>
-    <div class="search-input" @click="dialogVisible = !dialogVisible">
+    <div>
+        <div class="search-input" @click="dialogVisible = !dialogVisible">
         <div>
             <SvgIcon icon="mdi:search" color="#78809D" />
             <span>搜索</span>
@@ -72,6 +73,7 @@
             </div>
         </div>
     </ElDialog>
+    </div>
 </template>
 
 <script setup lang='ts'>

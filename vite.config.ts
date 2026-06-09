@@ -53,6 +53,13 @@ export default ({ mode }: { mode: string }) => {
     ],
     server: {
       host: '0.0.0.0',
+      proxy: {
+        '/api': {
+          target: 'http://blog.fishbarn.cn:8081',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, '/api'),
+        }
+      }
     },
     css: {
       preprocessorOptions: {

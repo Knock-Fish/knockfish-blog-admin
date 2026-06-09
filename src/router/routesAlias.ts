@@ -23,7 +23,9 @@ export const RoutesAlias = {
     User: '/account/user',  // 用户
     Role: '/account/role',  // 角色
     Permission: '/account/permission',   // 权限
-    Exception404 : '/404',   // 404
+    Exception404 : '/exception/404',   // 404
+    Exception403 : '/exception/403',   // 403
+    Exception500 : '/exception/500',   // 500
 } as const
 
 // 自动从对象推导出类型

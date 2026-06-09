@@ -92,6 +92,7 @@ const lineOption = ref({
     width: 100%;
     box-sizing: border-box;
     overflow: hidden;
+    margin: 15px;
 
     .chart-list {
         display: flex;

@@ -11,7 +11,6 @@
 <script setup lang='ts'>
 import '@wangeditor-next/editor/dist/css/style.css'
 import { Boot } from '@wangeditor-next/editor'
-import markdownModule from '@wangeditor-next/plugin-markdown'
 import '@wangeditor-next/code-highlight'                                  // 👈 核心库
 
 import type {
@@ -35,9 +34,9 @@ const props = withDefaults(defineProps<Props>(), {
 const handleCreated = (editor: IDomEditor) => {
     editorRef.value = editor // 记录editor
 }
-onMounted(() => {
-    Boot.registerModule(markdownModule)
-})
+// onMounted(() => {
+//     Boot.registerModule(markdownModule)
+// })
 // 组件销毁时，也及时销毁编辑器
 onBeforeUnmount(() => {
     const editor = editorRef.value

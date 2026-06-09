@@ -17,12 +17,24 @@ export const staticRoutes: RouteRecordRaw[] = [
         component: () => import("@views/login/index.vue")
     },
     {
-        path: RoutesAlias.Exception404,
-        name: "Exception404",
-        component: () => import("@views/exception/404/index.vue")
+        path: '/exception',
+        name: 'Exception',
+        children: [
+            {
+                path: RoutesAlias.Exception404,
+                name: "Exception404",
+                component: () => import("@views/exception/404/index.vue")
+            },
+            {
+                path: RoutesAlias.Exception403,
+                name: "Exception403",
+                component: () => import("@views/exception/403/index.vue")
+            },
+            {
+                path: RoutesAlias.Exception500,
+                name: "Exception500",
+                component: () => import("@views/exception/500/index.vue")
+            },
+        ]
     },
-    // {
-    //     path: '/:pathMatch(.*)*',
-    //     redirect: '/login'
-    // }
 ]

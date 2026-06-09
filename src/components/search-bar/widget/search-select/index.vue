@@ -1,22 +1,22 @@
 <template>
-    <el-select
+    <ElSelect
         v-model="value"
         v-bind="config"
         clearable
     >
-        <el-option
+        <ElOption
             v-for="item in options"
             :key="item.value"
             :label="item.label"
             :value="item.value"
         />
-    </el-select>
+    </ElSelect>
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive } from "vue"
 // 定义组件值类型
-export type ValueVO = unknown
+type ValueVO =  string | number
+import { ElOption} from "element-plus"
 interface OptionItem {
     value: ValueVO
     label: string
@@ -35,7 +35,7 @@ const emit = defineEmits<{
 }>()
 // 计算属性:处理v-model双向绑定
 const value = computed({
-    get: () => prop.value as string,
+    get: () => prop.value,
     set: (value: ValueVO) => emit('update:value', value)
 })
 // 合并默认配置和自定义配置

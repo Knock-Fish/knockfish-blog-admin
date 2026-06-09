@@ -39,6 +39,7 @@ import PieChart from "./widget/PieChart.vue"
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin: 15px;
 
     .header-section {
         box-sizing: border-box;
