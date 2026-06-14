@@ -1,14 +1,15 @@
 @use '@style/variables.scss' as *;
 
 .editor {
-    max-width: 1000px;
-    margin: 0 auto;
+    // max-width: 1000px;
+    margin: 15px;
 
     .btn-dropdown {
         display: none;
     }
 
     @media screen and (max-width: 600px) {
+        margin: 15px;
         .btn-dropdown {
             display: block;
         }
@@ -45,11 +46,6 @@
 
                 @media screen and (max-width: $screen-medium) {
                     display: block;
-                }
-
-                .right-section {
-                    // flex: 1;
-                    /* 自动占满剩余所有宽度 */
                 }
             }
 

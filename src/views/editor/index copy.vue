@@ -102,6 +102,9 @@
                     </ElFormItem>
                     <h2>文章内容</h2>
                 </div>
+                <!-- <WangEditor ref="wangEditorRef" v-model="formData.content"
+                    :toolbar-config="toolbarConfig"
+                    :editor-config="editorConfig" /> -->
                 <MdEditor v-model="formData.content"
                     @onUploadImg="onUploadImg" />
             </ElForm>
@@ -239,16 +242,25 @@ import { useRouter, useRoute, onBeforeRouteLeave } from "vue-router"
 import { useUserStore } from "@/store/modules/user"
 import { ArticleService } from "@/api/articleApi"
 import { R2FileService } from "@/api/r2FileApi"
-import { getMdImagePathKeys } from "@utils/url/urlKey"
-import { MdEditor } from 'md-editor-v3'
-import 'md-editor-v3/lib/style.css'
+// import MdEdit from "./widget/MdEdit.vue"
+import { MdEditor } from 'md-editor-v3';
+import 'md-editor-v3/lib/style.css';
+import type { IEditorConfig, IDomEditor, SlateElement } from '@wangeditor-next/editor'
 import _ from 'lodash'
 type Article = Api.Article.ArticleInfo
+type InsertFnType = (url: string) => void
 type ArticleDetail = Api.Article.ArticleDetailInfo
 type Tag = Api.Tag.TagInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
+type ImageElement = SlateElement & {
+    src: string
+    alt: string
+    url: string
+    href: string
+}
 const router = useRouter()
 const route = useRoute()
+const wangEditorRef = ref<IDomEditor>() // 获取富文本编辑器组件实例
 const dialogVisible = ref<boolean>(false)
 const userStore = useUserStore()
 const { accessToken } = userStore
@@ -304,8 +316,8 @@ const onUploadImg = async (files: File[], callback: (urls: string[]) => void) =>
             return
         }
         // 执行单图上传，拿到图片在线地址
-        const { url, key } = await R2FileService.uploadR2File({ file })
-        uploadImageList.value.push(...new Set([...uploadImageList.value, key]))
+        const url = await R2FileService.uploadR2File({ file })
+        console.log(url)
         callback([url])
     } catch (err) {
         console.error('图片上传失败：', err)
@@ -314,6 +326,76 @@ const onUploadImg = async (files: File[], callback: (urls: string[]) => void) =>
     }
 }
 //------------------------------ 配置 -----------------------------------
+/** 工具栏配置 */
+const toolbarConfig = ref({
+    toolbarKeys: [
+        'headerSelect', 'blockquote', '|',
+        'bold', 'italic', 'underline', 'through', '|',
+        'color', 'bgColor', 'fontSize', 'fontFamily', '|',
+        'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyJustify', '|',
+        'indent', 'delIndent', '|',
+        'bulletedList', 'numberedList', 'todo', '|',
+        'insertLink', 'insertImage', 'uploadImage', 'insertVideo', 'uploadVideo', '|',
+        'insertTable', 'codeBlock', 'code', '|',
+        'undo', 'redo', 'clearStyle',
+        'fullScreen'
+    ],
+    hoverbarKeys: {
+        formula: { menuKeys: ['editFormula'] }
+    },
+    // 将弹窗添加到body，避免被容器遮挡
+    modalAppendToBody: true
+})
+/** 编辑器配置 */
+const editorConfig = ref({
+    placeholder: '请输入内容...',
+    plugins: ['codeHighlight'],
+    MENU_CONF: {
+        codeSelectLang: {
+            codeLangs: [
+                { text: 'JavaScript', value: 'javascript' },
+                { text: 'TypeScript', value: 'typescript' },
+                { text: 'Java', value: 'java' },
+                { text: 'Python', value: 'python' },
+                { text: 'Go', value: 'go' },
+                { text: 'SQL', value: 'sql' },
+                { text: 'Shell', value: 'bash' },
+                { text: 'JSON', value: 'json' },
+                { text: 'YAML', value: 'yaml' },
+                { text: 'Plain Text', value: 'plain' },
+            ]
+        },
+        codeHighlight: {
+            languages: [
+                'javascript', 'typescript', 'java', 'python',
+                'go', 'sql', 'bash', 'json', 'yaml', 'plain'
+            ]
+        },
+        insertImage: {
+            // 插入图片后的回调
+            onInsertedImage: (imgNode: ImageElement) => {
+                // console.log('图片已插入', imgNode.src)
+                // editorImageList.value.push(imgNode.src)
+                // 可在此进行自定义逻辑，如图片统计等
+            }
+        },
+        uploadImage: {
+            // server: import.meta.env.VITE_API_URL + '/api/r2-file',
+            server: '/api/r2-file',
+            methods: "POST",
+            fieldName: "file",
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+            // 自定义插入图片
+            customInsert(res: any, insertFn: InsertFnType) {
+                const { url } = res.data
+                uploadImageList.value.push(url)
+                insertFn(url)
+            },
+        }
+    }
+})
 /** 上传组件配置 */
 const uploadProps = ref<Record<string, any>>({
     showFileList: false,
@@ -372,7 +454,10 @@ const loadArticle = async (articleId: number) => {
     // 将表单的数据保存为原始数据
     _.assign(originalData, _.cloneDeep(formData))
     await nextTick()
-    originImageList.value = article.urlKeys
+    // 获取编辑器的所有图片
+    const imageElements = wangEditorRef.value?.getElemsByType('image')
+    // 存储文章内容初始图片
+    originImageList.value = _.map(imageElements, 'src')
     ElMessage.success('加载文章成功')
 }
 /** 返回上一级路由 */
@@ -513,24 +598,29 @@ const loadMore = async (direction: ScrollbarDirection) => {
 //------------------------------ 图片操作 -----------------------------------
 /** 删除未使用的图片 */
 const delImages = () => {
-    const coverKey = new URL(formData.cover).pathname.substring(1) ?? ''
-    // 获取封面和编辑器的所有图片url
-    const editorImages = [...getMdImagePathKeys(formData.content), coverKey]
+    // 获取编辑器的所有图片url
+    const editorImages = wangEditorRef.value?.getElemsByType('image')
+        .map((item: any) => item.src).filter(Boolean) || []
     // 合并初始图片和已上传图片
     const allImages = [...originImageList.value, ...uploadImageList.value]
     // 找出未使用的图片
     const unused = allImages.filter(url => !editorImages.includes(url))
     if (unused.length > 0) {
         // 批量删除未使用的图片
-        R2FileService.batchDelR2File(unused)
+        R2FileService.batchDelR2File(getUrlKey(unused))
     }
 }
 /** 封面上传成功的回调函数 */
 const handleSuccess = (response: any, file: UploadFile) => {
     // 获取旧图片url的key，例如：blog/article-image/2026-06/ec018a64-623d-43db-8174-3eb7f330b317.webp
     let urlKey = response.data.key
+    console.log(urlKey)
     tempCoverList.value.push(urlKey)
+    console.log("上传成功！", response, file)
+    console.log("图片地址：", formData.cover)
 }
+/** 提取图片 key */
+const getUrlKey = (urlList: string[]) => urlList.map((url: string) => new URL(url).pathname)
 //------------------------------ 发布/编辑文章 -----------------------------------
 /** 发布文章 */
 const handlePublish = async () => {
@@ -703,5 +793,31 @@ watch(() => route.params.id, (newId) => {
 <style lang="scss">
 .popper-z-index {
     z-index: 10000 !important;
+}
+
+// 强制修复 wangEditor 弹窗位置 - 不加 scoped
+.w-e-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    z-index: 10001 !important;
+}
+
+.w-e-modal-container,
+.w-e-modal-mask {
+    position: fixed !important;
+    z-index: 10000 !important;
+}
+
+// 针对链接插入弹窗
+.w-e-link-dialog,
+.w-e-insert-link-modal,
+.w-e-insert-image-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
 }
 </style>

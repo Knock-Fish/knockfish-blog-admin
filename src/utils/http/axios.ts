@@ -1,5 +1,3 @@
-// 导出 axios 普通请求
-// export * from "./axios";
 /**
  * 基于 Axios 的封装，支持 RESTful 风格的 API 调用（GET/POST/PUT/DELETE）
  */
@@ -104,5 +102,3 @@ const api = {
 }
 
 export default api
-// 导出流式请求
-export * from "./stream";

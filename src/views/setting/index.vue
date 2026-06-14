@@ -61,7 +61,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .setting-page {
     box-sizing: border-box;
-    margin: auto;
+    margin: 15px auto;
     width: 80%;
     padding: 20px;
     background-color: var(--header-color);

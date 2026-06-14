@@ -35,7 +35,6 @@ import PieChart from "./widget/PieChart.vue"
 <style lang="scss" scoped>
 .workbench {
     box-sizing: border-box;
-    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 10px;

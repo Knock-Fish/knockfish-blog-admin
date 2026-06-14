@@ -1,4 +1,4 @@
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import Components from 'unplugin-vue-components/vite'
@@ -71,20 +71,20 @@ export default ({ mode }: { mode: string }) => {
 
     resolve: {
       alias: {
-        "@": resovePath("src"),
-        "@views": resovePath("src/views"),
-        "@comps": resovePath("src/components"),
-        "@imgs": resovePath("src/assets/imgs"),
-        "@icons": resovePath("src/assets/icons"),
-        "@utils": resovePath("src/utils"),
-        "@plugins": resovePath("src/plugins"),
-        "@style": resovePath("src/assets/style"),
-        "@fonts": resovePath("src/assets/fonts"),
-        "@api": resovePath("src/api")
+        "@": resolvePath("src"),
+        "@views": resolvePath("src/views"),
+        "@comps": resolvePath("src/components"),
+        "@imgs": resolvePath("src/assets/imgs"),
+        "@icons": resolvePath("src/assets/icons"),
+        "@utils": resolvePath("src/utils"),
+        "@plugins": resolvePath("src/plugins"),
+        "@style": resolvePath("src/assets/style"),
+        "@fonts": resolvePath("src/assets/fonts"),
+        "@api": resolvePath("src/api")
       },
     },
   })
 }
-function resovePath(paths: string) {
+function resolvePath(paths: string) {
   return fileURLToPath(new URL(paths, import.meta.url))
 }

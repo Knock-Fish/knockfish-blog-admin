@@ -14,6 +14,13 @@ export class SiteService {
             data
         })
     }
+    // 编辑站点
+    static updateSite(data: Api.Site.SiteInfo){
+        return request.put({
+            url: "/api/site",
+            data
+        })
+    }
     // 删除站点
     static delSite(params: number){
         return request.del({

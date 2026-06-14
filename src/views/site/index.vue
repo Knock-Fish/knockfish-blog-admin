@@ -4,12 +4,13 @@
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData"
-            :page="page" slot-header="header" :loading="loading" @current-page="getSiteListData"
-            @page-size="getSiteListData">
+            :page="page" slot-header="header" :loading="loading"
+            @current-page="getSiteListData" @page-size="getSiteListData">
             <!-- 自定义头部 -->
             <template #header>
                 <div class="table-header">
-                    <DialogButton permission="site:add" @submit="handleAdd" @closed="clearData">
+                    <DialogButton permission="site:add" @submit="handleAdd"
+                        @closed="clearData">
                         新增站点
                         <template #content>
                             <DynamicForm v-model="formData"
@@ -53,8 +54,9 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton permission="site:edit" :button-props="editButtonProps"
-                    :dialog-props="dialogProps" @click="getData(row)"
+                <DialogButton permission="site:edit"
+                    :button-props="editButtonProps" :dialog-props="dialogProps"
+                    @submit="handleUpdate" @click="getData(row)"
                     @closed="clearData">
                     编辑
                     <template #content>
@@ -73,7 +75,8 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <DialogButton permission="site:delete" :button-props="delButtonProps" @click="handleDel(row)">
+                <DialogButton permission="site:delete"
+                    :button-props="delButtonProps" @click="handleDel(row)">
                     删除
                 </DialogButton>
             </template>
@@ -89,7 +92,7 @@ type Site = Api.Site.SiteInfo
 type Category = Api.Category.CategoryInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 interface CategoryOptions {
-    value: Category['categoryId']
+    value: Category['categoryId'] | string  // 兼容 number 和 string
     label: Category['categoryName']
 }
 const query = reactive<Site>({})
@@ -98,31 +101,29 @@ const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
 const tableData = ref<Site[]>([])
 const loading = ref(true)
 const categoryOptions = ref<CategoryOptions[]>([])
+
+// 加载分类选项
 const loadCategoryOptions = () => {
     CategoryService.getCategoryOptions().then((data) => {
         categoryOptions.value = data.map(item => ({
-            value: item.categoryId,
+            value: String(item.categoryId),  // 统一转换为字符串
             label: item.categoryName
         }))
     })
 }
-const page = reactive({ // 分页参数
-    total: 0,
-    pageNum: 1,
-    pageSize: 10
-})
-const formData = reactive<Site>({})
-const editButtonProps = ref<ButtonProps>({
-    size: "small"
-})
-const delButtonProps = ref<ButtonProps>({
-    size: "small",
-    type: "danger"
-})
-const dialogProps = ref<DialogProps>({
-    title: "站点信息"
-})
-const formItems = computed(() => [
+
+interface FormItemConfig {
+    type: string
+    prop?: string
+    label?: string
+    slot?: string
+    props?: Record<string, any>
+    rules?: Record<string, any>
+    options?: any[]
+}
+
+// 基础表单配置
+const baseFormItems: FormItemConfig[] = [
     {
         type: 'Input',
         prop: 'siteName',
@@ -186,20 +187,48 @@ const formItems = computed(() => [
         label: '所属分类',
         props: {
             placeholder: '请选择分类',
-            multiple: false,
+            clearable: true,
         },
-        options: categoryOptions.value,
         rules: {
             required: true,
             message: '类别不能为空',
-            trigger: 'blur'
+            trigger: 'change'
         }
     }
-])
+]
+
+// 动态表单配置
+const formItems = computed<FormItemConfig[]>(() => {
+    return baseFormItems.map(item => {
+        if (item.prop === 'categoryId') {
+            return {
+                ...item,
+                options: categoryOptions.value
+            }
+        }
+        return item
+    })
+})
+
+const page = reactive({ // 分页参数
+    total: 0,
+    pageNum: 1,
+    pageSize: 10
+})
+const formData = reactive<Record<string, any>>({})
+const editButtonProps = ref<ButtonProps>({
+    size: "small"
+})
+const delButtonProps = ref<ButtonProps>({
+    size: "small",
+    type: "danger"
+})
+const dialogProps = ref<DialogProps>({
+    title: "站点信息"
+})
 const columns = ref([
     { type: 'index', label: '序号' },
     { prop: 'siteName', label: '站点名称', slot: 'ico', minWidth: '200', showOverflowTooltip: true },
-    // { prop: 'description', label: '站点描述', minWidth: '200', showOverflowTooltip: true },
     { slot: 'siteUrl', label: 'URL', minWidth: '180', showOverflowTooltip: true },
     { prop: 'createTime', label: '创建时间', minWidth: '140' },
     { prop: 'categoryName', label: '所属分类', minWidth: '90' },
@@ -221,25 +250,76 @@ const getSiteListData = async () => {
 }
 /** 编辑前获取数据 */
 const getData = (row: Site) => {
-    const { siteName, description, ico, siteUrl, categoryId, categoryName } = row
-    Object.assign(formData, { siteName, description, ico, siteUrl, categoryId, categoryName })
+    // 清空之前的表单数据
+    Object.keys(formData).forEach(key => {
+        delete formData[key]
+    })
+    // 设置编辑数据，只设置需要的字段
+    // categoryId 统一转换为字符串，确保与 options.value 类型一致
+    Object.assign(formData, {
+        siteId: row.siteId,
+        siteName: row.siteName,
+        description: row.description,
+        ico: row.ico,
+        siteUrl: row.siteUrl,
+        categoryId: String(row.categoryId)
+    })
 }
 const clearData = () => {
-    // 清空formData数据
-    Object.keys(formData).forEach((key) => {
-        (formData[key as keyof Site] as any) = ""
-    })
     // 清除表单数据，重置表单校验
     if (formRef.value) {
         formRef.value.resetForm()
     }
+    // 清空formData数据
+    Object.keys(formData).forEach(key => {
+        formData[key] = ''
+    })
+    delete formData.siteId
+}
+const clearAllData = () => {
+    Object.keys(formData).forEach(key => {
+        delete formData[key]
+    })
+}
+/** 编辑 */
+const handleUpdate = async () => {
+    // 确保 categoryId 是有效值
+    if (!formData.categoryId) {
+        ElMessage.warning('请选择所属分类')
+        return
+    }
+    await SiteService.updateSite({
+        siteId: formData.siteId,
+        siteName: formData.siteName,
+        description: formData.description,
+        ico: formData.ico,
+        siteUrl: formData.siteUrl,
+        categoryId: formData.categoryId
+    })
+    ElMessage({
+        message: '编辑成功',
+        type: 'success',
+    })
+    getSiteListData()
 }
 const handleAdd = async () => {
-    await SiteService.addSite(formData)
+    // 确保 categoryId 是有效值
+    if (!formData.categoryId) {
+        ElMessage.warning('请选择所属分类')
+        return
+    }
+    await SiteService.addSite({
+        siteName: formData.siteName,
+        description: formData.description,
+        ico: formData.ico,
+        siteUrl: formData.siteUrl,
+        categoryId: formData.categoryId
+    })
     ElMessage({
         message: '提交成功',
         type: 'success',
     })
+    clearAllData()
     getSiteListData()
 }
 const handleDel = async (row: Site) => {

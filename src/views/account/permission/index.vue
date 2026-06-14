@@ -29,7 +29,7 @@
             </template>
             
             <!-- 骨架屏 -->
-            <ElSkeleton v-if="loading" animated :count="8" style="padding: 0 20px;" />
+            <TreeSkeleton v-if="loading" />
             
             <!-- 树形结构 -->
             <ElTree v-else ref="treeRef" :data="treeData" :props="treeProps"

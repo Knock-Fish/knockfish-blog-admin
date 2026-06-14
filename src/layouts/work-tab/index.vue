@@ -38,7 +38,7 @@ const menuWidth = computed(() => menuStore.menuWidth)
     background-color: var(--header-color);
     // background-color: transparent;
     transition: width 0.4s ease;
-    z-index: 600;
+    z-index: 10000;
     border-bottom: 1px solid var(--border-color);
     .worktab-content {
         display: flex;

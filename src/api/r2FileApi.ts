@@ -1,10 +1,13 @@
 import request from "@/utils/http"
 export class R2FileService {
     // 上传文件
-    static uploadR2File(data: File) {
+    static uploadR2File(data: {file: File}) {
         return request.post<any>({
             url: `/api/r2-file`,
-            data
+            data,
+            headers:{
+                "Content-Type": "multipart/form-data"
+            }
         })
     }
     // 获取所有文件列表

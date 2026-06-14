@@ -139,6 +139,7 @@ onMounted(() => {
     border: 1px solid var(--border-color);
     background-color: var(--card-color);
     min-height: calc(100vh - 160px);
+    margin: 15px;
 
     .el-empty {
         height: calc(100vh - 200px);

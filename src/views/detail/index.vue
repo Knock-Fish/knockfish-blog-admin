@@ -2,90 +2,92 @@
     <div class="detail">
         <div class="article-content">
             <!-- 骨架屏 -->
-            <ElSkeleton v-if="loading" animated :count="1">
-                <template #template>
-                    <div style="padding: 20px;">
-                        <ElSkeletonItem variant="text" style="width: 60%; margin-bottom: 20px;" />
-                        <ElSkeletonItem variant="text" style="width: 40%; margin-bottom: 30px;" />
-                        <ElSkeletonItem variant="rect" style="width: 100%; height: 200px; margin-bottom: 30px;" />
-                        <ElSkeletonItem variant="text" style="width: 100%; margin-bottom: 10px;" />
-                        <ElSkeletonItem variant="text" style="width: 90%; margin-bottom: 10px;" />
-                        <ElSkeletonItem variant="text" style="width: 85%; margin-bottom: 10px;" />
-                        <ElSkeletonItem variant="text" style="width: 95%; margin-bottom: 10px;" />
-                        <ElSkeletonItem variant="text" style="width: 80%;" />
+            <ArticleSkeleton v-if="loading" />
+
+            <!-- 核心：外层 flex 左右布局 -->
+            <div class="article" v-else
+                style="position: relative; display: flex; gap: 24px;">
+                <!-- 左侧正文区域 -->
+                <div class="article-detail">
+                    <h1>{{ article?.title }}</h1>
+                    <div class="meta">
+                        <span class="author">作者：{{ article?.username }}</span>
+                        <time class="publish-time">时间：{{ article?.publishTime
+                        }}</time>
+                        <time class="updated-time"
+                            v-if="article?.updatedTime">最后修改时间：{{
+                                article?.updatedTime }}</time>
                     </div>
-                </template>
-            </ElSkeleton>
-            
-            <!-- 文章内容 -->
-            <ArticleDetail v-else :article="article" />
+                    <MdPreview style="background-color: transparent;" :id="editorId" :modelValue="article?.content"
+                        :theme="isDark ? 'dark' : 'light'"
+                        :codeTheme="isDark ? 'github' : 'atom'" />
+                </div>
+
+                <!-- 右侧目录区域 + 吸顶 + 暂无目录提示 -->
+                <div class="catalog-wrap">
+                    <MdCatalog v-if="hasCatalog" :editorId="editorId"
+                        :scrollElement="scrollElement" />
+                    <div v-else class="empty-catalog">暂无目录</div>
+                </div>
+            </div>
         </div>
-        <div class="article-anchor">
-            <ElAffix :offset="110">
-                <ElCard shadow="never">
-                    <template #header>
-                        <div>
-                            文章目录
-                        </div>
-                    </template>
-                    <AnchorNav :headings="headings" />
-                </ElCard>
-            </ElAffix>
-        </div>
+
+        <!-- 移动端悬浮按钮 -->
         <div class="bar">
-            <ElButton class="contents-btn" @click="drawer = true">
-                <SvgIcon icon="mdi:table-of-contents"></SvgIcon>
-            </ElButton>
+            <div class="contents-btn" @click="drawer = !drawer">
+                <SvgIcon icon="mdi:file-document-box-outline" />
+            </div>
         </div>
-        <ElDrawer v-model="drawer" title="文章目录" append-to-body :z-index="10000"
-            size="280px">
-            <AnchorNav :headings="headings" />
+        <ElDrawer v-model="drawer" :with-header="false">
+            <!-- 抽屉也同步判断目录 -->
+            <MdCatalog v-if="hasCatalog" :editorId="editorId"
+                :scrollElement="scrollElement" />
+            <div v-else class="drawer-empty">暂无目录</div>
         </ElDrawer>
     </div>
 </template>
 
 <script setup lang='ts'>
-import { ElSkeleton, ElSkeletonItem } from 'element-plus'
-import ArticleDetail from './widget/ArticleDetail.vue'
-import AnchorNav from './widget/AnchorNav.vue'
-type Article = Api.Article.ArticleInfo
+import { MdPreview, MdCatalog } from 'md-editor-v3'
+import 'md-editor-v3/lib/preview.css'
 import { useRouter, useRoute } from "vue-router"
 import { ArticleService } from "@/api/articleApi"
+import { useWindowSize } from '@vueuse/core'
+import { ArticleSkeleton } from '@/components/skeletons'
+
+const isDark = useDark()
 const route = useRoute()
 const drawer = ref<boolean>(false)
-const article = ref<Article>()
-const headings = ref<Array<{ id: string, text: string, level: number }>>([])
+const article = ref<Api.Article.ArticleInfo>()
 const loading = ref(true)
 const { width } = useWindowSize()
+
+// 滚动容器
+const scrollElement = document.documentElement
+const editorId = 'markdown-preview'
+
+// 计算：是否存在可生成目录的标题（1~6级markdown标题）
+const hasCatalog = computed(() => {
+    if (!article.value?.content) return false
+    return /^#{1,6}\s+.+/m.test(article.value.content)
+})
+
 const getArticleById = async () => {
     loading.value = true
     try {
         if (route.name === 'Detail' && route.params.id) {
-            const articleInfo: Article = await ArticleService.getArticleInfoById(
-                Number(route.params.id)
-            )
+            const articleInfo = await ArticleService.getArticleInfoById(Number(route.params.id))
             article.value = articleInfo
-            headings.value = extractHeadingsFromHtml(articleInfo.content)
         }
     } finally {
         loading.value = false
     }
 }
-watch(width, (val) => {
-  if (val >= 1300) drawer.value = false
-})
-// 提取标题的通用函数
-const extractHeadingsFromHtml = (html: string) => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(html, 'text/html')
-    const elements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6')
 
-    return Array.from(elements).map((el, index) => ({
-        id: el.id || `heading-${index}`,
-        text: el.textContent || '',
-        level: parseInt(el.tagName.substring(1))
-    }))
-}
+watch(width, (val) => {
+    if (val >= 1300) drawer.value = false
+})
+
 onMounted(() => {
     getArticleById()
 })
@@ -96,11 +98,11 @@ onMounted(() => {
     display: flex;
     z-index: 10000;
     gap: 10px;
-    margin: 10px auto;
+    margin: 15px;
 
     .article-content {
         box-sizing: border-box;
-        width: 80%;
+        width: 100%;
         padding: 20px;
         background-color: var(--header-color);
         border: 1px solid var(--border-color);
@@ -108,20 +110,59 @@ onMounted(() => {
         @media screen and (max-width: 1300px) {
             width: 100%;
         }
-    }
 
-    .article-anchor {
-        width: 20%;
+        .article {
+            width: 100%;
 
-        @media screen and (max-width: 1300px) {
-            display: none;
+            .article-detail {
+                flex: 1;
+                min-width: 0;
+
+                &>h1 {
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                }
+
+                .meta {
+                    display: flex;
+                    margin-bottom: 20px;
+                    gap: 5px;
+
+                    .author,
+                    .publish-time,
+                    .updated-time {
+                        margin-right: 20px;
+                        color: #8a919f;
+                    }
+
+                    @media screen and (max-width: $screen-medium) {
+                        flex-direction: column;
+                    }
+                }
+            }
+
+            /* 目录容器：定宽 + 吸顶 + 居中提示文字 */
+            .catalog-wrap {
+                width: 220px;
+                flex-shrink: 0;
+                position: sticky;
+                top: 105px;
+                height: calc(100vh - 100px);
+                overflow-y: auto;
+                overflow-x: hidden;
+
+                /* 小屏直接隐藏目录 */
+                @media screen and (max-width: 1300px) {
+                    display: none;
+                }
+
+                .empty-catalog {
+                    color: #999;
+                    font-size: 14px;
+                }
+            }
         }
-
-        .el-card {
-            height: calc(100vh - 130px);
-        }
     }
-
 
     .bar {
         display: none;
@@ -143,10 +184,18 @@ onMounted(() => {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background-color: #ffffff;
+            background-color: var(--card-color);
             border: 1px solid var(--text-color);
             transition: all 0.5s;
         }
     }
+}
+
+/* 移动端抽屉暂无目录样式 */
+.drawer-empty {
+    padding: 20px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
 }
 </style>

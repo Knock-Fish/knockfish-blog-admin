@@ -160,6 +160,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .page {
+    @include page;
     .table {
         .col-name {
             box-sizing: border-box;

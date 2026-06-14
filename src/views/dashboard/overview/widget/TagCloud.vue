@@ -8,6 +8,7 @@
 </template>
 
 <script setup lang="ts">
+import Vue3WordCloud from "vue3-word-cloud"
 // 格式：[文字, 权重]
 const words = ref<[string, number][]>([
     ['Vue3', 10],

@@ -89,7 +89,6 @@ const lineOption = ref({
 
 <style lang="scss" scoped>
 .dashboard {
-    width: 100%;
     box-sizing: border-box;
     overflow: hidden;
     margin: 15px;

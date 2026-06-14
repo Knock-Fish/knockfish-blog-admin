@@ -3,7 +3,6 @@ import { initStore } from "@/store/index"
 import { initRouter } from "@/router/index"
 import { addCollection } from '@iconify/vue'   // 使用iconify
 import { setupGlobDirectives } from "@/directives/index"
-import ElementPlusX from 'vue-element-plus-x'
 import mdi from '@iconify-json/mdi/icons.json'
 import ElementPlus from 'element-plus'              // element-plus组件库
 import SvgIcon from "@/components/svg-icon/index.vue"
@@ -19,7 +18,6 @@ initStore(app)
 initRouter(app)
 setupGlobDirectives(app)    // 自定义指令
 app.use(ElementPlus)    // 使用组件库
-app.use(ElementPlusX)
 // 注册全局组件
 app.component("SvgIcon", SvgIcon)
 app.mount('#app')

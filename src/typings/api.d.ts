@@ -113,6 +113,7 @@ declare namespace Api {
             username?: string
         }
         interface ArticleDetailInfo extends ArticleInfo {
+            urlKeys: string[]
             tagIds: string
             tagNames: string
             tagColors: string
