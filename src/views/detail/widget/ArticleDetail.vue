@@ -27,17 +27,6 @@ interface Props {
     article?: Article
 }
 const props = defineProps<Props>()
-import "prismjs/themes/prism-tomorrow.min.css"
-import Prism from 'prismjs'
-// onMounted(() => {
-//     nextTick()
-//     Prism.highlightAll()
-// })
-// onUpdated(() => {
-//     Prism.highlightAll()
-// })
-
-
 </script>
 
 <style lang="scss" scoped>

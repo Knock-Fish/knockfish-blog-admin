@@ -372,8 +372,8 @@ const searchList = [
 const handleReset = () => {
     getSiteListData()
 }
-onMounted(() => {
-    getSiteListData()
+onMounted(async () => {
+    await getSiteListData()
     loadCategoryOptions()
 })
 </script>

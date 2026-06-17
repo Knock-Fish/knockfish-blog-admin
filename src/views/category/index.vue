@@ -171,8 +171,8 @@ const handleReset = () => {
 const handleSearch = () => {
     getCategoryListData()
 }
-onMounted(() => {
-    getCategoryListData()
+onMounted(async () => {
+    await getCategoryListData()
 })
 </script>
 

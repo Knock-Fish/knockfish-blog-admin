@@ -258,8 +258,8 @@ const handleReset = () => {
     getLinkListData()
 }
 
-onMounted(() => {
-    getLinkListData()
+onMounted(async () => {
+    await getLinkListData()
 })
 </script>
 

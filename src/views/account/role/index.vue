@@ -268,8 +268,8 @@ const buildTree = (list: Permission[], parentId: number = 0): any[] => {
         }))
         .sort((a, b) => a.permissionId - b.permissionId)
 }
-onMounted(() => {
-    getRoleListData()
+onMounted(async () => {
+    await getRoleListData()
 })
 </script>
 

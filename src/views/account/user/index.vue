@@ -1,17 +1,21 @@
 <template>
     <div ref="divRef" class="page">
-        <SearchBar class="search" @submit="handleSearch" @reset="handleReset" :search-list="searchList"
-            :keyword="query" />
-        <PageTable class="table" :columns="columns" :table-data="tableData" :page="page" slot-header="header"
-            :loading="loading" @current-page="getUserListData" @page-size="getUserListData">
+        <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
+            :search-list="searchList" :keyword="query" />
+        <PageTable class="table" :columns="columns" :table-data="tableData"
+            :page="page" slot-header="header" :loading="loading"
+            @current-page="getUserListData" @page-size="getUserListData">
             <template #header>
                 <div class="table-header">
-                    <DialogButton permission="user:add" @submit="handleAdd" @closed="clearData" @click="isUsername = false">
+                    <DialogButton permission="user:add" @submit="handleAdd"
+                        @closed="clearData" @click="isUsername = false">
                         新增角色
                         <template #content>
-                            <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
+                            <DynamicForm ref="formRef" v-model="formData"
+                                :form-items="formItems">
                                 <template #upload="{ model }">
-                                    <Upload v-model="model.avatar" :props="uploadProps" tip="建议尺寸1:1"
+                                    <Upload v-model="model.avatar"
+                                        :props="uploadProps" tip="建议尺寸1:1"
                                         :width="100" :height="100" />
                                 </template>
                             </DynamicForm>
@@ -36,18 +40,23 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton permission="user:edit" @click="getData(row)" @closed="clearData" :button-props="editButtinProps">
+                <DialogButton permission="user:edit" @click="getData(row)"
+                    @closed="clearData" @submit="handleUpdate"
+                    :button-props="editButtinProps">
                     编辑
                     <template #content>
-                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
+                        <DynamicForm ref="formRef" v-model="formData"
+                            :form-items="formItems">
                             <template #upload="{ model }">
-                                <Upload v-model="model.avatar" :props="uploadProps" tip="建议尺寸1:1" width="100px"
-                                    height="100px" />
+                                <Upload v-model="model.avatar"
+                                    :props="uploadProps" tip="建议尺寸1:1"
+                                    width="100px" height="100px" />
                             </template>
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <DialogButton permission="user:delete" :button-props="delButtonProps">
+                <DialogButton permission="user:delete"
+                    :button-props="delButtonProps">
                     删除
                 </DialogButton>
             </template>
@@ -57,8 +66,9 @@
 
 <script setup lang='ts'>
 import { UserService } from "@/api/userApi"
+import { R2FileService } from "@/api/r2FileApi"
 import { useUserStore } from "@/store/modules/user"
-import { type ButtonProps } from "element-plus"
+import { type ButtonProps, type UploadRequestOptions, ElMessage } from "element-plus"
 type User = Api.User.UserInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 type Query = {
@@ -67,8 +77,7 @@ type Query = {
 }
 const formRef = ref()
 const divRef = ref<HTMLElement | null>(null)
-const userStore = useUserStore()
-const { accessToken } = userStore
+const updateAvatar = ref<string[]>([])
 const query = reactive<Query>({})
 const isUsername = ref<boolean>(false)
 const tableData = ref<User[]>([])
@@ -157,10 +166,13 @@ const formItems = computed(() => [
 ])
 const uploadProps = ref<Record<string, any>>({
     showFileList: false,
-    headers: {
-        'Authorization': `Bearer ${accessToken}`,
+    httpRequest: async (options: UploadRequestOptions) => {
+        const { file } = options
+        const res = await R2FileService.uploadR2File({ file })
+        updateAvatar.value.push(res.key)
+        return res.url
     },
-    action: import.meta.env.VITE_API_URL + '/api/r2-file'
+    action: '',
 })
 const getUserListData = async () => {
     loading.value = true
@@ -178,6 +190,28 @@ const getUserListData = async () => {
 }
 const handleAdd = () => {
     isUsername.value = false
+}
+const handleUpdate = async () => {
+    await UserService.updateUser(formData)
+    if (updateAvatar.value.length != 0) {
+        const avatarKey = formData.avatar ? new URL(formData.avatar).pathname.substring(1) : ''
+        if (formData.avatar && updateAvatar.value.includes(avatarKey)) {
+            // 删除除了当前头像以外的所有临时头像
+            const coversToDelete = updateAvatar.value.filter(
+                url => url !== avatarKey
+            )
+            if (coversToDelete.length > 0) {
+                await R2FileService.batchDelR2File(coversToDelete)
+            }
+            // 清空数组（保留正在使用的头像）
+            updateAvatar.value = [avatarKey]
+        }
+    }
+    ElMessage({
+        message: '编辑成功',
+        type: 'success',
+    })
+    await getUserListData()
 }
 const getData = (row: User) => {
     isUsername.value = true
@@ -239,8 +273,8 @@ const columns = ref([
     { prop: 'createTime', label: '创建时间', minWidth: '140' },
     { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
 ])
-onMounted(() => {
-    getUserListData()
+onMounted(async () => {
+    await getUserListData()
 })
 </script>
 

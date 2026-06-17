@@ -1,9 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-
 const petals = ref([])
 
-const generatePetals = () => {
+const generatePetals = async () => {
   const count = 20
   for (let i = 0; i < count; i++) {
     petals.value.push({
@@ -18,8 +16,8 @@ const generatePetals = () => {
   }
 }
 
-onMounted(() => {
-  generatePetals()
+onMounted(async () => {
+  await generatePetals()
 })
 </script>
 
@@ -49,7 +47,7 @@ onMounted(() => {
   inset: 0;
   // background: linear-gradient(135deg, #FFF9FA 0%, #F5F0F7 50%, #FFF0F5 100%);
   background-size: cover;
-  background: url("../../assets/imgs/sakura.png") no-repeat center center fixed;
+  background: url("../../assets/imgs/sakura.webp") no-repeat center center fixed;
   background-size: cover;
   z-index: -1;
   overflow: hidden;

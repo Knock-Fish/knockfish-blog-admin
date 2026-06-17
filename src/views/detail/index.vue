@@ -88,8 +88,8 @@ watch(width, (val) => {
     if (val >= 1300) drawer.value = false
 })
 
-onMounted(() => {
-    getArticleById()
+onMounted(async () => {
+    await getArticleById()
 })
 </script>
 

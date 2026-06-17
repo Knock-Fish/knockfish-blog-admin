@@ -17,7 +17,8 @@
             </ElCol>
         </ElRow>
         <ElEmpty v-if="!articleList" description="description" />
-        <div class="list" v-else>
+        <div class="list" v-else v-infinite-scroll="loadMore"
+            infinite-scroll-immediate="false">
             <ElCard class="card" shadow="never" v-for="article in articleList"
                 :key="article.articleId" @click="goToArticleDetail(article)">
                 <div class="image-container">
@@ -48,6 +49,14 @@
                     </div>
                 </div>
             </ElCard>
+            <!-- 加载更多提示 -->
+            <div class="loading-more" v-if="loading">
+                <SvgIcon icon="mdi:loading" class="loading-icon" />
+                加载中...
+            </div>
+            <div class="no-more" v-else-if="!hasMore && articleList.length > 0">
+                没有更多了~
+            </div>
         </div>
     </div>
 </template>
@@ -64,12 +73,41 @@ interface ArticleQuery {
 const input4 = ref()
 const router = useRouter()
 const articleList = ref<Article[]>([])
+const loading = ref(false)
+const hasMore = ref(true)
 const query = reactive<ArticleQuery>({})
 const page = reactive({ // 分页参数
     total: 0,
     pageNum: 1,
     pageSize: 10
 })
+const loadMore = async () => {
+    if (loading.value || !hasMore.value || articleList.value.length >= page.total) {
+        return
+    }
+
+    loading.value = true
+    page.pageNum++
+
+    try {
+        const data: PaginatingParams<Article> = await ArticleService.getArticleListData({
+            ...query,
+            pageNum: page.pageNum,
+            pageSize: page.pageSize,
+        })
+
+        articleList.value = [...articleList.value, ...data.list]
+        page.total = data.total
+        hasMore.value = articleList.value.length < page.total
+
+    } catch (error) {
+        console.error('加载更多失败:', error)
+        ElMessage.error('加载更多失败')
+        page.pageNum--
+    } finally {
+        loading.value = false
+    }
+}
 const editButtonProps: ButtonProps = {
     size: "small"
 }
@@ -81,13 +119,24 @@ const handleAdd = () => {
     router.push({ name: 'Publish' })
 }
 const getArticleListData = async () => {
-    const data: PaginatingParams<Article> = await ArticleService.getArticleListData({
-        ...query,
-        pageNum: page.pageNum,  // 当前页码
-        pageSize: page.pageSize,
-    })
-    articleList.value = data.list
-    page.total = data.total
+    if (loading.value) return
+
+    loading.value = true
+    try {
+        const data: PaginatingParams<Article> = await ArticleService.getArticleListData({
+            ...query,
+            pageNum: page.pageNum,
+            pageSize: page.pageSize,
+        })
+        articleList.value = data.list
+        page.total = data.total
+        hasMore.value = articleList.value.length < page.total
+    } catch (error) {
+        console.error('获取文章列表失败:', error)
+        ElMessage.error('获取文章列表失败')
+    } finally {
+        loading.value = false
+    }
 }
 const goToArticleEditor = (data: Article) => {
     router.push({
@@ -127,8 +176,8 @@ const handleDel = async (row: Article) => {
         ElMessage.info('已取消')
     }
 }
-onMounted(() => {
-    getArticleListData()
+onMounted(async () => {
+    await getArticleListData()
 })
 </script>
 
@@ -248,7 +297,20 @@ onMounted(() => {
                     }
                 }
             }
+        }
 
+        .loading-more,
+        .no-more {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            color: #78829D;
+            font-size: 14px;
+
+            .loading-icon {
+                animation: rotate 1s linear infinite;
+                margin-right: 8px;
+            }
         }
     }
 }

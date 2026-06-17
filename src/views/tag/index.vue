@@ -160,12 +160,12 @@ const handleDel = async (row: Tag) => {
 }
 /** 编辑 */
 const handleUpdate = async () => {
-    await TagService.updataTag(formData)
+    await TagService.updateTag(formData)
     ElMessage({
         message: '编辑成功',
         type: 'success',
     })
-    getTagListData()
+    await getTagListData()
 }
 const clearData = () => {
     // 清空formData数据
@@ -210,8 +210,8 @@ const handleSearch = () => {
 const handleReset = () => {
     getTagListData()
 }
-onMounted(() => {
-    getTagListData()
+onMounted(async () => {
+    await getTagListData()
 })
 </script>
 

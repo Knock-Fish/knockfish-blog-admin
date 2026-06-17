@@ -146,8 +146,8 @@ const copyUrl = async () => {
     }
 }
 
-onMounted(() => {
-    getFileByKey()
+onMounted(async () => {
+    await getFileByKey()
 })
 </script>
 

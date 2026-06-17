@@ -22,7 +22,7 @@ export class UserService{
         })
     }
     // 更新用户信息
-    static updataUser(data: Api.User.UserInfo){
+    static updateUser(data: Api.User.UserInfo){
         return request.put<Api.User.UserInfo>({
             url: "/api/user",
             data

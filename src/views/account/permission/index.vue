@@ -97,7 +97,6 @@
 
 <script setup lang='ts'>
 import { ElMessage, ElMessageBox, type ButtonProps, type FormProps } from 'element-plus'
-import { ElSkeleton } from 'element-plus'
 
 type Permission = Api.Permission.PermissionInfo
 defineOptions({ name: 'Permission' })
@@ -454,8 +453,8 @@ const handleSearch = () => {
 const handleReset = () => {
     getPermissionListData()
 }
-onMounted(() => {
-    getPermissionListData()
+onMounted(async () => {
+    await getPermissionListData()
 })
 </script>
 

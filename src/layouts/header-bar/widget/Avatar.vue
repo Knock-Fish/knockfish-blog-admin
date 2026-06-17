@@ -20,10 +20,9 @@ import { useTabStore } from "@/store/modules/worktab"
 import { useUserStore } from "@/store/modules/user"
 import { RoutesAlias } from "@/router/routesAlias"
 import { router } from '@/router'
-import { ElMessage } from 'element-plus'
 const tabStore = useTabStore()
 const userStore = useUserStore()
-const { avatar }  = userStore.info
+const { avatar }  = toRefs(userStore.info)
 /** 登出 */
 const handleLoginOut = () => {
     router.push(RoutesAlias.Login)

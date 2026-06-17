@@ -67,8 +67,7 @@
                             <!-- 图片上传 -->
                             <ElFormItem label="封面">
                                 <Upload v-model="formData.cover"
-                                    :props="uploadProps" text="请上传封面"
-                                    @success="handleSuccess" />
+                                    :props="uploadProps" text="请上传封面" />
                             </ElFormItem>
                         </div>
                         <div class="right-section">
@@ -207,11 +206,11 @@
                         </div>
                         <div class="draft-info">
                             <div class="draft-title">{{ draft.title || '无标题草稿'
-                                }}</div>
+                            }}</div>
                             <div class="draft-desc">{{ (draft.description ||
                                 '暂无摘要').slice(0, 80) }}</div>
                             <div class="draft-time">🕒 更新于 {{ draft.updatedTime
-                            }}</div>
+                                }}</div>
                         </div>
                         <div class="draft-actions">
                             <ElButton text type="danger" size="small"
@@ -233,7 +232,7 @@
 </template>
 
 <script setup lang='ts'>
-import { ElMessageBox, ElMessage, type UploadFile, type UploadProps, type UploadRawFile, type InputInstance, ElPopover, type ScrollbarDirection, formEmits } from "element-plus"
+import { ElMessageBox, ElMessage, type UploadFile, type UploadProps, type UploadRawFile, type InputInstance, ElPopover, type ScrollbarDirection, type UploadRequestOptions } from "element-plus"
 import { TagService } from "@/api/tagApi"
 import { useRouter, useRoute, onBeforeRouteLeave } from "vue-router"
 import { useUserStore } from "@/store/modules/user"
@@ -291,7 +290,7 @@ const originalData = reactive<Article>({
     title: "",
     cover: "",
     description: "",
-    content: '<p><br></p>',
+    content: '',
     status: 'DRAFT',
     tags: []
 })
@@ -317,11 +316,13 @@ const onUploadImg = async (files: File[], callback: (urls: string[]) => void) =>
 /** 上传组件配置 */
 const uploadProps = ref<Record<string, any>>({
     showFileList: false,
-    headers: {
-        'Authorization': `Bearer ${accessToken}`,
+    httpRequest: async (options: UploadRequestOptions) => {
+        const { file } = options
+            const res = await R2FileService.uploadR2File({ file })
+            tempCoverList.value.push(res.key)
+            return res.url
     },
-    // action: import.meta.env.VITE_API_URL + '/api/r2-file',
-    action: '/api/r2-file',
+    action: '',
 })
 //------------------------------ 方法 -----------------------------------
 /** 新增/保存文章 */
@@ -338,8 +339,6 @@ const saveOrPublish = async () => {
     }
     // 每次新增/更新保存当前快照
     Object.assign(originalData, _.cloneDeep(formData))
-    // 清除脏标记
-    // hasUnsavedChanges.value = false
 }
 /** 加载文章 */
 const loadArticle = async (articleId: number) => {
@@ -385,15 +384,14 @@ const delCover = () => {
         // 如果封面已经被使用（formData.cover 在 tempCoverList 中）
         if (formData.cover && tempCoverList.value.includes(coverKey)) {
             // 删除除了当前封面以外的所有临时封面
-            const coverToKeep = coverKey
             const coversToDelete = tempCoverList.value.filter(
-                url => url !== coverToKeep
+                url => url !== coverKey
             )
             if (coversToDelete.length > 0) {
                 R2FileService.batchDelR2File(coversToDelete)
             }
             // 清空数组（保留正在使用的封面）
-            tempCoverList.value = [coverToKeep]
+            tempCoverList.value = [coverKey]
         } else {
             // 封面没有被使用，全部删除
             R2FileService.batchDelR2File(tempCoverList.value)
@@ -483,10 +481,10 @@ const handleClick = (tag: Tag) => {
     }
 }
 /** 搜索标签 */
-const handleSearchTag = () => {
+const handleSearchTag = async () => {
     // 搜索前启动加载
     tagLoaded.value = false
-    getTagListData()
+    await getTagListData()
 }
 /** 获取选中的标签 */
 const handleSelectTagList = () => {
@@ -512,24 +510,23 @@ const loadMore = async (direction: ScrollbarDirection) => {
 
 //------------------------------ 图片操作 -----------------------------------
 /** 删除未使用的图片 */
-const delImages = () => {
-    const coverKey = new URL(formData.cover).pathname.substring(1) ?? ''
+const delImages = async () => {
+    const coverKey = formData.cover
+        ? new URL(formData.cover).pathname.substring(1)
+        : ''
     // 获取封面和编辑器的所有图片url
     const editorImages = [...getMdImagePathKeys(formData.content), coverKey]
+    // 非数组则转为空数组   
+    const originList = Array.isArray(originImageList.value) ? originImageList.value : []
+    const uploadList = Array.isArray(uploadImageList.value) ? uploadImageList.value : []
     // 合并初始图片和已上传图片
-    const allImages = [...originImageList.value, ...uploadImageList.value]
+    const allImages = [...originList, ...uploadList]
     // 找出未使用的图片
     const unused = allImages.filter(url => !editorImages.includes(url))
     if (unused.length > 0) {
         // 批量删除未使用的图片
-        R2FileService.batchDelR2File(unused)
+        await R2FileService.batchDelR2File(unused)
     }
-}
-/** 封面上传成功的回调函数 */
-const handleSuccess = (response: any, file: UploadFile) => {
-    // 获取旧图片url的key，例如：blog/article-image/2026-06/ec018a64-623d-43db-8174-3eb7f330b317.webp
-    let urlKey = response.data.key
-    tempCoverList.value.push(urlKey)
 }
 //------------------------------ 发布/编辑文章 -----------------------------------
 /** 发布文章 */
@@ -559,7 +556,7 @@ const handleDraft = async () => {
         draftLoaded.value = false
         formData.status = 'DRAFT'
         await saveOrPublish()
-        draftCount.value += 1
+        await getdraftCount()
     } else {
         ElMessage.success('文章已经保存')
     }
@@ -674,9 +671,9 @@ const handleSelectDraft = async (draft: Article) => {
 window.addEventListener('beforeunload', (e) => {
     e.preventDefault()
 })
-onMounted(() => {
-    getArticleById()
-    getdraftCount()
+onMounted(async () => {
+    await getArticleById()
+    await getdraftCount()
 
 })
 

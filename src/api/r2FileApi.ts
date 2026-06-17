@@ -1,11 +1,11 @@
 import request from "@/utils/http"
 export class R2FileService {
     // 上传文件
-    static uploadR2File(data: {file: File}) {
+    static uploadR2File(data: { file: File }) {
         return request.post<any>({
             url: `/api/r2-file`,
             data,
-            headers:{
+            headers: {
                 "Content-Type": "multipart/form-data"
             }
         })
@@ -31,10 +31,9 @@ export class R2FileService {
         })
     }
     // 删除R2文件信息
-    static delR2File(params: { key: string }) {
+    static delR2File(params: string) {
         return request.del({
-            url: '/api/r2-file',
-            params
+            url: `/api/r2-file?key=${params}`
         })
     }
     // 批量删除图片

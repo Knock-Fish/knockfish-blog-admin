@@ -33,7 +33,7 @@ export class TagService {
         })
     }
     // 更新标签
-    static updataTag(data: Api.Tag.TagInfo){
+    static updateTag(data: Api.Tag.TagInfo){
         return request.put({
             url: "/api/tag",
             data

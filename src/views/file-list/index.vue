@@ -153,8 +153,8 @@ const getR2FileList = async () => {
   }
 }
 
-onMounted(() => {
-    getR2FileList()
+onMounted(async () => {
+    await getR2FileList()
 })
 </script>
 

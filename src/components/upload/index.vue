@@ -51,12 +51,12 @@ const componentProps = {
 const getComponentEvents = {
     // 上传成功
     success: (response: any, file: UploadFile) => {
-        if (!response.data?.url) {
+        if (!response) {
             ElMessage.error("上传失败：未获取到图片地址")
             return
         }
         // 获取新上传图片url
-        cover.value = response.data.url
+        cover.value = response
         emit("success", response, file)
         ElMessage.success("图片上传成功")
     },

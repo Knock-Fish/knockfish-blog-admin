@@ -23,7 +23,6 @@ declare module 'vue' {
     DynamicForm: typeof import('./../components/dynamic-form/index.vue')['default']
     ElAnchor: typeof import('element-plus/es')['ElAnchor']
     ElAnchorLink: typeof import('element-plus/es')['ElAnchorLink']
-    ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElBadge: typeof import('element-plus/es')['ElBadge']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']
     ElBreadcrumbItem: typeof import('element-plus/es')['ElBreadcrumbItem']
@@ -96,5 +95,8 @@ declare module 'vue' {
     Upload: typeof import('./../components/upload/index.vue')['default']
     WangEditor: typeof import('./../components/wang-editor/index.vue')['default']
     WorkTab: typeof import('./../layouts/work-tab/index.vue')['default']
+  }
+  export interface GlobalDirectives {
+    vInfiniteScroll: typeof import('element-plus/es')['ElInfiniteScroll']
   }
 }
