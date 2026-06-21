@@ -102,7 +102,7 @@
                     <h2>文章内容</h2>
                 </div>
                 <MdEditor v-model="formData.content"
-                    @onUploadImg="onUploadImg" />
+                    @onUploadImg="onUploadImg" :theme="isDark ? 'dark' : 'light'"/>
             </ElForm>
             <ElDialog v-model="dialogVisible" title="添加标签" width="400"
                 :z-index="10000" @open="getTagListData">
@@ -250,7 +250,8 @@ const router = useRouter()
 const route = useRoute()
 const dialogVisible = ref<boolean>(false)
 const userStore = useUserStore()
-const { accessToken } = userStore
+// const { accessToken } = userStore
+const isDark = useDark()
 const query = reactive<Tag>({})    // 搜索关键词
 const inputVisible = ref<boolean>(false)
 const drawer = ref<boolean>(false)

@@ -176,4 +176,38 @@ declare namespace Api {
         }
         type RoleListData = Api.Common.PaginatingParams<RoleInfo>
     }
+    /** 笔记类型 */
+    namespace Note {
+        interface NoteInfo {
+            noteId?: number
+            noteTitle?: string
+            noteContent?: string
+            sort?: number
+            createTime?: string
+        }
+        type NoteListData = Api.Common.PaginatingParams<NoteInfo>
+    }
+    /** 代码片段类型 */
+    namespace CodeSnippet {
+        interface CodeSnippetInfo {
+            codeSnippetId?: number
+            title?: string
+            codeCategoryId?: number
+            codeCategoryName?: string
+            codeContent?: string
+            createTime?: string
+        }
+        type CodeSnippetListData = Api.Common.PaginatingParams<CodeSnippetInfo>
+    }
+    /** 代码分类类型 */
+    namespace CodeCategory {
+        interface CodeCategoryInfo {
+            codeCategoryId?: number
+            codeCategoryName?: string
+            sort?: number
+            snippetCount?: number
+            createTime?: string
+        }
+        type CodeCategoryListData = Api.Common.PaginatingParams<CodeCategoryInfo>
+    }
 }

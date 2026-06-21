@@ -39,17 +39,19 @@ body {
         Inter, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
         '微软雅黑', Arial, sans-serif;
 }
+
 a,
-a:link
-a:visited,
+a:link a:visited,
 a:hover,
-a:active{
+a:active {
     text-decoration: none;
 }
-a{
+
+a {
     outline: none;
     color: #000;
 }
+
 select {
     font-size: 12px;
 }

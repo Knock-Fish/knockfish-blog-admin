@@ -82,7 +82,8 @@
                                     </DynamicForm>
                                 </template>
                             </DialogButton>
-                            <DialogButton type="button" permission="permission:delete" :button-props="delButtonProps">
+                            <DialogButton type="button" permission="permission:delete" :button-props="delButtonProps"
+                                @click="handleDelete(data)">
                                 <SvgIcon icon="mdi:delete-outline">
                                     删除
                                 </SvgIcon>
@@ -96,23 +97,28 @@
 </template>
 
 <script setup lang='ts'>
-import { ElMessage, ElMessageBox, type ButtonProps, type FormProps } from 'element-plus'
+import { ElMessage, ElMessageBox, type ButtonProps } from 'element-plus'
 
 type Permission = Api.Permission.PermissionInfo
 defineOptions({ name: 'Permission' })
 import { PermissionService } from "@/api/permissionApi"
+
 const formRef = ref()
+const treeRef = ref()
 const tableData = ref<Permission[]>([])
 const defaultExpandedKeys = ref<number[]>([])
 const isPermissionCode = ref<boolean>(false)
 const query = ref({})
 const loading = ref(true)
+const currentEditId = ref<number>(0)
+
 const permissionType = {
     DIRECTORY: '目录',
     MENU: '菜单',
     BUTTON: '按钮',
     API: '外链'
 } as const
+
 const formData = reactive<Permission>({
     permissionId: 0,
     permissionName: '',
@@ -124,16 +130,19 @@ const formData = reactive<Permission>({
     keepAlive: 0,
     status: 'ENABLE'
 })
+
 const editButtonProps = ref<ButtonProps>({
     size: 'small',
     link: true,
     type: 'primary'
 })
+
 const delButtonProps = ref<ButtonProps>({
     size: 'small',
     link: true,
     type: 'danger'
 })
+
 // 树形配置
 const treeProps = {
     children: 'children',
@@ -152,7 +161,9 @@ const buildTree = (list: Permission[], parentId: number = 0): any[] => {
 }
 
 // 树形数据
-const treeData = computed(() => buildTree(tableData.value))
+const treeData = computed(() => {
+    return buildTree(tableData.value)
+})
 
 // 过滤节点
 const filterNode = (value: string, data: any) => {
@@ -162,160 +173,61 @@ const filterNode = (value: string, data: any) => {
         data.permissionId.toString().includes(value)
 }
 
-/** 编辑前获取数据 */
-const getData = (data: Permission) => {
-    isPermissionCode.value = true
-    const { children, ...rest } = data
-    Object.assign(formData, rest)
-}
-const clearData = () => {
-    // 清除表单数据，重置表单校验
-    if (formRef.value) {
-        formRef.value.resetForm()
+// 递归获取所有子节点ID
+const getAllChildIds = (data: any[], targetId: number): number[] => {
+    const result: number[] = []
+    const findNode = (nodes: any[]) => {
+        for (const node of nodes) {
+            if (node.permissionId === targetId) {
+                // 找到目标节点，收集所有子节点ID
+                const collectChildren = (children: any[]) => {
+                    for (const child of children) {
+                        result.push(child.permissionId)
+                        if (child.children && child.children.length > 0) {
+                            collectChildren(child.children)
+                        }
+                    }
+                }
+                if (node.children && node.children.length > 0) {
+                    collectChildren(node.children)
+                }
+                return true
+            }
+            if (node.children && node.children.length > 0) {
+                if (findNode(node.children)) {
+                    return true
+                }
+            }
+        }
+        return false
     }
-    // 清空formData数据
-    Object.keys(formData).forEach(key => {
-        (formData[key as keyof Permission] as any) = ''
-    })
+    findNode(data)
+    return result
+}
 
+// 过滤树数据，排除当前节点及其子节点
+const filterTreeData = (data: any[], excludeIds: number[]): any[] => {
+    return data
+        .filter(item => !excludeIds.includes(item.permissionId))
+        .map(item => ({
+            ...item,
+            children: item.children ? filterTreeData(item.children, excludeIds) : []
+        }))
+        .filter(item => item.children.length > 0 || !excludeIds.includes(item.permissionId))
 }
-const handleClick = () => {
-    isPermissionCode.value = false
-}
-const handleAdd = async () => {
-    await PermissionService.addPermission(formData)
-    ElMessage({
-        message: '提交成功',
-        type: 'success',
-    })
-    getPermissionListData()
-}
-// 监听搜索
-// watch(filterText, (val) => {
-//     treeRef.value?.filter(val)
-//     if (val) {
-//         // 搜索时展开所有匹配的节点
-//         expandAll()
-//     }
-// })
 
-// 获取权限列表
-const getPermissionListData = async () => {
-    loading.value = true
-    try {
-        const data = await PermissionService.getPermissionListData()
-        tableData.value = data.list
-    } finally {
-        loading.value = false
+// 获取可用于父级选择的树数据
+const getParentTreeData = computed(() => {
+    if (currentEditId.value === 0) {
+        return treeData.value
     }
-}
+    const excludeIds = getAllChildIds(treeData.value, currentEditId.value)
+    excludeIds.push(currentEditId.value) // 排除自身
+    return filterTreeData(treeData.value, excludeIds)
+})
 
-// 节点点击
-const handleNodeClick = (data: any) => {
-    console.log('点击节点:', data)
-}
-// 基础表单项
-// const baseFormItems = computed(() => [
-//     {
-//         type: 'Select',
-//         prop: 'type',
-//         label: '权限类型',
-//         props: { placeholder: '请选择权限类型', multiple: false, clearable: true },
-//         options: [
-//             { value: "MENU", label: "菜单" },
-//             { value: "BUTTON", label: "按钮" },
-//             { value: "API", label: "接口" },
-//         ],
-//         rules: { required: true, message: '类型不能为空', trigger: 'blur' }
-//     },
-//     {
-//         type: 'Input',
-//         prop: 'permissionName',
-//         label: '权限名称',
-//         props: { placeholder: '请输入权限名称' },
-//         rules: { required: true, message: '名称不能为空', trigger: 'blur' }
-//     },
-//     {
-//         type: 'Input',
-//         prop: 'permissionCode',
-//         label: '权限编码',
-//         props: {
-//             placeholder: '请输入权限编码，如：blog:xxx:xxx',
-//             disabled: isPermissionCode.value
-//         },
-//         rules: { required: true, message: '编码不能为空', trigger: 'blur' }
-//     },
-//     {
-//         type: 'Input',
-//         prop: 'sortOrder',
-//         label: '排序号',
-//         props: { placeholder: '请输入排序号' }
-//     },
-// ])
-// // 菜单专用的表单项
-// const menuFormItems = reactive([
-//     {
-//         type: 'TreeSelect',
-//         prop: 'parentId',
-//         label: '父级权限',
-//         props: {
-//             placeholder: '请选择父级权限（不选则为顶级）',
-//             get data() {
-//                 return unref(treeData)
-//             },
-//             nodeKey: 'permissionId',
-//             props: {
-//                 label: 'permissionName',
-//                 value: 'permissionId',
-//                 children: 'children',
-//                 clearable: true,
-//             },
-//             // 动态获取当前选中的值
-//             get modelValue() {
-//                 return formData.parentId
-//             },
-//             checkStrictly: true,
-//             renderAfterExpand: false,
-//         },
-//     },
-//     {
-//         type: 'Input',
-//         prop: 'routeName',
-//         label: '路由名称',
-//         props: {
-//             placeholder: '请输入路由名称',
-//         }
-//     },
-//     {
-//         type: 'Input',
-//         prop: 'path',
-//         label: '访问路径',
-//         props: {
-//             placeholder: '请输入访问路径',
-//         }
-//     },
-//     {
-//         type: 'Input',
-//         prop: 'icon',
-//         label: '图标',
-//         props: {
-//             placeholder: '请输入图标名（Material Design Icons）',
-//         }
-//     },
-//     {
-//         type: 'Input',
-//         prop: 'component',
-//         label: '组件路径',
-//         props: {
-//             placeholder: '请输入组件路径',
-//         }
-//     },
-//     {
-//         slot: 'swithList',
-//     },
-// ])
-// 根据类型动态计算表单项
-const formItems = ref([
+// 根据类型动态计算表单项 - 改为 computed
+const formItems = computed(() => [
     {
         type: 'Select',
         prop: 'type',
@@ -357,7 +269,7 @@ const formItems = ref([
         label: '父级权限',
         props: {
             placeholder: '请选择父级权限（不选则为顶级）',
-            data: unref(treeData),
+            data: getParentTreeData.value, // 使用过滤后的数据
             nodeKey: 'permissionId',
             props: {
                 label: 'permissionName',
@@ -365,7 +277,7 @@ const formItems = ref([
                 children: 'children',
                 clearable: true,
             },
-            modelValue: null,
+            modelValue: formData.parentId, // 绑定到 formData.parentId
             checkStrictly: true,
             renderAfterExpand: false,
         },
@@ -406,18 +318,7 @@ const formItems = ref([
         slot: 'switchList'
     }
 ])
-// const formItems = computed(() => {
-//     const items = [...unref(baseFormItems)]
-//     switch (formData.type) {
-//         case 'MENU':
-//             items.push(...menuFormItems)
-//             break
-//         default:
-//             // 未选择类型时，不显示额外的表单项
-//             break
-//     }
-//     return items
-// })
+
 /** 搜索栏配置 */
 const searchList = [
     {
@@ -445,14 +346,107 @@ const searchList = [
         }
     },
 ]
+
+/** 编辑前获取数据 */
+const getData = (data: Permission) => {
+    isPermissionCode.value = true
+    currentEditId.value = data.permissionId
+    const { children, ...rest } = data
+    Object.assign(formData, rest)
+}
+
+const clearData = () => {
+    // 清除表单数据，重置表单校验
+    if (formRef.value) {
+        formRef.value.resetForm()
+    }
+    // 重置formData数据到默认值，保持枚举字段的正确类型
+    Object.assign(formData, {
+        permissionId: 0,
+        permissionName: '',
+        permissionCode: '',
+        parentId: 0,
+        type: 'API',           // 枚举字段：保持默认值
+        sortOrder: 0,
+        hidden: 0,             // 枚举字段：保持默认值
+        keepAlive: 0,          // 枚举字段：保持默认值
+        status: 'ENABLE'       // 枚举字段：保持默认值
+    })
+    currentEditId.value = 0
+    isPermissionCode.value = false
+}
+
+const handleClick = () => {
+    isPermissionCode.value = false
+    currentEditId.value = 0
+}
+
+const handleAdd = async () => {
+    // 表单验证
+    if (formRef.value) {
+        await formRef.value.validate()
+    }
+    await PermissionService.addPermission(formData)
+    ElMessage({
+        message: '提交成功',
+        type: 'success',
+    })
+    await getPermissionListData()
+    clearData()
+}
+
+// 删除
+const handleDelete = (data: Permission) => {
+    ElMessageBox.confirm(
+        `确定要删除权限 "${data.permissionName}" 吗？`,
+        '删除确认',
+        {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+        }
+    ).then(async () => {
+        await PermissionService.delPermission(data.permissionId)
+        ElMessage({
+            message: '删除成功',
+            type: 'success',
+        })
+        await getPermissionListData()
+    }).catch(() => {})
+}
+
+// 获取权限列表
+const getPermissionListData = async () => {
+    loading.value = true
+    try {
+        const data = await PermissionService.getPermissionListData()
+        tableData.value = data.list
+        // 默认展开第一层
+        if (data.list.length > 0) {
+            defaultExpandedKeys.value = data.list
+                .filter(item => item.parentId === 0)
+                .map(item => item.permissionId)
+        }
+    } finally {
+        loading.value = false
+    }
+}
+
+// 节点点击
+const handleNodeClick = (data: any) => {
+    console.log('点击节点:', data)
+}
+
 /** 搜索 */
 const handleSearch = () => {
     getPermissionListData()
 }
+
 /** 搜索重置 */
 const handleReset = () => {
     getPermissionListData()
 }
+
 onMounted(async () => {
     await getPermissionListData()
 })
@@ -472,14 +466,7 @@ onMounted(async () => {
         transition: none;
         margin-top: 10px;
         flex: 1 1 auto;
-
-        // margin-top: 10px;
-        // flex: 1 1 auto;
-        // overflow: auto;
-        // background-color: var(--card-color);
-        // border: 1px solid var(--border-color);
-        // padding: 0 10px;
-        // border-radius: 10px;
+        overflow: auto;
 
         :deep(.el-tree) {
             background: transparent;

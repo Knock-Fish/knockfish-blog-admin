@@ -74,6 +74,7 @@ export const useMenuStore = defineStore('menuStore', () => {
             menuWidth.value = '240px'
         }
     }
+    initMenuState()
     // 监听窗口变化，自动调整侧边栏
     watch(width, () => {
         initMenuState()
@@ -95,6 +96,6 @@ export const useMenuStore = defineStore('menuStore', () => {
 }, {
     persist: {
         key: 'menu',
-        storage: localStorage
+        storage: localStorage,
     }
 })

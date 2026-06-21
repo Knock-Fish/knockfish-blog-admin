@@ -24,4 +24,9 @@ export class RoleService {
             data
         })
     }
+    static delRole(params: number){
+        return request.del({
+            url: `/api/role/${params}`
+        })
+    }
 }

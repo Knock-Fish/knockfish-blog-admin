@@ -31,4 +31,10 @@ export class PermissionService {
             data
         })
     }
+    // 删除权限信息
+    static delPermission(params: number){
+        return request.del({
+            url: `/api/permission/${params}`
+        })
+    }
 }

@@ -46,7 +46,6 @@ onMounted(async () => {
   position: fixed;
   inset: 0;
   // background: linear-gradient(135deg, #FFF9FA 0%, #F5F0F7 50%, #FFF0F5 100%);
-  background-size: cover;
   background: url("../../assets/imgs/sakura.webp") no-repeat center center fixed;
   background-size: cover;
   z-index: -1;

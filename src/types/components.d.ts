@@ -64,6 +64,7 @@ declare module 'vue' {
     ElTag: typeof import('element-plus/es')['ElTag']
     ElTimeline: typeof import('element-plus/es')['ElTimeline']
     ElTimelineItem: typeof import('element-plus/es')['ElTimelineItem']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTree: typeof import('element-plus/es')['ElTree']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     ExcelExport: typeof import('./../components/icon-btn/excel-export/index.vue')['default']
@@ -71,6 +72,7 @@ declare module 'vue' {
     FileSkeleton: typeof import('./../components/skeletons/FileSkeleton.vue')['default']
     FullScreenPage: typeof import('./../components/icon-btn/full-screen-page/index.vue')['default']
     HeaderBar: typeof import('./../layouts/header-bar/index.vue')['default']
+    MdEditor: typeof import('./../components/md-editor/index.vue')['default']
     PageContent: typeof import('./../layouts/page-content/index.vue')['default']
     PageTable: typeof import('./../components/page-table/index.vue')['default']
     Prompts: typeof import('./../components/chat-ai/Prompts.vue')['default']
@@ -98,5 +100,6 @@ declare module 'vue' {
   }
   export interface GlobalDirectives {
     vInfiniteScroll: typeof import('element-plus/es')['ElInfiniteScroll']
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }

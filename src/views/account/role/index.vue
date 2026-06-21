@@ -60,7 +60,8 @@
                             :form-items="formItems" />
                     </template>
                 </DialogButton>
-                <DialogButton type="button" permission="role:delete" :button-props="delButtonProps">
+                <DialogButton type="button" permission="role:delete" :button-props="delButtonProps"
+                @click="handleDel(row)">
                     删除
                 </DialogButton>
             </template>
@@ -71,7 +72,7 @@
 <script setup lang='ts'>
 import { RoleService } from '@/api/roleApi'
 import { PermissionService } from '@/api/permissionApi'
-import { type ButtonProps, type DialogProps, ElMessage } from "element-plus"
+import { type ButtonProps, type DialogProps, ElMessage,ElMessageBox } from "element-plus"
 defineOptions({ name: 'Role' })
 type Role = Api.Role.RoleInfo
 type Permission = Api.Permission.PermissionInfo
@@ -202,6 +203,29 @@ const searchList = [
         }
     }
 ]
+const handleDel = async (row: Role) => {
+    if (!row.roleId) {
+        ElMessage.warning('无效的站点ID')
+        return
+    }
+
+    try {
+        await ElMessageBox.confirm('确定要删除该站点吗？删除后无法恢复！', '警告', {
+            confirmButtonText: '确定删除',
+            cancelButtonText: '取消',
+            type: 'warning',
+            appendTo: document.body,
+        })
+
+        // 确认后才执行
+        await RoleService.delRole(row.roleId)
+        ElMessage.success('删除成功')
+        getRoleListData()
+
+    } catch (error) {
+        ElMessage.info('已取消')
+    }
+}
 const handleSubmit = async () => {
     if (!formData.roleId) {
         ElMessage.warning('请选择要分配权限的角色')

@@ -17,6 +17,12 @@ export const staticRoutes: RouteRecordRaw[] = [
         component: () => import("@views/login/index.vue")
     },
     {
+        path: '/md-editor',
+        name: 'MdEditor',
+        component: () => import("@views/md-editor/index.vue"),
+        meta: { requiresAuth: true }
+    },
+    {
         path: '/exception',
         name: 'Exception',
         children: [
