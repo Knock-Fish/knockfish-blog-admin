@@ -114,7 +114,6 @@
 <script setup lang='ts'>
 import { Conversations, Sender, BubbleList, Bubble, Thinking, Prompts } from '@/components/chat-ai'
 import { createStreamRequest, type StreamError, type SSEEvent } from '@/utils/http/stream'
-import { useWindowSize } from '@vueuse/core'
 
 interface ConversationItem<T = any> {
     id: string
@@ -168,8 +167,6 @@ const currentMessages = ref<MessageItem[]>([])
 // 流式请求实例
 const streamRequest = createStreamRequest()
 
-// API地址
-const { VITE_API_URL } = import.meta.env
 const chatApiUrl = `http://127.0.0.1:8000/qa/stream`
 
 // 会话列表数据

@@ -64,6 +64,8 @@ import { ElMessage, ElMessageBox } from "element-plus"
 import { useRouter } from "vue-router"
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
+import { useDark } from '@vueuse/core'
+import { ref, reactive, onMounted } from 'vue'
 
 type Note = Api.Note.NoteInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
@@ -105,7 +107,7 @@ const getNoteListData = async () => {
 const clearData = () => {
   formData.noteContent = ''
   formData.noteTitle = ''
-  formData.noteId = 0
+  formData.noteId = undefined
 }
 const handleAdd = () => {
   clearData()
@@ -136,16 +138,38 @@ const handleDel = async (row: Note) => {
   }
 }
 const handleSave = async () => {
+  if (!formData.noteTitle) {
+    ElMessage.warning('请输入笔记标题')
+    return
+  }
+  if (!formData.noteContent) {
+    ElMessage.warning('请输入笔记内容')
+    return
+  }
+
   try {
-    await NoteService.updateNote(formData)
-    ElMessage.success("修改成功")
+    if (formData.noteId) {
+      await NoteService.updateNote(formData)
+      ElMessage.success("修改成功")
+    } else {
+      await NoteService.addNote(formData)
+      ElMessage.success("新增成功")
+    }
     onBack()
+    getNoteListData()
   } catch {
-    ElMessage.warning("修改失败")
+    ElMessage.warning("操作失败")
   }
 }
-const handleSearch = () => getNoteListData()
-const handleReset = () => getNoteListData()
+const handleSearch = () => {
+  page.pageNum = 1
+  getNoteListData()
+}
+const handleReset = () => {
+  query.noteTitle = ''
+  page.pageNum = 1
+  getNoteListData()
+}
 
 const searchList = [{ prop: "noteTitle", current: "input", label: "笔记标题", props: { placeholder: "请输入笔记标题" } }]
 
