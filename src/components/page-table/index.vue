@@ -17,7 +17,7 @@
         </div>
         
         <!-- 表格内容 -->
-        <ElTable v-else v-loading="true" :data="tableData" height="100%" v-on="componentsEmit">
+        <ElTable v-else v-loading="loading" :data="tableData" height="100%" v-on="componentsEmit">
             <template v-for="item in columns" :key="item.prop">
                 <!-- 选择列 -->
                 <ElTableColumn v-if="item.type === 'selection'" type="selection" />

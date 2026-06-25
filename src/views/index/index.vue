@@ -32,13 +32,13 @@
     //     left: 0;
     //     right: 0;
     //     bottom: 0;
-    //     z-index: 20000; // 设置较低的层级
+    //     z-index: 20010; // 设置较低的层级
     //     background-image: url('../../assets/imgs/laffy.jpg'); // 替换为你的图片路径
     //     background-size: cover;
     //     background-position: center;
     //     background-repeat: no-repeat;
     //     background-attachment: fixed; // 固定背景
-    //     opacity: 0.1; // 透明度，让背景更淡
+    //     opacity: 0.3; // 透明度，让背景更淡
     //     pointer-events: none; // 确保不会干扰点击事件
     // }
 
