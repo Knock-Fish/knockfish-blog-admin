@@ -1,14 +1,16 @@
 <template>
-  <div class="pie-chart">
+  <div class="pie-chart" v-loading="loading">
     <VChart :option="pieOption" autoresize />
   </div>
 </template>
 
 <script setup lang="ts">
-import VChart from 'vue-echarts'
-import 'echarts'
+import { ref, onMounted } from 'vue';
+import VChart from 'vue-echarts';
+import 'echarts';
+import { DashboardService, type TagCloudItem } from '@/api/dashboardApi';
 
-const pieOption = {
+const pieOption = ref<any>({
   title: {
     text: '文章分类占比',
     left: 'center',
@@ -18,7 +20,6 @@ const pieOption = {
     trigger: 'item',
     formatter: '{b}：{c} 篇 ({d}%)'
   },
-  // 收紧空白
   grid: {
     top: 30,
     left: 10,
@@ -29,18 +30,17 @@ const pieOption = {
     {
       name: '文章分类',
       type: 'pie',
-      radius: ['45%', '70%'], // 内圈、外圈大小，做成环形
+      radius: ['45%', '70%'],
       center: ['50%', '55%'],
       avoidLabelOverlap: false,
       itemStyle: {
-        borderRadius: 4 // 区块圆角，更柔和
+        borderRadius: 4
       },
       label: {
         show: true,
         position: 'outside',
         fontSize: 11
       },
-      // 中间显示总数
       labelLine: {
         length: 8,
         length2: 12
@@ -52,11 +52,35 @@ const pieOption = {
         { name: '工具教程', value: 18 },
         { name: '其他', value: 10 }
       ],
-      // 配色和你折线图统一风格
       color: ['#3390ff', '#67C23A', '#E6A23C', '#9C88FF', '#909399']
     }
   ]
-}
+});
+
+const loading = ref(true);
+
+const fetchData = async () => {
+  loading.value = true;
+  try {
+    const categories = await DashboardService.getCategoryStats();
+    if (categories && categories.length > 0) {
+      pieOption.value.series[0].data = categories.map(item => ({
+        name: item.tagName,
+        value: item.articleCount
+      }));
+    }
+  } catch (error) {
+    console.error('PieChart fetch error:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  fetchData();
+});
+
+defineExpose({ refresh: fetchData });
 </script>
 
 <style lang="scss" scoped>

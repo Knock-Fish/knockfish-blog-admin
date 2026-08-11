@@ -1,29 +1,42 @@
 <template>
     <div class="article-latest">
         <h4>最近文章</h4>
-        <ul class="article-list">
+        <ul class="article-list" v-loading="loading">
             <li class="article-item" v-for="(item, index) in articleList"
                 :key="index">
                 <div class="article-title">{{ item.title }}</div>
-                <div class="article-date">{{ item.date }}</div>
+                <div class="article-date">{{ item.publishTime }}</div>
             </li>
         </ul>
     </div>
 </template>
 
 <script setup lang='ts'>
-const articleList = [
-    { title: 'Vue 3 组合式 API 最佳实践', date: '2024-01-15' },
-    { title: 'TypeScript 类型系统深入解析', date: '2024-01-14' },
-    { title: 'ECharts 图表组件封装技巧', date: '2024-01-13' },
-    { title: 'Tailwind CSS 实用指南', date: '2024-01-12' },
-    { title: '前端性能优化完全指南', date: '2024-01-11' },
-    { title: 'Pinia 状态管理入门', date: '2024-01-10' },
-    { title: 'Vite 插件开发教程', date: '2024-01-09' },
-    { title: 'ES2024 新特性一览', date: '2024-01-08' },
-    { title: '响应式设计最佳实践', date: '2024-01-07' },
-    { title: 'WebAssembly 入门与实践', date: '2024-01-06' }
-]
+import { ref, onMounted } from 'vue';
+import { DashboardService, type ArticleLatest } from '@/api/dashboardApi';
+import { ElMessage } from 'element-plus';
+
+const articleList = ref<ArticleLatest[]>([]);
+const loading = ref(true);
+
+const fetchLatestArticles = async () => {
+    loading.value = true;
+    try {
+        const articles = await DashboardService.getLatestArticles({ limit: 10 });
+        articleList.value = articles;
+    } catch (error) {
+        ElMessage.error('获取最近文章失败');
+        console.error('Latest articles fetch error:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchLatestArticles();
+});
+
+defineExpose({ refresh: fetchLatestArticles });
 </script>
 
 <style lang="scss" scoped>
@@ -99,7 +112,6 @@ const articleList = [
     }
 }
 
-// 移动端适配
 @media (max-width: 768px) {
     .article-latest {
         max-width: 100%;

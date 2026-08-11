@@ -9,23 +9,17 @@
           @current-page="getNoteListData" @page-size="getNoteListData">
           <!-- 自定义头部 -->
           <template #header>
-            <div class="table-header">
-              <el-button type="primary" @click="handleAdd">
+              <el-button @click="handleAdd" v-permission="NotePerm.ADD">
                 新增笔记
               </el-button>
-              <div class="icon-list">
-                <DataRefresh @click="getNoteListData" />
-                <FullScreenPage :target-ref="divRef" />
-              </div>
-            </div>
           </template>
           <!-- 自定义操作列 -->
           <template #option="{ row }">
             <el-button type="primary" size="small" link
-              @click="handleEdit(row)">
+              @click="handleEdit(row)" v-permission="NotePerm.EDIT">
               编辑
             </el-button>
-            <el-button type="danger" size="small" link @click="handleDel(row)">
+            <el-button type="danger" size="small" link @click="handleDel(row)" v-permission="NotePerm.DELETE">
               删除
             </el-button>
           </template>
@@ -50,7 +44,7 @@
             show-word-limit clearable />
         </div>
         <div class="md-editor">
-          <MdEditor v-model="formData.noteContent"
+          <MdEditor v-model="formData.noteContent" @onUploadImg="onUploadImg"
             :theme="isDark ? 'dark' : 'light'" />
         </div>
       </div>
@@ -59,18 +53,21 @@
 </template>
 
 <script setup lang="ts">
+import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { NotePerm } from '@/constants'
 import { NoteService } from "@/api/noteApi"
+import { R2FileService } from "@/api/r2FileApi"
+import { useUserStore } from "@/store/modules/user"
 import { ElMessage, ElMessageBox } from "element-plus"
-import { useRouter } from "vue-router"
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { useDark } from '@vueuse/core'
-import { ref, reactive, onMounted } from 'vue'
 
-type Note = Api.Note.NoteInfo
+type Note = Api.Note.NoteData
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 
 const router = useRouter()
+const userStore = useUserStore()
+const userId = userStore.info.userId
 const isDark = useDark()
 const query = reactive<Note>({})
 const divRef = ref<HTMLElement | null>(null)
@@ -79,14 +76,49 @@ const tableData = ref<Note[]>([])
 const loading = ref(true)
 const page = reactive({ total: 0, pageNum: 1, pageSize: 10 })
 const isEditor = ref<boolean>(false)
-const columns = ref([
+const columns = reactive([
   { type: "index", label: "序号" },
   { prop: "noteTitle", label: "笔记标题", minWidth: "150", showOverflowTooltip: true },
   { prop: "createTime", label: "创建时间", minWidth: "160" },
-  { prop: "action", label: "操作", fixed: "right", slot: "option", minWidth: "150" }
+  { prop: "action", label: "操作", fixed: "right", slot: "option", minWidth: "150", permission: ['note:edit', 'note:delete'] }
 ])
-/** 切换到列表 */
-const onBack = () => {
+useTableColumnPermission(columns)
+/** 确保笔记已创建（上传图片时触发：首次上传即创建空笔记获取 noteId 供图片关联） */
+let notePromise: Promise<number | undefined> | null = null
+let isPlaceholder = false  // 标记是否为 ensureNote 创建的占位笔记（用于 onBack 清理判断）
+const ensureNote = (): Promise<number | undefined> => {
+  if (formData.noteId) return Promise.resolve(formData.noteId)
+  if (notePromise) return notePromise
+  notePromise = (async () => {
+    try {
+      const noteId = await NoteService.addNote({ noteTitle: '', noteContent: '' })
+      formData.noteId = noteId
+      isPlaceholder = true
+      return noteId
+    } finally {
+      notePromise = null
+    }
+  })()
+  return notePromise!
+}
+/** 切换到列表（清理 ensureNote 创建的占位空笔记，或解绑未使用图片） */
+const onBack = async () => {
+  if (isPlaceholder && formData.noteId && !formData.noteTitle && !formData.noteContent) {
+    // 占位笔记且无内容，直接删除（delNote 会清理关联文件）
+    try {
+      await NoteService.delNote(formData.noteId)
+    } catch (e) {
+      console.error('清理占位笔记失败：', e)
+    }
+  } else if (formData.noteId) {
+    // 非占位删除场景：解绑未使用图片
+    try {
+      await NoteService.unbindUnusedFiles(formData.noteId)
+    } catch (e) {
+      console.warn('解绑未使用图片失败：', e)
+    }
+  }
+  isPlaceholder = false
   isEditor.value = false
 }
 const getNoteListData = async () => {
@@ -153,6 +185,7 @@ const handleSave = async () => {
       ElMessage.success("修改成功")
     } else {
       await NoteService.addNote(formData)
+      console.log(formData)
       ElMessage.success("新增成功")
     }
     onBack()
@@ -170,7 +203,30 @@ const handleReset = () => {
   page.pageNum = 1
   getNoteListData()
 }
-
+const onUploadImg = async (files: File[], callback: (urls: string[]) => void) => {
+  try {
+    // 只取第一张图片
+    const file = files[0]
+    if (!file) {
+      callback([])
+      return
+    }
+    if (userId) {
+      // 确保笔记已创建，拿到 noteId 供图片关联
+      await ensureNote()
+      // 执行单图上传，拿到图片在线地址
+      const { url } = await R2FileService.uploadR2File({ file, type: "note", userId, referenceId: formData.noteId })
+      callback([url])
+    } else {
+      ElMessage.error('用户不存在')
+      throw new Error('用户不存在')
+    }
+  } catch (err) {
+    console.error('图片上传失败：', err)
+    // 异常兜底，结束上传状态
+    callback([])
+  }
+}
 const searchList = [{ prop: "noteTitle", current: "input", label: "笔记标题", props: { placeholder: "请输入笔记标题" } }]
 
 onMounted(async () => await getNoteListData())
@@ -205,15 +261,6 @@ onMounted(async () => await getNoteListData())
     margin-top: 10px;
     flex: 1 1 auto;
 
-    .table-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      .icon-list {
-        display: flex;
-      }
-    }
 
     .content-preview {
       display: inline-block;

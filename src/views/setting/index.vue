@@ -3,7 +3,6 @@
         <ElTabs v-model="activeTab" :tab-position="tabPosition">
             <ElTabPane v-for="item in tabItems" :key="item.name"
                 :label="item.label" :name="item.name">
-                <!-- 核心：keep-alive + 条件渲染 -->
                 <KeepAlive>
                     <Transition name="fade" mode="out-in">
                         <component :is="components[item.current]"
@@ -21,7 +20,6 @@ import type { ElTabPane, TabsInstance } from 'element-plus'
 import BlogSetting from "./widget/blog-setting/index.vue"
 import ChangePassword from "./widget/change-password/index.vue"
 import UserInfo from "./widget/user-info/index.vue"
-import { ref, markRaw, onMounted } from 'vue'
 
 const tabPosition = ref<TabsInstance['tabPosition']>('left')
 

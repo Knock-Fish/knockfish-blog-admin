@@ -108,12 +108,12 @@ declare namespace Api {
             status: 'PUBLISH' | 'DRAFT'
             publishTime?: string
             updatedTime?: string
-            tags?: number[]
             userId?: number
-            username?: string
+        }
+        interface ArticleData extends ArticleInfo{
+            tags?: number[]
         }
         interface ArticleDetailInfo extends ArticleInfo {
-            urlKeys: string[]
             tagIds: string
             tagNames: string
             tagColors: string
@@ -130,6 +130,19 @@ declare namespace Api {
             avatar?: string
             nickname?: string
             description?: string
+            githubUrl?: string
+            bilibiliUrl?: string
+            background?: string
+            roles?: UserRole[]
+            roleIds?: number[]
+        }
+        interface UserRole {
+            roleId?: number
+            roleName?: string
+        }
+        interface UserRoleUpdate {
+            userId: number
+            roleIds?: number[]
         }
         type UserListData = Api.Common.PaginatingParams<UserInfo>
     }
@@ -185,6 +198,8 @@ declare namespace Api {
             sort?: number
             createTime?: string
         }
+        interface NoteData extends NoteInfo{
+        }
         type NoteListData = Api.Common.PaginatingParams<NoteInfo>
     }
     /** 代码片段类型 */
@@ -209,5 +224,19 @@ declare namespace Api {
             createTime?: string
         }
         type CodeCategoryListData = Api.Common.PaginatingParams<CodeCategoryInfo>
+    }
+    /** 资源引用 */
+    namespace FileReference{
+        interface FileReferenceInfo{
+            fileId?: number
+            fileName: string
+            filePath: string
+            fileSize?: number
+            mimeType?: string
+            referenceId?: number | null
+            referenceType?: string
+            userId?: number
+            createTime?: string
+        }
     }
 }

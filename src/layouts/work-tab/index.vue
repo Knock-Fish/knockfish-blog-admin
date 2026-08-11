@@ -36,7 +36,6 @@ const menuWidth = computed(() => menuStore.menuWidth)
     top: 50px;
     padding: 0 20px 10px;
     background-color: var(--header-color);
-    // background-color: transparent;
     transition: width 0.4s ease;
     z-index: 700;
     border-bottom: 1px solid var(--border-color);

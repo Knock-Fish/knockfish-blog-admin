@@ -20,7 +20,7 @@
 import { MdPreview, MdCatalog } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
 const scrollElement = document.documentElement
-type Article = Api.Article.ArticleInfo
+type Article = Api.Article.ArticleDetailInfo
 // 1. 定义一个唯一且不变的 ID
 const editorId = 'markdown-preview';
 interface Props {

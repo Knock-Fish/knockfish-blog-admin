@@ -1,153 +1,109 @@
 import { fileURLToPath } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import Icons from 'unplugin-icons/vite'
 import Components from 'unplugin-vue-components/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import viteCompression from 'vite-plugin-compression'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import vueDevTools from 'vite-plugin-vue-devtools'
-// https://vite.dev/config/
-export default ({ mode }: { mode: string }) => {
-  // 获取.env文件里定义的环境变量
-  const root = process.cwd()
-  const env = loadEnv(mode, root)
-  const { VITE_VERSION, VITE_PORT, VITE_BASE_URL, VITE_API_URL } = env
-  return defineConfig({
 
+export default ({ mode }: { mode: string }) => {
+  // 获取当前工作目录
+  const root = process.cwd()
+  // 加载环境变量（从 .env 文件）
+  const env = loadEnv(mode, root)
+  // 解构获取环境变量
+  const { VITE_VERSION, VITE_PORT, VITE_BASE_URL, VITE_API_URL } = env
+  // 判断是否为生产环境
+  const isProduction = mode === 'production'
+
+  return defineConfig({
+    // ========== 插件配置 ==========
     plugins: [
       vue(),
-      vueDevTools(),
-      // 自动导入 components 下面的组件，无需 import 引入
-      Components({
-        deep: true,
-        extensions: ['vue'],
-        dirs: ['src/components', 'src/layouts'], // 自动导入的组件目录
-        resolvers: [
-          ElementPlusResolver()],
-        dts: 'src/types/components.d.ts' // 指定类型声明文件的路径
+      Icons({
+        compiler: 'vue3',
+        autoInstall: true,
       }),
+      !isProduction && vueDevTools(),
+      Components({
+        deep: true,                      // 深度扫描子目录
+        extensions: ['vue'],             // 文件扩展名
+        dirs: ['src/components', 'src/layouts'], // 组件目录
+        resolvers: [ElementPlusResolver()], // Element Plus 按需加载
+        dts: 'src/types/components.d.ts' // 生成类型声明文件
+      }),
+
+      // 自动导入 API 配置（无需手动 import）
       AutoImport({
-        imports: ['vue', 'vue-router', '@vueuse/core', 'pinia'],
-        resolvers: [ElementPlusResolver()],
-        dts: 'src/types/auto-imports.d.ts',
+        imports: ['vue', 'vue-router', '@vueuse/core', 'pinia'], // 自动导入的库
+        resolvers: [ElementPlusResolver()], // Element Plus 按需加载
+        dts: 'src/types/auto-imports.d.ts', // 生成类型声明文件
         eslintrc: {
-          // 这里先设置成true然后pnpm dev 运行之后会生成 .auto-import.json 文件之后，在改为false
-          enabled: false,
+          enabled: false,                // 是否生成 ESLint 配置
           filepath: './.auto-import.json',
           globalsPropValue: true
         }
       }),
+
+      // Gzip 压缩配置
       viteCompression({
-        verbose: true, // 是否在控制台输出压缩结果
-        disable: false, // 是否禁用
-        algorithm: 'gzip', // 压缩算法,可选 [ 'gzip' , 'brotliCompress' ,'deflate' , 'deflateRaw']
-        ext: '.gz', // 压缩后的文件名后缀
-        threshold: 10240, // 只有大小大于该值的资源会被处理 10240B = 10KB
-        deleteOriginFile: false // 压缩后是否删除原文件
+        verbose: true,                  // 是否在控制台输出压缩结果
+        disable: false,                 // 是否禁用
+        algorithm: 'gzip',              // 压缩算法,可选 [ 'gzip' , 'brotliCompress' ,'deflate' , 'deflateRaw']
+        ext: '.gz',                     // 压缩后的文件名后缀
+        threshold: 10240,               // 只有大小大于该值的资源会被处理 10240B = 10KB
+        deleteOriginFile: false        // 压缩后是否删除原文件
       }),
+
+      // Brotli 压缩配置
+      viteCompression({
+        verbose: true,
+        disable: false,
+        algorithm: 'brotliCompress',    // 使用 brotli 算法
+        ext: '.br',
+        threshold: 10240,
+        deleteOriginFile: false,
+      })
     ],
+
+    // ========== 开发服务器配置 ==========
     server: {
-      host: true,
+      host: true,                       // 监听所有网络接口（允许局域网访问）
+      port: 5173,                       // 开发服务器端口
       proxy: {
-        '/api': {
-          target: "http://blog.fishbarn.cn:8081",
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, '/api'),
+        '/api': {                       // 代理 /api 请求
+          target: "http://localhost:8081", // 后端服务地址
+          changeOrigin: true,           // 修改请求头中的 origin
+          rewrite: (path) => path.replace(/^\/api/, '/api'), // 路径重写（保持原样）
         }
       },
     },
-    // 预加载项目必需的组件
+
+    // ========== 依赖优化配置 ==========
     optimizeDeps: {
-      include: [
+      include: [                        // 预构建的依赖（加快冷启动）
         'vue',
         'vue-router',
         'pinia',
         'axios',
-        '@vueuse/core',
-        'echarts',
-        'element-plus/es/components/form/style/css',
-        'element-plus/es/components/form-item/style/css',
-        'element-plus/es/components/button/style/css',
-        'element-plus/es/components/input/style/css',
-        'element-plus/es/components/input-number/style/css',
-        'element-plus/es/components/switch/style/css',
-        'element-plus/es/components/upload/style/css',
-        'element-plus/es/components/menu/style/css',
-        'element-plus/es/components/col/style/css',
-        'element-plus/es/components/icon/style/css',
-        'element-plus/es/components/row/style/css',
-        'element-plus/es/components/tag/style/css',
-        'element-plus/es/components/dialog/style/css',
-        'element-plus/es/components/loading/style/css',
-        'element-plus/es/components/radio/style/css',
-        'element-plus/es/components/radio-group/style/css',
-        'element-plus/es/components/popover/style/css',
-        'element-plus/es/components/scrollbar/style/css',
-        'element-plus/es/components/tooltip/style/css',
-        'element-plus/es/components/dropdown/style/css',
-        'element-plus/es/components/dropdown-menu/style/css',
-        'element-plus/es/components/dropdown-item/style/css',
-        'element-plus/es/components/sub-menu/style/css',
-        'element-plus/es/components/menu-item/style/css',
-        'element-plus/es/components/divider/style/css',
-        'element-plus/es/components/card/style/css',
-        'element-plus/es/components/link/style/css',
-        'element-plus/es/components/breadcrumb/style/css',
-        'element-plus/es/components/breadcrumb-item/style/css',
-        'element-plus/es/components/table/style/css',
-        'element-plus/es/components/tree-select/style/css',
-        'element-plus/es/components/table-column/style/css',
-        'element-plus/es/components/select/style/css',
-        'element-plus/es/components/option/style/css',
-        'element-plus/es/components/pagination/style/css',
-        'element-plus/es/components/tree/style/css',
-        'element-plus/es/components/alert/style/css',
-        'element-plus/es/components/radio-button/style/css',
-        'element-plus/es/components/checkbox-group/style/css',
-        'element-plus/es/components/checkbox/style/css',
-        'element-plus/es/components/tabs/style/css',
-        'element-plus/es/components/tab-pane/style/css',
-        'element-plus/es/components/rate/style/css',
-        'element-plus/es/components/date-picker/style/css',
-        'element-plus/es/components/notification/style/css',
-        'element-plus/es/components/image/style/css',
-        'element-plus/es/components/statistic/style/css',
-        'element-plus/es/components/watermark/style/css',
-        'element-plus/es/components/config-provider/style/css',
-        'element-plus/es/components/text/style/css',
-        'element-plus/es/components/drawer/style/css',
-        'element-plus/es/components/color-picker/style/css',
-        'element-plus/es/components/backtop/style/css',
-        'element-plus/es/components/message-box/style/css',
-        'element-plus/es/components/skeleton/style/css',
-        'element-plus/es/components/skeleton/style/css',
-        'element-plus/es/components/skeleton-item/style/css',
-        'element-plus/es/components/badge/style/css',
-        'element-plus/es/components/steps/style/css',
-        'element-plus/es/components/step/style/css',
-        'element-plus/es/components/avatar/style/css',
-        'element-plus/es/components/descriptions/style/css',
-        'element-plus/es/components/descriptions-item/style/css',
-        'element-plus/es/components/checkbox-group/style/css',
-        'element-plus/es/components/progress/style/css',
-        'element-plus/es/components/image-viewer/style/css',
-        'element-plus/es/components/empty/style/css',
-        'element-plus/es/components/segmented/style/css',
-        'element-plus/es/components/calendar/style/css',
-        'element-plus/es/components/message/style/css',
-        'xlsx',
-        'element-plus/es/components/timeline/style/css',
-        'element-plus/es/components/timeline-item/style/css',
-      ]
+        '@vueuse/core'
+      ],
+      exclude: ['echarts', 'xlsx'] // 排除预构建（这些库较大）
     },
+
+    // ========== CSS 预处理器配置 ==========
     css: {
       preprocessorOptions: {
         scss: {
           additionalData: `@use "@style/variables.scss" as *; @use "@style/mixin.scss" as *;`
+          // 全局注入 SCSS 变量和混合函数，无需在每个文件手动引入
         }
       }
     },
 
+    // ========== 路径别名配置 ==========
     resolve: {
       alias: {
         "@": resolvePath("src"),
@@ -161,9 +117,65 @@ export default ({ mode }: { mode: string }) => {
         "@fonts": resolvePath("src/assets/fonts"),
         "@api": resolvePath("src/api")
       },
+    },
+
+    // ========== 构建配置 ==========
+    build: {
+      target: 'es2020',                 // 构建目标（ES2020，提升性能）
+      outDir: 'dist',                   // 输出目录
+      assetsDir: 'assets',              // 静态资源目录
+      assetsInlineLimit: 4096,         // 小于 4KB 的资源内联为 base64
+      cssCodeSplit: true,              // CSS 代码分割（按路由）
+      sourcemap: isProduction ? false : true,
+      minify: isProduction ? 'terser' : 'esbuild', // 生产用 terser，开发用 esbuild
+      modulePreload: {
+        polyfill: true                  // 启用 modulePreload polyfill
+      },
+      terserOptions: {
+        compress: {
+          drop_console: isProduction,   // 生产环境移除 console
+          drop_debugger: isProduction,  // 生产环境移除 debugger
+          join_vars: true, // 合并连续的变量声明，减少代码行数
+          reduce_vars: true,  // 削减多余变量
+          dead_code: true // 移除无法访问的代码（如 if(false)）
+        }
+      },
+      rollupOptions: {
+        output: {
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+          manualChunks(id) {
+            if (id.includes('node_modules/vue') ||
+              id.includes('node_modules/vue-router') ||
+              id.includes('node_modules/pinia') ||
+              id.includes('node_modules/@vueuse')) {
+              return 'vue'
+            }
+            if (id.includes('node_modules/element-plus')) {
+              return 'elementPlus'
+            }
+            if (id.includes('node_modules/echarts') ||
+              id.includes('node_modules/vue-echarts')) {
+              return 'echarts'
+            }
+            if (id.includes('node_modules/xlsx')) {
+              return 'xlsx'
+            }
+            if (id.includes('node_modules/lodash')) {
+              return 'lodash'
+            }
+          }
+        }
+      },
+      chunkSizeWarningLimit: 1000,
+      reportCompressedSize: true
     }
   })
 }
+
+// ========== 辅助函数：解析路径 ==========
 function resolvePath(paths: string) {
+  // 将相对路径转换为绝对路径（基于 import.meta.url）
   return fileURLToPath(new URL(paths, import.meta.url))
 }

@@ -3,17 +3,16 @@
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData"
-            :page="page" slot-header="header" :loading="loading" @current-page="getLinkListData"
-            @page-size="getLinkListData">
+            :page="page" slot-header="header" :loading="loading"
+            @current-page="getLinkListData" @page-size="getLinkListData">
             <template #header>
-                <div class="table-header">
-                    <DialogButton permission="link:add" @submit="handleAdd" @closed="clearData">
-                        新增友链
-                        <template #content>
-                            <DynamicForm v-model="formData"
-                                :form-items="formItems">
-                                <template #icon>
-                                    <img v-if="formData.avatar" style="
+                <DialogButton :permission="LinkPerm.ADD" @submit="handleAdd"
+                    @closed="clearData">
+                    新增友链
+                    <template #content>
+                        <DynamicForm v-model="formData" :form-items="formItems">
+                            <template #icon>
+                                <img v-if="formData.avatar" style="
                             position: absolute;
                             right: 20px;
                             top: -5px;
@@ -21,16 +20,11 @@
                             height: 40px;
                             margin-left: 30px;
                             vertical-align: middle;" :src="formData.avatar">
-                                </template>
-                            </DynamicForm>
-                        </template>
-                    </DialogButton>
-                    <div class="icon-list">
-                        <DataRefresh @click="getLinkListData" />
-                        <FullScreenPage :target-ref="divRef" />
-                        <ExcelExport :table-data="tableData" />
-                    </div>
-                </div>
+                            </template>
+                        </DynamicForm>
+                    </template>
+                </DialogButton>
+
             </template>
             <template #linkInfo="{ row }">
                 <div class="link-item">
@@ -44,13 +38,14 @@
                 </div>
             </template>
             <template #linkUrl="{ row }">
-                <a class="link-url" :href="row.linkUrl" target="_blank">{{ row.linkUrl }}</a>
+                <a class="link-url" :href="row.linkUrl" target="_blank">{{
+                    row.linkUrl }}</a>
             </template>
             <template #option="{ row }">
-                <DialogButton permission="link:edit" :button-props="editButtonProps"
-                    :dialog-props="dialogProps" @click="getData(row)"
-                    @closed="clearData">
-                    编辑
+                <DialogButton :permission="LinkPerm.EDIT" :buttonBorder="false"
+                    :button-props="editButtonProps" :dialog-props="dialogProps"
+                    @click="getData(row)" @closed="clearData">
+                    <SvgIcon icon="ri:pencil-line" />
                     <template #content>
                         <DynamicForm ref="formRef" v-model="formData"
                             :form-items="formItems">
@@ -67,8 +62,9 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <DialogButton permission="link:delete" :button-props="delButtonProps" @click="handleDel(row)">
-                    删除
+                <DialogButton type="confirm" :buttonBorder="false" :permission="LinkPerm.DELETE"
+                    :button-props="delButtonProps" @click="handleDel(row)">
+                    <SvgIcon icon="ri:delete-bin-6-line" />
                 </DialogButton>
             </template>
         </PageTable>
@@ -76,36 +72,40 @@
 </template>
 
 <script setup lang='ts'>
+import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { LinkPerm } from '@/constants'
 import { LinkService } from "@/api/linkApi"
 import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps } from "element-plus"
 
 type Link = Api.Link.LinkInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 
-const query = reactive<Link>({})
-const formRef = ref()
-const divRef = ref<HTMLElement | null>(null)
-const tableData = ref<Link[]>([])
-const loading = ref(true)
-
-const page = reactive({
+const query = reactive<Link>({})    // 搜索关键词
+const formRef = ref()   // 表单DOM
+const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
+const tableData = ref<Link[]>([])   // 表格数据
+const formData = reactive<Link>({}) // 表单数据
+const loading = ref<boolean>(true)   // 是否加载
+const page = reactive({ // 分页参数
     total: 0,
     pageNum: 1,
     pageSize: 10
 })
 
-const formData = reactive<Link>({})
+// --------------- 按钮配置 ---------------
 const editButtonProps = ref<ButtonProps>({
-    size: "small"
+    type: "primary",
+    plain: true
 })
 const delButtonProps = ref<ButtonProps>({
-    size: "small",
-    type: "danger"
+    type: "danger",
+    plain: true
 })
+// --------------- 模态框配置 ---------------
 const dialogProps = ref<DialogProps>({
     title: "友链信息"
 })
-
+// --------------- 表单项配置 ---------------
 const formItems = computed(() => [
     {
         type: 'Input',
@@ -165,15 +165,27 @@ const formItems = computed(() => [
         }
     }
 ])
-
-const columns = ref([
+// --------------- 表格项配置 ---------------
+const columns = reactive([
     { type: 'index', label: '序号' },
-    { prop: 'linkName', label: '友链信息', slot: 'linkInfo', minWidth: '250', showOverflowTooltip: true },
-    { slot: 'linkUrl', label: '链接', minWidth: '200', showOverflowTooltip: true },
-    { prop: 'createTime', label: '创建时间', minWidth: '140' },
-    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
+    { prop: 'linkName', label: '友链信息', slot: 'linkInfo', minWidth: '150', showOverflowTooltip: true },
+    { slot: 'linkUrl', label: '链接', minWidth: '150', showOverflowTooltip: true },
+    { prop: 'createTime', label: '创建时间', minWidth: '150' },
+    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', permission: ['link:edit', 'link:delete'] }
 ])
-
+useTableColumnPermission(columns)
+// --------------- 搜索栏配置 ---------------
+const searchList = [
+    {
+        prop: 'linkName',
+        current: 'input',
+        label: "友链名称",
+        props: {
+            placeholder: "请输入友链名称"
+        }
+    }
+]
+/** 获取友链数据 */
 const getLinkListData = async () => {
     loading.value = true
     try {
@@ -188,21 +200,22 @@ const getLinkListData = async () => {
         loading.value = false
     }
 }
-
+/** 编辑前获取数据 */
 const getData = (row: Link) => {
     const { linkName, description, avatar, linkUrl, linkId } = row
     Object.assign(formData, { linkName, description, avatar, linkUrl, linkId })
 }
-
+/** 清除表单数据 */
 const clearData = () => {
     Object.keys(formData).forEach((key) => {
         (formData[key as keyof Link] as any) = ""
     })
+    // 重置表单校验
     if (formRef.value) {
         formRef.value.resetForm()
     }
 }
-
+/** 添加友链 */
 const handleAdd = async () => {
     if (formData.linkId) {
         await LinkService.updateLink(formData)
@@ -215,7 +228,7 @@ const handleAdd = async () => {
     })
     getLinkListData()
 }
-
+/** 删除友链 */
 const handleDel = async (row: Link) => {
     if (!row.linkId) {
         ElMessage.warning('无效的友链ID')
@@ -238,22 +251,12 @@ const handleDel = async (row: Link) => {
         ElMessage.info('已取消')
     }
 }
-
+/** 搜索 */
 const handleSearch = () => {
     getLinkListData()
 }
 
-const searchList = [
-    {
-        prop: 'linkName',
-        current: 'input',
-        label: "友链名称",
-        props: {
-            placeholder: "请输入友链名称"
-        }
-    }
-]
-
+/** 重置 */
 const handleReset = () => {
     getLinkListData()
 }

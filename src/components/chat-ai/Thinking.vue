@@ -25,8 +25,7 @@ withDefaults(defineProps<{
     gap: 8px;
     // padding: 12px 16px;
     padding: 16px;
-    background-color: #f5f5f5;
-    border: 1px solid #e0e0e0;
+    // background-color: #f5f5f5;
     border-radius: 12px 12px 12px 4px;
     color: #666;
     font-size: 14px;

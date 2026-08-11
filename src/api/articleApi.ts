@@ -10,7 +10,7 @@ export class ArticleService{
     // 添加文章
     static addArticle(data:Api.Article.ArticleInfo){
         return request.post<number>({
-            url:`/api/article`,
+            url:'/api/article',
             data
         })
     }
@@ -25,6 +25,12 @@ export class ArticleService{
     static delArticle(params:number){
         return request.del({
             url:`/api/article/${params}`
+        })
+    }
+    // 解绑文章未使用的图片（发布/编辑后离开页面时调用）
+    static unbindUnusedFiles(articleId:number){
+        return request.post({
+            url:`/api/article/unbindUnused/${articleId}`
         })
     }
     // 获取指定文章和相关联标签
@@ -45,11 +51,10 @@ export class ArticleService{
             url: '/api/article/draft-count'
         })
     }
-    // 获取10条最近发布/草稿的文章
-    static getTop10List(params: {status: 'PUBLISH' | 'DRAFT'}){
+    // 获取10条草稿的文章
+    static getDraftList(){
         return request.get<Api.Article.ArticleInfo[]>({
-            url: '/api/article/top10',
-            params
+            url: '/api/article/draft'
         })
     }
 }

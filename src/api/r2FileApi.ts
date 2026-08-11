@@ -1,7 +1,7 @@
 import request from "@/utils/http"
 export class R2FileService {
     // 上传文件
-    static uploadR2File(data: { file: File }) {
+    static uploadR2File(data: { file: File, type: string, userId: number, referenceId?: number }) {
         return request.post<any>({
             url: `/api/r2-file`,
             data,

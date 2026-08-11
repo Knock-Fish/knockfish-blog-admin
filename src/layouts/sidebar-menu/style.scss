@@ -1,14 +1,14 @@
 @use '@style/variables.scss' as *;
+@use '@style/mixin.scss' as *;
 
 .el-menu {
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    z-index: 20000;
+    z-index: 900;
     // ???
     // user-select: none;
-    // scrollbar-width: none;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;

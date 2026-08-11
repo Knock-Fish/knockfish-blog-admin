@@ -8,15 +8,13 @@
             @current-page="getSiteListData" @page-size="getSiteListData">
             <!-- 自定义头部 -->
             <template #header>
-                <div class="table-header">
-                    <DialogButton permission="site:add" @submit="handleAdd"
-                        @closed="clearData">
-                        新增站点
-                        <template #content>
-                            <DynamicForm v-model="formData"
-                                :form-items="formItems">
-                                <template #ico>
-                                    <img style="
+                <DialogButton :permission="SitePerm.ADD" @submit="handleAdd"
+                    @closed="clearData">
+                    新增站点
+                    <template #content>
+                        <DynamicForm v-model="formData" :form-items="formItems">
+                            <template #ico>
+                                <img style="
                             position: absolute;
                             right: 20px;
                             top: -5px;
@@ -24,19 +22,10 @@
                             height: 40px;
                             margin-left: 30px;
                             vertical-align: middle;" :src="formData.ico">
-                                </template>
-                            </DynamicForm>
-                        </template>
-                    </DialogButton>
-                    <div class="icon-list">
-                        <!-- 刷新数据 -->
-                        <DataRefresh @click="getSiteListData" />
-                        <!-- 页面全屏 -->
-                        <FullScreenPage :target-ref="divRef" />
-                        <!-- 导出excel -->
-                        <ExcelExport :table-data="tableData" />
-                    </div>
-                </div>
+                            </template>
+                        </DynamicForm>
+                    </template>
+                </DialogButton>
             </template>
             <template #ico="{ row }">
                 <div class="site">
@@ -54,11 +43,11 @@
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton permission="site:edit"
+                <DialogButton :permission="SitePerm.EDIT" :buttonBorder="false"
                     :button-props="editButtonProps" :dialog-props="dialogProps"
                     @submit="handleUpdate" @click="getData(row)"
                     @closed="clearData">
-                    编辑
+                    <SvgIcon icon="ri:pencil-line" />
                     <template #content>
                         <DynamicForm ref="formRef" v-model="formData"
                             :form-items="formItems">
@@ -75,9 +64,10 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <DialogButton permission="site:delete"
-                    :button-props="delButtonProps" @click="handleDel(row)">
-                    删除
+                <DialogButton type="confirm" :permission="SitePerm.DELETE"
+                    :buttonBorder="false" :button-props="delButtonProps"
+                    @click="handleDel(row)">
+                    <SvgIcon icon="ri:delete-bin-6-line" />
                 </DialogButton>
             </template>
         </PageTable>
@@ -85,6 +75,8 @@
 </template>
 
 <script setup lang='ts'>
+import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { SitePerm } from '@/constants'
 import { SiteService } from "@/api/siteApi"
 import { CategoryService } from "@/api/categoryApi"
 import { ElMessage, ElMessageBox, type Action, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
@@ -217,23 +209,25 @@ const page = reactive({ // 分页参数
 })
 const formData = reactive<Record<string, any>>({})
 const editButtonProps = ref<ButtonProps>({
-    size: "small"
+    type: "primary",
+    plain: true
 })
 const delButtonProps = ref<ButtonProps>({
-    size: "small",
-    type: "danger"
+    type: "danger",
+    plain: true
 })
 const dialogProps = ref<DialogProps>({
     title: "站点信息"
 })
-const columns = ref([
+const columns = reactive([
     { type: 'index', label: '序号' },
-    { prop: 'siteName', label: '站点名称', slot: 'ico', minWidth: '200', showOverflowTooltip: true },
+    { prop: 'siteName', label: '站点名称', slot: 'ico', minWidth: '150', showOverflowTooltip: true },
     { slot: 'siteUrl', label: 'URL', minWidth: '180', showOverflowTooltip: true },
-    { prop: 'createTime', label: '创建时间', minWidth: '140' },
-    { prop: 'categoryName', label: '所属分类', minWidth: '90' },
-    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
+    { prop: 'createTime', label: '创建时间', minWidth: '150' },
+    { prop: 'categoryName', label: '所属分类', minWidth: '150' },
+    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', permission: ['site:edit', 'site:delete'] }
 ])
+useTableColumnPermission(columns)
 const getSiteListData = async () => {
     loading.value = true
     try {
@@ -389,16 +383,6 @@ onMounted(async () => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
-
-        .table-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            .icon-list {
-                display: flex;
-            }
-        }
     }
 }
 

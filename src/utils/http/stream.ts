@@ -243,7 +243,7 @@ class StreamRequest {
                                 onSSEEvent?.(event)
 
                                 // 如果是内容事件，提取 content
-                                if (event.type === 'content' && event.content) {
+                                if (eventData.content !== undefined && eventData.content !== null) {
                                     this.fullText += event.content
                                     this.contentBuffer += event.content
                                     this.scheduleFlush(onContent)

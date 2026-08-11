@@ -7,72 +7,82 @@
             :page="page" slot-header="header" @current-page="getRoleListData"
             @page-size="getRoleListData">
             <template #header>
-                <div class="table-header">
-                    <DialogButton permission="role:add" @submit="handleAdd">
-                        新增角色
-                        <template #content>
-                            <DynamicForm v-model="formData"
-                                :form-items="formItems" />
-                        </template>
-                    </DialogButton>
-                    <div class="icon-list">
-                        <DataRefresh @click="getRoleListData" />
-                        <FullScreenPage :target-ref="divRef" />
-                        <ExcelExport :table-data="tableData" />
-                    </div>
-                </div>
-            </template>
-            <template #permission="{ row }">
-                <DialogButton permission="role:edit" :button-props="permissionButtonProps"
-                    @open="handleOpenPermission(row)"
-                    @closed="clearPermissionIds" @submit="handleSubmit">
-                    <span class="permissionText">
-                        <SvgIcon icon="mdi:account-box-edit-outline">
-                            分配权限
-                        </SvgIcon>
-                    </span>
-                    <template #content>
-                        <ElScrollbar height="300px">
-                            <ElTree :data="treeData" node-key="permissionId"
-                                :props="treeProps" show-checkbox
-                                :check-strictly="true"
-                                ref="permissionTreeRef"
-                                @check="handleTreeCheck">
-                                <template #default="{ node, data }">
-                                    <div class="custom-tree-node">
-                                        <span class="node-name">{{
-                                            data.permissionName }}</span>
-                                        <span class="node-code">{{
-                                            data.permissionCode }}</span>
-                                    </div>
-                                </template>
-                            </ElTree>
-                        </ElScrollbar>
-                    </template>
-                </DialogButton>
-            </template>
-            <!-- 自定义操作列 -->
-            <template #option="{ row }">
-                <DialogButton permission="role:edit" :button-props="editButtonProps" @click="getData(row)">
-                    编辑
+                <DialogButton :permission="RolePerm.ADD" @submit="handleAdd"
+                    @closed="clearData">
+                    新增角色
                     <template #content>
                         <DynamicForm v-model="formData"
                             :form-items="formItems" />
                     </template>
                 </DialogButton>
-                <DialogButton type="button" permission="role:delete" :button-props="delButtonProps"
-                @click="handleDel(row)">
-                    删除
-                </DialogButton>
+            </template>
+            <!-- 自定义操作列 -->
+            <template #option="{ row }">
+                <ElDropdown placement="bottom">
+                    <ElButton style="padding: 10px; border: none;" plain
+                        type="info">
+                        <SvgIcon icon="mdi:more-vert" />
+                    </ElButton>
+                    <template #dropdown>
+                        <div style="display: flex; flex-direction: column;">
+                            <DialogButton :permission="RolePerm.EDIT"
+                                :button-props="permissionButtonProps"
+                                @open="handleOpenPermission(row)"
+                                @closed="clearPermissionIds"
+                                @submit="handleSubmit">
+                                权限分配
+                                <template #content>
+                                    <ElScrollbar height="300px">
+                                        <ElTree :data="treeData"
+                                            node-key="permissionId"
+                                            :props="treeProps" show-checkbox
+                                            :check-strictly="true"
+                                            ref="permissionTreeRef"
+                                            @check="handleTreeCheck">
+                                            <template #default="{ node, data }">
+                                                <div class="custom-tree-node">
+                                                    <span class="node-name">{{
+                                                        data.permissionName
+                                                        }}</span>
+                                                    <span class="node-code">{{
+                                                        data.permissionCode
+                                                        }}</span>
+                                                </div>
+                                            </template>
+                                        </ElTree>
+                                    </ElScrollbar>
+                                </template>
+                            </DialogButton>
+                            <DialogButton :permission="RolePerm.EDIT"
+                                :button-props="editButtonProps"
+                                @click="getData(row)" @submit="handleUpdate"
+                                @closed="clearData">
+                                编辑
+                                <template #content>
+                                    <DynamicForm v-model="formData"
+                                        :form-items="formItems" />
+                                </template>
+                            </DialogButton>
+                            <DialogButton type="button"
+                                :permission="RolePerm.DELETE"
+                                :button-props="delButtonProps"
+                                @click="handleDel(row)">
+                                删除
+                            </DialogButton>
+                        </div>
+                    </template>
+                </ElDropdown>
             </template>
         </PageTable>
     </div>
 </template>
 
 <script setup lang='ts'>
+import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { RolePerm } from '@/constants/index.ts'
 import { RoleService } from '@/api/roleApi'
 import { PermissionService } from '@/api/permissionApi'
-import { type ButtonProps, type DialogProps, ElMessage,ElMessageBox } from "element-plus"
+import { type ButtonProps, type DialogProps, ElMessage, ElMessageBox } from "element-plus"
 defineOptions({ name: 'Role' })
 type Role = Api.Role.RoleInfo
 type Permission = Api.Permission.PermissionInfo
@@ -142,13 +152,15 @@ const getData = (row: Role) => {
     const { roleId, roleName, description } = row
     Object.assign(formData, { roleId, roleName, description })
 }
-const clearPermissionIds = () => {
-    selectPermissionIds.value = []
-    currentCheckedIds.value = []  // 添加这行
-    // 清空formData数据
+const clearData = () => {
     Object.keys(formData).forEach((key) => {
         (formData[key as keyof Role] as any) = ""
     })
+}
+const clearPermissionIds = () => {
+    selectPermissionIds.value = []
+    currentCheckedIds.value = []
+    clearData()
 }
 // 树形配置
 const treeProps = {
@@ -175,24 +187,28 @@ const handleTreeCheck = (data: any, { checkedKeys, halfCheckedKeys }: any) => {
 
 }
 const permissionButtonProps = ref<ButtonProps>({
-    size: "small",
+    type: "warning",
     link: true
 })
 const editButtonProps = ref<ButtonProps>({
-    size: "small",
+    // size: "small",
+    type: "primary",
+    link: true
 })
-const delButtonProps =  ref<ButtonProps>({
-    size: "small",
-    type: "danger"
+const delButtonProps = ref<ButtonProps>({
+    // size: "small",
+    type: "danger",
+    link: true
 })
-const columns = ref([
+const columns = reactive([
     { type: 'index', label: '序号' },
-    { prop: 'roleName', label: '角色名称', minWidth: '130' },
-    { prop: 'description', label: '描述', minWidth: '180', showOverflowTooltip: true },
-    { label: '分配/拥有权限', minWidth: '100', slot: "permission" },
-    { prop: 'createTime', label: '创建时间', minWidth: '130' },
-    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
+    { prop: 'roleName', label: '角色名称', minWidth: '150' },
+    { prop: 'description', label: '描述', minWidth: '150', showOverflowTooltip: true },
+    // { prop: 'permission', label: '分配/拥有权限', minWidth: '100', slot: "permission", permission: ['role:edit'] },
+    { prop: 'createTime', label: '创建时间', minWidth: '150' },
+    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', permission: ['role:edit', 'role:delete'] }
 ])
+useTableColumnPermission(columns)
 const searchList = [
     {
         prop: 'roleName',
@@ -210,7 +226,7 @@ const handleDel = async (row: Role) => {
     }
 
     try {
-        await ElMessageBox.confirm('确定要删除该站点吗？删除后无法恢复！', '警告', {
+        await ElMessageBox.confirm('确定要删除该角色吗？删除后无法恢复！', '警告', {
             confirmButtonText: '确定删除',
             cancelButtonText: '取消',
             type: 'warning',
@@ -251,9 +267,9 @@ const handleSubmit = async () => {
 }
 const getRoleListData = async () => {
     const data: PaginatingParams<Role> = await RoleService.getRoleListData({
-        ...query,
-        pageNum: page.pageNum,  // 当前页码
-        pageSize: page.pageSize,    // 每页条数
+        ...query.value,
+        pageNum: page.pageNum,
+        pageSize: page.pageSize,
     })
     tableData.value = data.list
     page.total = data.total
@@ -271,16 +287,26 @@ const handleAdd = async () => {
         message: '提交成功',
         type: 'success',
     })
-    permissionLoaded.value = false
-    getPermissionListData()
+    page.pageNum = 1
+    getRoleListData()
+}
+const handleUpdate = async () => {
+    await RoleService.updatePermission(formData)
+    ElMessage({
+        message: '编辑成功',
+        type: 'success',
+    })
+    getRoleListData()
 }
 /** 搜索 */
 const handleSearch = () => {
-    // getRoleListData()
+    page.pageNum = 1
+    getRoleListData()
 }
 /** 搜索重置 */
 const handleReset = () => {
-    // getRoleListData()
+    page.pageNum = 1
+    getRoleListData()
 }
 // 构建树形结构
 const buildTree = (list: Permission[], parentId: number = 0): any[] => {
@@ -308,16 +334,6 @@ onMounted(async () => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
-
-        .table-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            .icon-list {
-                display: flex;
-            }
-        }
     }
 
     .permissionText {

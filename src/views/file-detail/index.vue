@@ -71,7 +71,7 @@
 import { R2FileService } from '@/api/r2FileApi'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
-import { FileSkeleton } from '@/components/skeletons'
+import FileSkeleton from './widget/FileSkeleton.vue'
 
 type R2File = Api.R2File.R2FileInfo
 

@@ -29,17 +29,17 @@ export const staticRoutes: RouteRecordRaw[] = [
             {
                 path: RoutesAlias.Exception404,
                 name: "Exception404",
-                component: () => import("@views/exception/404/index.vue")
+                component: () => import(/* webpackChunkName: "exception" */ "@views/exception/404/index.vue")
             },
             {
                 path: RoutesAlias.Exception403,
                 name: "Exception403",
-                component: () => import("@views/exception/403/index.vue")
+                component: () => import(/* webpackChunkName: "exception" */ "@views/exception/403/index.vue")
             },
             {
                 path: RoutesAlias.Exception500,
                 name: "Exception500",
-                component: () => import("@views/exception/500/index.vue")
+                component: () => import(/* webpackChunkName: "exception" */ "@views/exception/500/index.vue")
             },
         ]
     },

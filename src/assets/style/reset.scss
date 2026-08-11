@@ -1,5 +1,13 @@
 @charset "UTF-8";
 
+p {
+    img {
+        position: relative !important;
+        z-index: 90 !important;
+    }
+
+}
+
 body,
 dl,
 dt,
@@ -102,12 +110,12 @@ hr {
     overflow: hidden;
 }
 
-ol,
-ul {
-    list-style-image: none;
-    list-style-position: outside;
-    list-style-type: none;
-}
+// ol,
+// ul {
+//     list-style-image: none;
+//     list-style-position: outside;
+//     list-style-type: none;
+// }
 
 caption,
 th {

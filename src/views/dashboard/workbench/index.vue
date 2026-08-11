@@ -6,14 +6,14 @@
         </div>
         <div class="section">
             <div class="left-section">
-                <ChartArticle />
+                <ChartArticle/>
                 <div class="activity">
                     <ActivitySection style="flex: 0.8;" />
                     <TodoList style="flex: 1;" />
                 </div>
             </div>
             <div class="right-section">
-                <PieChart />
+                <PieChart/>
                 <QuickActions />
                 <QuickLinks />
             </div>
@@ -28,8 +28,24 @@ import QuickActions from './widget/QuickActions.vue'
 import QuickLinks from './widget/QuickLinks.vue'
 import StatsCard from './widget/StatsCard.vue'
 import TodoList from './widget/TodoList.vue'
-import ChartArticle from './widget/ChartArticle.vue'
-import PieChart from "./widget/PieChart.vue"
+import LoadingSpinner from './widget/LoadingSpinner.vue'
+import LoadError from './widget/LoadError.vue'
+
+const ChartArticle = defineAsyncComponent({
+    loader: () => import('./widget/ChartArticle.vue'),
+    loadingComponent: LoadingSpinner,
+    errorComponent: LoadError,
+    delay: 0,
+    timeout: 10000
+})
+
+const PieChart = defineAsyncComponent({
+    loader: () => import('./widget/PieChart.vue'),
+    loadingComponent: LoadingSpinner,
+    errorComponent: LoadError,
+    delay: 0,
+    timeout: 10000
+})
 </script>
 
 <style lang="scss" scoped>
@@ -75,13 +91,11 @@ import PieChart from "./widget/PieChart.vue"
         }
 
         .right-section {
-            // flex: 0.4;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
 
-        /* 小屏幕自动垂直排列 */
         @media screen and (max-width: 1024px) {
             flex-direction: column;
 

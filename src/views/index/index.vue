@@ -12,8 +12,12 @@
 </template>
 
 <script setup lang='ts'>
-
-
+import { useUserStore } from "@/store/modules/user"
+const userStore = useUserStore()
+const backgroundImage = computed(() => {
+    const bg = userStore.info.background
+    return bg ? `url(${bg})` : 'none'
+})
 </script>
 
 <style lang="scss" scoped>
@@ -24,65 +28,24 @@
     padding: 0;
     min-height: 100vh;
 
-    // 添加背景图片
-    // &::before {
-    //     content: '';
-    //     position: fixed;
-    //     top: 0;
-    //     left: 0;
-    //     right: 0;
-    //     bottom: 0;
-    //     z-index: 20010; // 设置较低的层级
-    //     background-image: url('../../assets/imgs/laffy.jpg'); // 替换为你的图片路径
-    //     background-size: cover;
-    //     background-position: center;
-    //     background-repeat: no-repeat;
-    //     background-attachment: fixed; // 固定背景
-    //     opacity: 0.3; // 透明度，让背景更淡
-    //     pointer-events: none; // 确保不会干扰点击事件
-    // }
-
+    &::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        background-image: v-bind(backgroundImage);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0.2;
+        filter: blur(3px);
+        pointer-events: none;
+        transform: translateZ(0);
+        will-change: transform;
+    }
+    
 }
-
-// 全局背景
-// body {
-//     position: relative;
-//     margin: 0;
-//     padding: 0;
-//     min-height: 100vh;
-
-//     // 添加背景图片
-//     &::before {
-//         content: '';
-//         position: fixed;
-//         top: 0;
-//         left: 0;
-//         right: 0;
-//         bottom: 0;
-//         z-index: 10000; // 设置较低的层级
-//         background-image: url('./assets/imgs/laffy.jpg'); // 替换为你的图片路径
-//         background-size: cover;
-//         background-position: center;
-//         background-repeat: no-repeat;
-//         background-attachment: fixed; // 固定背景
-//         opacity: 0.3; // 透明度，让背景更淡
-//         pointer-events: none; // 确保不会干扰点击事件
-//     }
-// }
-
-// // 确保主内容区域在背景之上
-// #app {
-//     position: relative;
-//     z-index: 1;
-//     background: transparent;
-// }
-
-// // el-dialog 遮罩层默认层级是更高的，会自动覆盖
-// .el-overlay {
-//     z-index: 2000 !important; // element-plus 遮罩默认层级
-
-//     &::before {
-//         // 遮罩层有自己的背景，会覆盖页面背景
-//         background-color: rgba(0, 0, 0, 0.5);
-//     }
-// }</style>
+</style>

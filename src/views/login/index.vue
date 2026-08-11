@@ -3,7 +3,7 @@
         <SakuraBackground />
         <div class="login-container">
             <div class="laffy"></div>
-            <div class="login-form">
+            <div class="login-form" v-if="!isLoading">
                 <h2>Login</h2>
                 <DynamicForm ref="formRef" v-model="formData"
                     :form-items="formItems">
@@ -14,34 +14,29 @@
                             color="#ffffff" icon="mdi:lock-outline" />
                     </template>
                 </DynamicForm>
-                
+
                 <div class="verify-wrapper">
-                    <DragVerify
-                        ref="verifyRef"
-                        :width="240"
-                        :height="36"
-                        :tips-text="verifyTips"
-                        :success-text="'验证成功'"
+                    <DragVerify ref="verifyRef" :width="240" :height="36"
+                        :tips-text="verifyTips" :success-text="'验证成功'"
                         :bg-color="'rgba(255, 255, 255, 0.2)'"
                         :fill-color="'rgba(240, 168, 192, 0.8)'"
-                        :block-bg="'#F0A8C0'"
-                        @success="onVerifySuccess"
-                        @fail="onVerifyFail"
-                    />
+                        :block-bg="'#F0A8C0'" @success="onVerifySuccess"
+                        @fail="onVerifyFail" />
                 </div>
-                
-                <ElButton 
-                    class="login-btn" 
-                    :disabled="!isVerified"
+
+                <ElButton class="login-btn" :disabled="!isVerified"
                     @click="handleLogin">
                     Log In
                 </ElButton>
+            </div>
+            <div class="loading-wrapper" v-else>
+                <div class="loading-spinner"></div>
+                <p class="loading-text">登录中……</p>
             </div>
         </div>
     </div>
 </template>
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
 import DragVerify from "@comps/drag-verify/index.vue"
 import { useUserStore } from "@/store/modules/user"
 import { useMenuStore } from "@/store/modules/menu"
@@ -51,22 +46,23 @@ import { flatPermissionsToMenuTree } from "@/utils/tree/menuHelper"
 import { extractPermissions } from "@/utils/tree/extractPermissions"
 import { ElMessage } from "element-plus"
 import { type AppRouteRecord } from '@/types'
+import { registerDynamicRoutes } from "@/router/utils/registerRoutes"
+import { setRouteRegistered } from "@/router/guards/beforeEach"
+
 
 type LoginParasm = Api.Auth.LoginParams
-type Permission = Api.Permission.PermissionInfo
 
 const router = useRouter()
 const userStore = useUserStore()
 const menuStore = useMenuStore()
 
 const formRef = ref()
-const verifyRef = ref()
 const isVerified = ref(false)
 const verifyTips = ref('向右拖动滑块进行验证')
-
+const isLoading = ref(false)
 const formData = reactive<LoginParasm>({
-    username: '',
-    password: '',
+    username: 'user_fish',
+    password: '123456',
 })
 
 const onVerifySuccess = () => {
@@ -86,36 +82,52 @@ const handleLogin = async () => {
         ElMessage.warning('请先完成滑块验证')
         return
     }
-    
-    if (formRef.value) {
-        try {
-            await formRef.value.validate()
-            await performLogin()
-        } catch (error) {
-            console.log('表单验证失败')
+
+    if (!formRef.value) return
+    if (isLoading.value) return
+
+    isLoading.value = true
+
+    try {
+        await formRef.value.validate()
+    } catch {
+        isLoading.value = false
+        return
+    }
+
+    try {
+        const {
+            userId, username, description, nickname, avatar, email, githubUrl, bilibiliUrl, background, token
+        } = await AuthService.login(formData)
+
+        if (!token) {
+            throw new Error('登录失败 - 未收到令牌')
         }
-    }
-}
+        userStore.setToken(token)
+        const permissionData = await PermissionService.getUserPermissions(Number(userId))
+        const menuList: AppRouteRecord[] = flatPermissionsToMenuTree(permissionData.list)
+        menuStore.setMenuList(menuList)
+        userStore.setLoginStatus(true)
+        userStore.setPermissions(extractPermissions(permissionData.list))
+        userStore.setUserInfo({ 
+            userId, 
+            username, 
+            description, 
+            nickname, 
+            email, 
+            avatar, 
+            githubUrl, 
+            bilibiliUrl, 
+            background 
+        })
 
-const performLogin = async () => {
-    const {
-        userId, username, description, nickname, avatar, email, token
-    } = await AuthService.login(formData)
-    
-    if (!token) {
-        throw new Error('登录失败 - 未收到令牌')
+        await registerDynamicRoutes(router, menuList)
+        setRouteRegistered(true)
+        ElMessage.success(`登录成功`)
+        router.push("/dashboard/workbench")
+    } catch (error) {
+        isLoading.value = false
     }
-    
-    userStore.setToken(token)
-    const permissionData = await PermissionService.getUserPermissions(Number(userId))
-
-    const menuList: AppRouteRecord[] = flatPermissionsToMenuTree(permissionData.list)
-    menuStore.setMenuList(menuList)
-    userStore.setLoginStatus(true)
-    userStore.setPermissions(extractPermissions(permissionData.list))
-    userStore.setUserInfo({ userId, username, description, nickname, email, avatar })
-    ElMessage.success(`登录成功`)
-    router.push("/dashboard/workbench")
 }
 
 const formItems = ref([
@@ -161,7 +173,7 @@ const formItems = ref([
         align-items: center;
         width: 100%;
         max-width: 320px;
-        height: auto;
+        height: 350px;
         @include frosted-glass;
         background-color: rgba(255, 255, 255, 0.1);
 
@@ -183,7 +195,7 @@ const formItems = ref([
             padding: 40px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
             z-index: 2;
-            
+
             h2 {
                 text-align: center;
                 font-weight: bold;
@@ -241,6 +253,38 @@ const formItems = ref([
                 }
             }
         }
+
+        .loading-wrapper {
+            width: 100%;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+
+            .loading-spinner {
+                width: 48px;
+                height: 48px;
+                border: 4px solid rgba(255, 255, 255, 0.3);
+                border-top-color: #F0A8C0;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+            .loading-text {
+                margin-top: 20px;
+                color: white;
+                font-size: 16px;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            }
+        }
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }
 </style>

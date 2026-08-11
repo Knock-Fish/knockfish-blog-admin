@@ -2,7 +2,7 @@
     <div class="container">
         <ElRow justify="space-between">
             <ElCol :span="13">
-                <ElInput v-model="input4" class="input" size="large"
+                <ElInput v-model="query.title" class="input" size="large"
                     placeholder="输入文章标题查询">
                     <template #prefix>
                         <SvgIcon icon="mdi:search" />
@@ -10,92 +10,106 @@
                 </ElInput>
             </ElCol>
             <ElCol :span="1.5">
-                <DialogButton type="button" permission="article:add"
+                <DialogButton type="button" :permission="ArticlePerm.ADD"
                     @click="handleAdd">
                     新增文章
                 </DialogButton>
             </ElCol>
         </ElRow>
         <ElEmpty v-if="!articleList" description="description" />
-        <div class="list" v-else v-infinite-scroll="loadMore"
-            infinite-scroll-immediate="false">
-            <ElCard class="card" shadow="never" v-for="article in articleList"
-                :key="article.articleId" @click="goToArticleDetail(article)">
-                <div class="image-container">
-                    <ElImage :src="article.cover" lazy fit="cover" />
-                </div>
-                <div class="bottom">
-                    <span class="title">{{ article.title }}</span>
-                    <div class="info">
-                        <span class="date">
-                            <SvgIcon icon="mdi:clock-outline">
-                                {{ article.publishTime }}
-                            </SvgIcon>
-                        </span>
-                        <span class="action-btn">
-                            <DialogButton type="button"
-                                :button-props="editButtonProps"
-                                permission="article:edit"
-                                @click="goToArticleEditor(article)">
-                                编辑
-                            </DialogButton>
-                            <DialogButton type="button"
-                                :button-props="delButtonProps"
-                                permission="article:delete"
-                                @click="handleDel(article)">
-                                删除
-                            </DialogButton>
-                        </span>
+        <ElScrollbar v-else ref="scrollbarRef" class="list"
+            max-height="calc(100vh - 200px)" :distance="50"
+            @end-reached="onEndReached">
+            <div class="grid">
+                <ElCard class="card" shadow="never" v-for="article in articleList"
+                    :key="article.articleId" @click="goToArticleDetail(article)">
+                    <div class="image-container">
+                        <ElImage :src="article.cover" lazy fit="cover" />
                     </div>
+                    <div class="bottom">
+                        <span class="title">{{ article.title }}</span>
+                        <div class="info">
+                            <span class="date">
+                                <SvgIcon icon="mdi:clock-outline">
+                                    {{ article.publishTime }}
+                                </SvgIcon>
+                            </span>
+                            <span class="action-btn">
+                                <DialogButton type="button"
+                                    :button-props="editButtonProps"
+                                    :permission="ArticlePerm.EDIT"
+                                    @click="goToArticleEditor(article)">
+                                    编辑
+                                </DialogButton>
+                                <DialogButton type="button"
+                                    :button-props="delButtonProps"
+                                    :permission="ArticlePerm.DELETE"
+                                    @click="handleDel(article)">
+                                    删除
+                                </DialogButton>
+                            </span>
+                        </div>
+                    </div>
+                </ElCard>
+                <!-- 加载更多提示 -->
+                <div class="loading-more" v-if="loading">
+                    <SvgIcon icon="mdi:loading" class="loading-icon" />
+                    加载中...
                 </div>
-            </ElCard>
-            <!-- 加载更多提示 -->
-            <div class="loading-more" v-if="loading">
-                <SvgIcon icon="mdi:loading" class="loading-icon" />
-                加载中...
+                <div class="no-more" v-else-if="!hasMore && articleList.length > 0">
+                    没有更多了~
+                </div>
             </div>
-            <div class="no-more" v-else-if="!hasMore && articleList.length > 0">
-                没有更多了~
-            </div>
-        </div>
+        </ElScrollbar>
     </div>
 </template>
 
 <script setup lang='ts'>
-import { useRouter } from "vue-router"
 import { ArticleService } from "@/api/articleApi"
-import { ElEmpty, ElMessage, ElMessageBox, type ButtonProps } from "element-plus"
+import { ArticlePerm } from "@/constants/permission"
+import { ElEmpty, ElMessage, ElMessageBox, ElScrollbar, type ButtonProps, type ScrollbarInstance } from "element-plus"
 type Article = Api.Article.ArticleInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 interface ArticleQuery {
     title?: string
 }
-const input4 = ref()
 const router = useRouter()
-const articleList = ref<Article[]>([])
-const loading = ref(false)
-const hasMore = ref(true)
-const query = reactive<ArticleQuery>({})
+const articleList = ref<Article[]>([])  // 文章列表
+const loading = ref<boolean>(false) // 是否加载
+const hasMore = ref<boolean>(true)  // 是否有更多文章
+const query = reactive<ArticleQuery>({})     // 搜索关键词
+const scrollbarRef = ref<ScrollbarInstance>()  // 滚动容器实例
 const page = reactive({ // 分页参数
     total: 0,
     pageNum: 1,
     pageSize: 10
 })
+// --------------- 按钮配置 ---------------
+const editButtonProps: ButtonProps = {
+    size: "small"
+}
+const delButtonProps: ButtonProps = {
+    size: "small",
+    type: "danger"
+}
+/** 跳转到新增页面 */
+const handleAdd = () => {
+    router.push({ name: 'Publish' })
+}
+/** 滚动加载文章 */
 const loadMore = async () => {
     if (loading.value || !hasMore.value || articleList.value.length >= page.total) {
         return
     }
-
     loading.value = true
     page.pageNum++
-
     try {
         const data: PaginatingParams<Article> = await ArticleService.getArticleListData({
             ...query,
             pageNum: page.pageNum,
             pageSize: page.pageSize,
         })
-
+        // 追加文章
         articleList.value = [...articleList.value, ...data.list]
         page.total = data.total
         hasMore.value = articleList.value.length < page.total
@@ -106,18 +120,24 @@ const loadMore = async () => {
         page.pageNum--
     } finally {
         loading.value = false
+        // 内容不足以撑出滚动条时继续加载，直到出现滚动条或没有更多
+        ensureFilled()
     }
 }
-const editButtonProps: ButtonProps = {
-    size: "small"
+/** 触底回调 */
+const onEndReached = (direction: string) => {
+    if (direction === 'bottom') loadMore()
 }
-const delButtonProps: ButtonProps = {
-    size: "small",
-    type: "danger"
+/** 内容未填满容器时自动继续加载 */
+const ensureFilled = async () => {
+    await nextTick()
+    const wrap = scrollbarRef.value?.wrapRef
+    if (!wrap) return
+    if (hasMore.value && !loading.value && wrap.scrollHeight <= wrap.clientHeight) {
+        loadMore()
+    }
 }
-const handleAdd = () => {
-    router.push({ name: 'Publish' })
-}
+/** 获取文章数据 */
 const getArticleListData = async () => {
     if (loading.value) return
 
@@ -136,8 +156,10 @@ const getArticleListData = async () => {
         ElMessage.error('获取文章列表失败')
     } finally {
         loading.value = false
+        ensureFilled()
     }
 }
+/** 跳转到文章编辑页面 */
 const goToArticleEditor = (data: Article) => {
     router.push({
         name: "Editor",
@@ -146,6 +168,7 @@ const goToArticleEditor = (data: Article) => {
         }
     })
 }
+/** 跳转到文章详情页面 */
 const goToArticleDetail = (data: Article) => {
     router.push({
         name: "Detail",
@@ -154,6 +177,7 @@ const goToArticleDetail = (data: Article) => {
         }
     })
 }
+/** 删除文章 */
 const handleDel = async (row: Article) => {
     if (!row.articleId) {
         ElMessage.warning('无效的文章ID')
@@ -184,10 +208,12 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .container {
     padding: 20px;
-    border-radius: 15px;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
     border: 1px solid var(--border-color);
     background-color: var(--card-color);
-    min-height: calc(100vh - 160px);
+    height: calc(100vh - 111px);
+
     margin: 15px;
 
     .el-empty {
@@ -195,33 +221,39 @@ onMounted(async () => {
     }
 
     .list {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
         margin: 20px 0;
 
-        @media screen and (min-width: 900px) and (max-width: $screen-larger) {
-            grid-template-columns: repeat(3, 1fr);
+        :deep(.el-scrollbar__bar) {
+            display: none;
         }
 
-        @media screen and (min-width: $screen-medium) and (max-width: 900px) {
-            grid-template-columns: repeat(3, 1fr);
-        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
 
-        @media screen and (max-width: $screen-medium) {
-            grid-template-columns: repeat(2, 1fr);
-        }
+            @media screen and (min-width: 900px) and (max-width: $screen-larger) {
+                grid-template-columns: repeat(3, 1fr);
+            }
 
-        @media screen and (max-width: $screen-small) {
-            grid-template-columns: repeat(1, 1fr);
-        }
+            @media screen and (min-width: $screen-medium) and (max-width: 900px) {
+                grid-template-columns: repeat(3, 1fr);
+            }
 
+            @media screen and (max-width: $screen-medium) {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            @media screen and (max-width: $screen-small) {
+                grid-template-columns: repeat(1, 1fr);
+            }
+        }
 
         .card {
-            border-radius: 8px;
             box-sizing: border-box;
             cursor: pointer;
             overflow: hidden;
+            background-color: transparent !important;
 
             .image-container {
                 aspect-ratio: 16 / 9;

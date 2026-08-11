@@ -1,9 +1,8 @@
 <template>
-    <el-row :gutter="15" class="card-list">
+    <el-row :gutter="15" class="card-list" v-loading="loading">
         <el-col v-for="(item, index) in dataList" :key="index" :sm="12" :md="6"
             :lg="6">
             <div class="custom-card">
-
                 <el-statistic class="box-title" :value="item.num">
                     <template #title>
                         <span class="des subtitle">{{ item.des }}</span>
@@ -26,40 +25,65 @@
 </template>
 
 <script setup lang="ts">
-const dataList = reactive([
+import { ref, onMounted } from "vue";
+import { DashboardService, type DashboardOverview } from "@/api/dashboardApi";
+import { ElMessage } from "element-plus";
+
+interface StatItem {
+    des: string;
+    icon: string;
+    num: number;
+    change: string;
+}
+
+const dataList = ref<StatItem[]>([]);
+const loading = ref(true);
+
+const mapOverviewToStats = (overview: DashboardOverview): StatItem[] => [
     {
         des: '总访问次数',
         icon: 'mdi:account-eye',
-        startVal: 0,
-        duration: 1000,
-        num: 9120,
-        change: '+20%'
+        num: overview.totalVisits,
+        change: overview.visitChange
     },
     {
         des: '文章总数量',
         icon: 'mdi:file-document-outline',
-        startVal: 0,
-        duration: 1000,
-        num: 182,
-        change: '+10%'
+        num: overview.totalArticles,
+        change: overview.articleChange
     },
     {
         des: '标签总数量',
         icon: 'mdi:tag-outline',
-        startVal: 0,
-        duration: 1000,
-        num: 9520,
-        change: '-12%'
+        num: overview.totalTags,
+        change: overview.tagChange
     },
     {
         des: '收藏站点总数量',
         icon: 'mdi:sitemap-outline',
-        startVal: 0,
-        duration: 1000,
-        num: 156,
-        change: '+30%'
+        num: overview.totalSites,
+        change: overview.siteChange
     }
-])
+];
+
+const fetchOverview = async () => {
+    loading.value = true;
+    try {
+        const overview = await DashboardService.getOverview();
+        dataList.value = mapOverviewToStats(overview);
+    } catch (error) {
+        ElMessage.error('获取统计数据失败');
+        console.error('Dashboard overview fetch error:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchOverview();
+});
+
+defineExpose({ refresh: fetchOverview });
 </script>
 
 <style lang="scss" scoped>

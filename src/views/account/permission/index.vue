@@ -6,7 +6,7 @@
         <!-- 权限树表格 -->
         <ElCard class="table" shadow="never">
             <template #header>
-                <DialogButton permission="permission:add" @click="handleClick" @submit="handleAdd"
+                <DialogButton :permission="PermissionPerm.ADD" @click="handleClick" @submit="handleAdd"
                     @open="clearData">
                     新增权限
                     <template #content>
@@ -55,7 +55,7 @@
                         <span class="node-id">ID: {{ data.permissionId }}</span>
                         <!-- 操作按钮 -->
                         <div class="node-actions">
-                            <DialogButton permission="permission:edit" :button-props="editButtonProps"
+                            <DialogButton :permission="PermissionPerm.EDIT" :button-props="editButtonProps"
                                 @click="getData(data)" @closed="clearData">
                                 <SvgIcon icon="mdi:file-edit-outline">
                                     编辑
@@ -82,7 +82,7 @@
                                     </DynamicForm>
                                 </template>
                             </DialogButton>
-                            <DialogButton type="button" permission="permission:delete" :button-props="delButtonProps"
+                            <DialogButton type="button" :permission="PermissionPerm.DELETE" :button-props="delButtonProps"
                                 @click="handleDelete(data)">
                                 <SvgIcon icon="mdi:delete-outline">
                                     删除
@@ -98,6 +98,8 @@
 
 <script setup lang='ts'>
 import { ElMessage, ElMessageBox, type ButtonProps } from 'element-plus'
+import { PermissionPerm } from '@/constants'
+import TreeSkeleton from './widget/TreeSkeleton.vue'
 
 type Permission = Api.Permission.PermissionInfo
 defineOptions({ name: 'Permission' })

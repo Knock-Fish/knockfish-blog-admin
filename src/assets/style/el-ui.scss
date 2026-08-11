@@ -10,13 +10,20 @@
           }
      }
 
+
      .is-active {
           border: none !important;
           background-color: transparent !important;
      }
+
+     .el-sub-menu {
+          .el-menu {
+               background-color: transparent !important;
+          }
+     }
 }
 
-// // 优化菜单折叠展开动画（提升动画流畅度）
+// 优化菜单折叠展开动画（提升动画流畅度）
 // .el-menu.el-menu--inline {
 //      transition: max-height 0.26s cubic-bezier(0.4, 0, 0.2, 1) !important;
 // }
@@ -41,8 +48,8 @@
 
 // 去除el-button按钮的背景和边框
 // .el-button {
-//      background-color: transparent !important;
-//      border: none !important;
+     // background-color: transparent !important;
+     // border: none !important;
 // }
 
 // 去除el-input输入框的边框以及内部背景色
@@ -92,6 +99,7 @@
 
      .el-card__body {
           padding: 0 20px;
+
      }
 
 }
@@ -99,22 +107,52 @@
 // 修改el-table的字体大小
 .el-table {
      font-size: 13px;
+     background-color: transparent !important;
 
-     .cell {
-          font-size: 13px;
+     /* 表头透明 */
+     // tr,
+     // .el-table__header-wrapper,
+     // th.el-table__cell {
+     //      background-color: transparent !important;
+     // }
 
-     }
-
-     /* 表头字体 */
      th.el-table__cell {
           font-size: 13px;
           font-weight: 600;
+     }
+
+     /* 固定列表头透明 */
+     .el-table__fixed,
+     .el-table__fixed-right,
+     .el-table__fixed-header-wrapper {
+          background-color: transparent !important;
+     }
+
+     // /* 单元格透明 */
+     // .el-table__body,
+     // .el-table__header,
+     // .el-table__footer {
+     //      // background-color: transparent !important;
+     // }
+
+     // .el-table__row,
+     // .el-table__cell {
+     //      // background-color: transparent !important;
+     // }
+
+     .cell {
+          font-size: 13px;
      }
 
      .el-table__row {
           .el-table__cell {
                padding: 3px 0;
           }
+     }
+
+     /* 空数据透明 */
+     .el-table__empty-block {
+          background-color: transparent !important;
      }
 }
 
@@ -145,37 +183,17 @@
      border-bottom: none !important;
 }
 
-.elx-conversations {
-     .elx-conversations__list {
-          background-color: var(--card-color) !important;
+.md-editor-code-head {
+     position: relative !important;
+     z-index: 100 !important;
+}
 
-          .elx-conversations__group-title {
-               background-color: transparent;
-          }
-
-          .elx-conversations-item {
-               .elx-conversations-item__label {
-                    color: var(--text-color) !important;
-               }
-
-               &.elx-conversations-item--active {
-                    background-color: var(--border-color);
-               }
-
-               &.elx-conversations-item--menu-opened {
-                    color: var(--text-color);
-               }
-
-               &.elx-conversations-item--hovered {
-                    color: var(--text-color);
-                    background-color: var(--border-color) !important;
-               }
-          }
+.el-input {
+     .el-input__wrapper {
+          background-color: transparent !important;
      }
 }
 
-.elx-x-sender {
-     .chat-write-input {
-          color: var(--text-color);
-     }
+.blur {
+     background-color: transparent !important;
 }

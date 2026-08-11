@@ -49,3 +49,7 @@
     box-sizing: border-box;
     overflow: hidden;
 }
+
+@mixin bg-with-fallback() {
+    background-color: transparent !important;
+}

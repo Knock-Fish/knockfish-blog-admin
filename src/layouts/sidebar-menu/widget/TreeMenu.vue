@@ -1,7 +1,8 @@
 <template>
-  <template v-for="item in props.menuData" :key="item.id">
+  <template v-for="item in props.menuData" :key="item.id" >
     <!-- 无子菜单的情况 -->
-    <el-menu-item v-if="!item.children || item.children.length === 0" :index="item.path">
+    <el-menu-item v-if="!item.children || item.children.length === 0"
+      :index="item.path">
       <el-icon v-if="item.meta?.icon">
         <SvgIcon :icon="item.meta.icon" />
       </el-icon>
@@ -25,8 +26,8 @@
 <script lang="ts" setup>
 import TreeMenu from './TreeMenu.vue'
 import { type AppRouteRecord } from '@/types'
-interface Props{
-    menuData: AppRouteRecord[]
+interface Props {
+  menuData: AppRouteRecord[]
 }
 const props = defineProps<Props>()
 </script>

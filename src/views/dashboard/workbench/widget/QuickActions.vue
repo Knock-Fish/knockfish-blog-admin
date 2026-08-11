@@ -4,7 +4,7 @@
             <h3 class="header-title">快捷功能</h3>
         </div>
         <div class="actions-grid">
-            <div class="action-item" v-permission="`blog:${action.permission}`" v-for="action in quickActions" :key="action.title" @click="handleAction(action)">
+            <div class="action-item" v-permission="action.permission" v-for="action in quickActions" :key="action.title" @click="handleAction(action)">
                 <div class="action-icon">
                     <SvgIcon :icon="action.icon" />
                 </div>
@@ -19,43 +19,44 @@
 
 <script setup lang='ts'>
 import { ElMessage } from 'element-plus'
+import { ArticlePerm, CategoryPerm, TagPerm, FilePerm, SettingPerm, UserPerm } from '@/constants'
 
 const quickActions = ref([
     {
         title: '写文章',
         icon: 'mdi:file-edit',
         description: '写一篇新文章',
-        permission: 'article:add'
+        permission: ArticlePerm.ADD
     },
     {
         title: '站点分类',
         icon: 'mdi:folder',
         description: '管理站点分类',
-        permission: 'category:manage'
+        permission: CategoryPerm.MANAGE
     },
     {
         title: '文章标签',
         icon: 'mdi:tag',
         description: '文章相关标签',
-        permission: 'tag:manage'
+        permission: TagPerm.MANAGE
     },
     {
         title: '文件管理',
         icon: 'mdi:folder-open',
         description: '管理文章文件',
-        permission: 'file:manage'
+        permission: FilePerm.MANAGE
     },
     {
         title: '系统设置',
         icon: 'mdi:settings',
         description: '配置管理系统参数',
-        permission: 'setting:manage'
+        permission: SettingPerm.MANAGE
     },
     {
         title: '用户管理',
         icon: 'mdi:users',
         description: '管理系统用户',
-        permission: 'user:manage'
+        permission: UserPerm.MANAGE
     }
 ])
 

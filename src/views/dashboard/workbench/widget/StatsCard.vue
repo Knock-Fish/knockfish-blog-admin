@@ -1,6 +1,6 @@
 <template>
     <div class="stats-card">
-        <div class="stats-grid">
+        <div class="stats-grid" v-loading="loading">
             <div class="stat-item" v-for="(stat, index) in stats" :key="index">
                 <div class="stat-info">
                     <div class="stat-label">{{ stat.label }}</div>
@@ -15,26 +15,61 @@
 </template>
 
 <script setup lang='ts'>
-const stats = ref([
-    {
-        label: '今日发布',
-        value: '3',
-        icon: 'mdi:calendar-check',
-        iconBg: 'bg-green'
-    },
-    {
-        label: '文章总数',
-        value: '156',
-        icon: 'mdi:file-document-outline',
-        iconBg: 'bg-blue'
-    },
-    {
-        label: '草稿数量',
-        value: '8',
-        icon: 'mdi:file-edit-outline',
-        iconBg: 'bg-orange'
-    },
-])
+import { ref, onMounted } from 'vue';
+import { DashboardService, type DashboardOverview } from '@/api/dashboardApi';
+import { ElMessage } from 'element-plus';
+
+interface Stat {
+    label: string;
+    value: string | number;
+    icon: string;
+    iconBg: string;
+}
+
+const stats = ref<Stat[]>([
+    { label: '今日发布', value: '0', icon: 'mdi:calendar-check', iconBg: 'bg-green' },
+    { label: '文章总数', value: '0', icon: 'mdi:file-document-outline', iconBg: 'bg-blue' },
+    { label: '草稿数量', value: '0', icon: 'mdi:file-edit-outline', iconBg: 'bg-orange' }
+]);
+const loading = ref(true);
+
+const fetchStats = async () => {
+    loading.value = true;
+    try {
+        const overview = await DashboardService.getOverview();
+        stats.value = [
+            {
+                label: '今日发布',
+                value: '0',
+                icon: 'mdi:calendar-check',
+                iconBg: 'bg-green'
+            },
+            {
+                label: '文章总数',
+                value: overview.totalArticles,
+                icon: 'mdi:file-document-outline',
+                iconBg: 'bg-blue'
+            },
+            {
+                label: '草稿数量',
+                value: overview.draftCount,
+                icon: 'mdi:file-edit-outline',
+                iconBg: 'bg-orange'
+            }
+        ];
+    } catch (error) {
+        ElMessage.error('获取统计数据失败');
+        console.error('StatsCard fetch error:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchStats();
+});
+
+defineExpose({ refresh: fetchStats });
 </script>
 
 <style lang="scss" scoped>

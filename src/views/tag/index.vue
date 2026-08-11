@@ -1,31 +1,28 @@
 <template>
     <div ref="divRef" class="page">
         <!-- 搜索栏 -->
-        <SearchBar class="search" @submit="handleSearch" @reset="handleReset" :search-list="searchList"
-            :keyword="query" />
-        <PageTable class="table" :columns="columns" :table-data="tableData" :page="page" slot-header="header"
-            @current-page="getTagListData" @page-size="getTagListData">
+        <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
+            :search-list="searchList" :keyword="query" />
+        <PageTable class="table" :columns="columns" :table-data="tableData"
+            :full-target-ref="divRef" @refresh="getTagListData" :page="page"
+            slot-header="header" @current-page="getTagListData"
+            @page-size="getTagListData">
             <!-- 自定义头部 -->
             <template #header>
-                <div class="table-header">
-                    <DialogButton permission="tag:add" @submit="handleAdd" @closed="clearData">
-                        新增标签
-                        <template #content>
-                            <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
-                                <template #colorSlot>
-                                    <div style="margin-left: 10px;">
-                                        {{ formData.color || "暂无" }}
-                                    </div>
-                                </template>
-                            </DynamicForm>
-                        </template>
-                    </DialogButton>
-                    <div class="icon-list">
-                        <DataRefresh @click="getTagListData" />
-                        <FullScreenPage :target-ref="divRef" />
-                        <ExcelExport :table-data="tableData" />
-                    </div>
-                </div>
+                <DialogButton :permission="TagPerm.ADD" @submit="handleAdd"
+                    @closed="clearData">
+                    新增标签
+                    <template #content>
+                        <DynamicForm ref="formRef" v-model="formData"
+                            :form-items="formItems">
+                            <template #colorSlot>
+                                <div style="margin-left: 10px;">
+                                    {{ formData.color || "暂无" }}
+                                </div>
+                            </template>
+                        </DynamicForm>
+                    </template>
+                </DialogButton>
             </template>
             <template #color="{ row }">
                 <div style="display: flex; gap: 5px;">
@@ -38,15 +35,18 @@
                 </div>
             </template>
             <template #preview="{ row }">
-                <ElTag :color="row.color" style="color: #fff; font-weight: bold;">
+                <ElTag :color="row.color"
+                    style="color: #fff; font-weight: bold;">
                     {{ row.tagName }}
                 </ElTag>
             </template>
             <!-- 自定义操作列 -->
             <template #option="{ row }">
-                <DialogButton permission="tag:edit" :button-props="editButtonProps" :dialog-props="dialogProps"
-                    @click="getData(row)" @submit="handleUpdate" @closed="clearData">
-                    编辑
+                <DialogButton :permission="TagPerm.EDIT" :buttonBorder="false"
+                    :button-props="editButtonProps" :dialog-props="dialogProps"
+                    @click="getData(row)" @submit="handleUpdate"
+                    @closed="clearData">
+                    <SvgIcon icon="ri:pencil-line" />
                     <template #content>
                         <DynamicForm v-model="formData" :form-items="formItems">
                             <template #colorSlot>
@@ -57,8 +57,10 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <DialogButton type="button" permission="tag:delete" @click="handleDel(row)" :button-props="delButtonProps">
-                    删除
+                <DialogButton type="confirm" :buttonBorder="false"
+                    :permission="TagPerm.DELETE" @click="handleDel(row)"
+                    :button-props="delButtonProps">
+                    <SvgIcon icon="ri:delete-bin-6-line" />
                 </DialogButton>
             </template>
         </PageTable>
@@ -66,11 +68,14 @@
 </template>
 
 <script setup lang='ts'>
-import SearchBar from "@comps/search-bar/index.vue"
+import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { TagPerm } from '@/constants'
+import { useUserStore } from "@/store/modules/user"
 import { TagService } from "@/api/tagApi"
 import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
 type Tag = Api.Tag.TagInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
+const userStore = useUserStore()
 const formRef = ref()
 const divRef = ref<HTMLElement | null>(null)
 const query = reactive<Tag>({})
@@ -83,20 +88,21 @@ const formData = reactive<Tag>({
     color: '#f4f4f5'
 })
 const tableData = ref<Tag[]>([])
-const columns = ref([
+const columns = reactive([
     { type: 'index', label: '序号' },
     { prop: 'tagName', label: '标签名称', minWidth: '150' },
     { prop: 'color', label: '标签颜色', slot: 'color', minWidth: '150' },
-    { label: '预览', slot: 'preview', minWidth: '150' },
     { prop: 'createTime', label: '创建时间', minWidth: '150' },
-    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
+    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', show: true, permission: ['tag:edit', 'tag:delete'] }
 ])
+useTableColumnPermission(columns)
 const editButtonProps = ref<ButtonProps>({
-    size: "small"
+    type: "primary",
+    plain: true
 })
 const delButtonProps = ref<ButtonProps>({
-    size: "small",
-    type: "danger"
+    type: "danger",
+    plain: true
 })
 const formItems = ref([
     {
@@ -124,9 +130,6 @@ const formItems = ref([
         },
     },
 ])
-const buttonProps = ref<ButtonProps>({
-    size: "small"
-})
 const dialogProps = ref<DialogProps>({})
 const handleAdd = async () => {
     await TagService.addTag(formData)
@@ -226,16 +229,6 @@ onMounted(async () => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
-
-        .table-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            .icon-list {
-                display: flex;
-            }
-        }
     }
 }
 </style>
