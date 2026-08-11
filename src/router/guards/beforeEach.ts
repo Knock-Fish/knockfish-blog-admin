@@ -1,8 +1,9 @@
 import type { Router, RouteLocationNormalized, RouteLocationRaw } from 'vue-router'
+import NProgress from 'nprogress'
 import { RoutesAlias } from "@/router/routesAlias"
 import { useUserStore } from '@/store/modules/user'
 import { useMenuStore } from '@/store/modules/menu'
-import { registerDynamicRoutes } from "@/router/utils/registerRoutes"
+import { registerDynamicRoutes, clearRegisteredRoutes } from "@/router/utils/registerRoutes"
 // 是否已注册动态路由
 const isRouteRegistered = ref(false)
 // 白名单路由（不需要登录即可访问）
@@ -18,10 +19,12 @@ export function setupBeforeEachGuard(router: Router): void {
             to: RouteLocationNormalized,
             from: RouteLocationNormalized,
         ) => {
+            NProgress.start()
             try {
                 return await handleRouterGuard(to, from, router)
             } catch (error) {
                 console.error('路由守卫处理失败:', error)
+                NProgress.done()
                 return '/400'
             }
         }
@@ -60,7 +63,6 @@ async function handleRouterGuard(
     if (userStore.isLogin && to.path === '/') {
         return RoutesAlias.Workbench
     }
-
     return true
 }
 
@@ -99,9 +101,15 @@ async function handleDynamicRoutes(
     }
     return true
 }
+/** 设置路由已注册状态 */
+export function setRouteRegistered(value: boolean): void {
+    isRouteRegistered.value = value
+}
+
 /** 重置路由相关状态 */
-export function resetRouterState(): void {
+export function resetRouterState(router: Router): void {
     isRouteRegistered.value = false
+    clearRegisteredRoutes()
     const menuStore = useMenuStore()
     menuStore.setMenuList([])
 }

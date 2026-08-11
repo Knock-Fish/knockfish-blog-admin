@@ -2,7 +2,7 @@
   <ElForm ref="formRef" :model="formModel" v-bind="formProps">
     <template v-for="(item, index) in formItems" :key="item.prop || index">
       <ElFormItem v-bind="item">
-        <component v-if="item.prop" :class="item.class" :is="`El${item.type}`"
+        <component v-if="item.prop" :class="item.class" :is="componentMap[`El${item.type}`]"
           v-model="formModel[item.prop]" v-bind="item.props"
           :ref="(el: any) => setItemRef(el, item.prop || '')">
 
@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import { ElInput, ElSelect, ElOption, ElRadio, ElCheckbox, ElDatePicker, ElRadioGroup, ElCheckboxGroup, ElButton, ElSegmented } from 'element-plus'
 import type {
   FormInstance,
   FormItemRule,
@@ -62,7 +63,6 @@ import type {
   SelectOptionProps,
   CheckboxOption,
   RadioButtonProps,
-  ElCheckbox,
   InputProps,
   SelectProps,
   RadioGroupProps,
@@ -71,6 +71,19 @@ import type {
   ButtonProps,
   SegmentedProps,
 } from 'element-plus'
+
+const componentMap: Record<string, any> = {
+  ElInput,
+  ElSelect,
+  ElRadio,
+  ElRadioGroup,
+  ElCheckbox,
+  ElCheckboxGroup,
+  ElDatePicker,
+  ElButton,
+  ElSegmented,
+}
+
 const itemRefs = ref<Record<string, any>>({})
 defineOptions({ inheritAttrs: false })
 const formModel = defineModel<Record<string, any>>({ required: true })

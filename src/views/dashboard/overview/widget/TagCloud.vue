@@ -1,50 +1,60 @@
 <template>
     <div class="word-cloud-card">
         <h4>博客标签词云</h4>
-        <Vue3WordCloud style=" height: 100%;" :words="words" :color="colorFn"
-            font-family="Microsoft YaHei" :show-tooltip="true"
-            @word-click="handleWordClick" />
+        <div v-loading="loading" style="height: calc(100% - 40px);">
+            <Vue3WordCloud style="height: 100%;" :words="words" :color="colorFn"
+                font-family="Microsoft YaHei" :show-tooltip="true"
+                @word-click="handleWordClick" />
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-// import Vue3WordCloud from "vue3-word-cloud"
-// 格式：[文字, 权重]
-const words = ref<[string, number][]>([
-    ['Vue3', 10],
-    ['TypeScript', 9],
-    ['ECharts', 8],
-    ['Node.js', 22],
-    ['Vite', 7],
-    ['前端', 9],
-    ['博客', 8],
-    ['仪表盘', 6],
-    ['API', 5],
-    ['组件封装', 6],
-    ['Vue3', 10],
-    ['TypeScript', 9],
-    ['ECharts', 8],
-    ['Node.js', 7],
-    ['Vite', 7],
-    ['前端', 9],
-    ['博客', 8],
-    ['仪表盘', 6],
-    ['API', 5],
-    ['组件封装', 6],
-])
+import { ref, onMounted } from 'vue';
+import Vue3WordCloud from 'vue3-word-cloud';
+import { DashboardService, type TagCloudItem } from '@/api/dashboardApi';
+import { ElMessage } from 'element-plus';
 
-// 自定义颜色：权重越高颜色越深
+const words = ref<[string, number][]>([]);
+const loading = ref(true);
+
 const colorFn = ([, weight]: [string, number]) => {
-    if (weight >= 90) return '#f56c6c'
-    if (weight >= 70) return '#e6a23c'
-    if (weight >= 60) return '#409eff'
-    return '#67c23a'
-}
+    if (weight >= 90) return '#f56c6c';
+    if (weight >= 70) return '#e6a23c';
+    if (weight >= 60) return '#409eff';
+    return '#67c23a';
+};
 
-// 点击词回调
 const handleWordClick = (word: [string, number]) => {
-    console.log('点击了：', word[0], '权重：', word[1])
-}
+    console.log('点击了：', word[0], '权重：', word[1]);
+};
+
+const fetchTagCloud = async () => {
+    loading.value = true;
+    try {
+        const tags = await DashboardService.getTagCloud();
+        const maxCount = Math.max(...tags.map(t => t.articleCount), 1);
+        words.value = tags.map(tag => [
+            tag.tagName,
+            Math.round((tag.articleCount / maxCount) * 100) || 10
+        ] as [string, number]);
+    } catch (error) {
+        ElMessage.error('获取标签云数据失败');
+        console.error('Tag cloud fetch error:', error);
+        words.value = [
+            ['Vue3', 10], ['TypeScript', 9], ['ECharts', 8], ['Node.js', 7], ['Vite', 7],
+            ['前端', 9], ['博客', 8], ['仪表盘', 6], ['API', 5], ['组件封装', 6]
+        ];
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchTagCloud();
+});
+
+defineExpose({ refresh: fetchTagCloud });
 </script>
 
 <style lang="scss" scoped>

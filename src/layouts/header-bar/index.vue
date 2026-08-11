@@ -119,7 +119,6 @@ const toggleFullscreen = () => {
 }
 
 .dark::view-transition-old(root) {
-    z-index: 1;
+    z-index: 99999;
 }
-
 </style>

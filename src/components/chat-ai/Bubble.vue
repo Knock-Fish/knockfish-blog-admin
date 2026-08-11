@@ -101,7 +101,8 @@ onUnmounted(() => {
 
     // 内容区域
     .bubble-content {
-        max-width: 70%;
+        // 对话框的宽度
+        max-width: 100%;
         display: flex;
         flex-direction: column;
     }

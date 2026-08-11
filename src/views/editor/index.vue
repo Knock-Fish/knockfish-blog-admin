@@ -101,8 +101,8 @@
                     </ElFormItem>
                     <h2>文章内容</h2>
                 </div>
-                <MdEditor v-model="formData.content"
-                    @onUploadImg="onUploadImg" :theme="isDark ? 'dark' : 'light'"/>
+                <MdEditor v-model="formData.content" @onUploadImg="onUploadImg"
+                    :theme="isDark ? 'dark' : 'light'" />
             </ElForm>
             <ElDialog v-model="dialogVisible" title="添加标签" width="400"
                 :z-index="10000" @open="getTagListData">
@@ -238,11 +238,10 @@ import { useRouter, useRoute, onBeforeRouteLeave } from "vue-router"
 import { useUserStore } from "@/store/modules/user"
 import { ArticleService } from "@/api/articleApi"
 import { R2FileService } from "@/api/r2FileApi"
-import { getMdImagePathKeys } from "@utils/url/urlKey"
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import _ from 'lodash'
-type Article = Api.Article.ArticleInfo
+type Article = Api.Article.ArticleData
 type ArticleDetail = Api.Article.ArticleDetailInfo
 type Tag = Api.Tag.TagInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
@@ -250,7 +249,7 @@ const router = useRouter()
 const route = useRoute()
 const dialogVisible = ref<boolean>(false)
 const userStore = useUserStore()
-// const { accessToken } = userStore
+const userId = userStore.info?.userId
 const isDark = useDark()
 const query = reactive<Tag>({})    // 搜索关键词
 const inputVisible = ref<boolean>(false)
@@ -263,9 +262,6 @@ const InputRef = ref<InputInstance>()
 const tagList = ref<Tag[]>([])  // 存储所有标签
 const selectTagList = ref<Tag[]>([])    // 存储已选择的标签
 const tagTemp = ref<Tag[]>([])  // 存储临时已选择的标签
-const originImageList = ref<string[]>([])     // 存储编辑文章的原始图片url
-const uploadImageList = ref<string[]>([])    // 存储上传的图片url
-const tempCoverList = ref<string[]>([]) // 记录已上传的封面
 const draftCount = ref<number>(0)   // 草稿数量
 const draftList = ref<Article[]>([])    // 草稿列表
 const draftLoaded = ref<boolean>(false) // 草稿是否已经加载
@@ -303,10 +299,16 @@ const onUploadImg = async (files: File[], callback: (urls: string[]) => void) =>
             callback([])
             return
         }
-        // 执行单图上传，拿到图片在线地址
-        const { url, key } = await R2FileService.uploadR2File({ file })
-        uploadImageList.value.push(...new Set([...uploadImageList.value, key]))
-        callback([url])
+        if (userId) {
+            // 确保草稿已创建，拿到 articleId 供图片关联
+            await ensureDraft()
+            // 执行单图上传，拿到图片在线地址
+            const { url } = await R2FileService.uploadR2File({ file, type: "article", userId, referenceId: formData.articleId })
+            callback([url])
+        } else {
+            ElMessage.error('用户不存在')
+            throw new Error('用户不存在')
+        }
     } catch (err) {
         console.error('图片上传失败：', err)
         // 异常兜底，结束上传状态
@@ -319,24 +321,42 @@ const uploadProps = ref<Record<string, any>>({
     showFileList: false,
     httpRequest: async (options: UploadRequestOptions) => {
         const { file } = options
-            const res = await R2FileService.uploadR2File({ file })
-            tempCoverList.value.push(res.key)
+        if (userId) {
+            await ensureDraft()
+            const res = await R2FileService.uploadR2File({ file, type: "cover", userId, referenceId: formData.articleId })
             return res.url
+        } else {
+            ElMessage.error('用户不存在')
+            throw new Error('用户不存在')
+        }
     },
     action: '',
 })
 //------------------------------ 方法 -----------------------------------
+/** 确保草稿已创建（延迟创建：首次输入/上传时触发） */
+let draftPromise: Promise<number | undefined> | null = null
+const ensureDraft = (): Promise<number | undefined> => {
+    if (formData.articleId) return Promise.resolve(formData.articleId)
+    if (draftPromise) return draftPromise
+    draftPromise = (async () => {
+        try {
+            formData.status = 'DRAFT'
+            const articleId = await ArticleService.addArticle(formData)
+            formData.articleId = articleId
+            return articleId
+        } finally {
+            draftPromise = null
+        }
+    })()
+    return draftPromise
+}
 /** 新增/保存文章 */
 const saveOrPublish = async () => {
-    // 如果表单存在文章id，则更新当前文章数据，否则添加该文章数据
+    // 确保草稿已创建（延迟创建场景下首次保存时触发）
+    await ensureDraft()
     if (formData.articleId) {
         await ArticleService.updateArticle(formData)
         ElMessage.success('修改成功')
-    } else {
-        // 获取插入数据后的文章id
-        const articleId = await ArticleService.addArticle(formData)
-        formData.articleId = articleId
-        ElMessage.success('提交成功')
     }
     // 每次新增/更新保存当前快照
     Object.assign(originalData, _.cloneDeep(formData))
@@ -372,54 +392,41 @@ const loadArticle = async (articleId: number) => {
     // 将表单的数据保存为原始数据
     _.assign(originalData, _.cloneDeep(formData))
     await nextTick()
-    originImageList.value = article.urlKeys
     ElMessage.success('加载文章成功')
 }
 /** 返回上一级路由 */
 const onBack = () => {
     router.back()
 }
-const delCover = () => {
-    if (tempCoverList.value.length != 0) {
-        const coverKey = new URL(formData.cover).pathname.substring(1)
-        // 如果封面已经被使用（formData.cover 在 tempCoverList 中）
-        if (formData.cover && tempCoverList.value.includes(coverKey)) {
-            // 删除除了当前封面以外的所有临时封面
-            const coversToDelete = tempCoverList.value.filter(
-                url => url !== coverKey
+
+/** 路由离开前拦截 */
+onBeforeRouteLeave(async (to, from) => {
+    // 1. 未保存提示
+    if (hasUnsavedChanges.value) {
+        try {
+            await ElMessageBox.confirm(
+                '当前内容尚未保存，确定要离开吗？未保存的内容将会丢失。',
+                '提示',
+                {
+                    confirmButtonText: '离开（不保存）',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                    appendTo: document.body,
+                }
             )
-            if (coversToDelete.length > 0) {
-                R2FileService.batchDelR2File(coversToDelete)
-            }
-            // 清空数组（保留正在使用的封面）
-            tempCoverList.value = [coverKey]
-        } else {
-            // 封面没有被使用，全部删除
-            R2FileService.batchDelR2File(tempCoverList.value)
-            tempCoverList.value = []
+        } catch {
+            return false // 取消离开
         }
     }
-}
-/** 路由离开前拦截 */
-onBeforeRouteLeave((to, from) => {
-    if (hasUnsavedChanges.value) {
-        return ElMessageBox.confirm(
-            '当前内容尚未保存，确定要离开吗？未保存的内容将会丢失。',
-            '提示',
-            {
-                confirmButtonText: '离开（不保存）',
-                cancelButtonText: '取消',
-                type: 'warning',
-                appendTo: document.body,
-            }
-        ).then(() => {
-            return true  // 确认离开
-        }).catch(() => {
-            return false // 取消离开
-        })
-    } else {
-        return true
+    // 2. 离开前触发后端差集解绑：解绑已上传但 content/cover 未使用的图片
+    if (formData.articleId) {
+        try {
+            await ArticleService.unbindUnusedFiles(formData.articleId)
+        } catch (e) {
+            console.warn('解绑未使用图片失败：', e)
+        }
     }
+    return true
 })
 //------------------------------ 标签 -----------------------------------
 /** 请求标签数据 */
@@ -509,34 +516,11 @@ const loadMore = async (direction: ScrollbarDirection) => {
     await getTagListData()
 }
 
-//------------------------------ 图片操作 -----------------------------------
-/** 删除未使用的图片 */
-const delImages = async () => {
-    const coverKey = formData.cover
-        ? new URL(formData.cover).pathname.substring(1)
-        : ''
-    // 获取封面和编辑器的所有图片url
-    const editorImages = [...getMdImagePathKeys(formData.content), coverKey]
-    // 非数组则转为空数组   
-    const originList = Array.isArray(originImageList.value) ? originImageList.value : []
-    const uploadList = Array.isArray(uploadImageList.value) ? uploadImageList.value : []
-    // 合并初始图片和已上传图片
-    const allImages = [...originList, ...uploadList]
-    // 找出未使用的图片
-    const unused = allImages.filter(url => !editorImages.includes(url))
-    if (unused.length > 0) {
-        // 批量删除未使用的图片
-        await R2FileService.batchDelR2File(unused)
-    }
-}
 //------------------------------ 发布/编辑文章 -----------------------------------
 /** 发布文章 */
 const handlePublish = async () => {
     formData.status = 'PUBLISH'
     await saveOrPublish()
-    delImages()
-    delCover()
-    onBack()
 }
 /** 组件处于编辑则根据路由参数获取指定文章 */
 const getArticleById = async () => {
@@ -548,7 +532,7 @@ const getArticleById = async () => {
 
 //------------------------------ 草稿操作 -----------------------------------
 /** 获取草稿数量 */
-const getdraftCount = async () => {
+const getDraftCount = async () => {
     draftCount.value = await ArticleService.getDraftCount()
 }
 /** 保存草稿 */
@@ -557,7 +541,7 @@ const handleDraft = async () => {
         draftLoaded.value = false
         formData.status = 'DRAFT'
         await saveOrPublish()
-        await getdraftCount()
+        await getDraftCount()
     } else {
         ElMessage.success('文章已经保存')
     }
@@ -565,9 +549,7 @@ const handleDraft = async () => {
 }
 /** 获取10条草稿 */
 const getArticleDraftList = async () => {
-    const data = await ArticleService.getTop10List({
-        status: 'DRAFT'
-    })
+    const data = await ArticleService.getDraftList()
     draftList.value = data
 }
 /** 打开抽屉获取草稿 */
@@ -674,18 +656,20 @@ window.addEventListener('beforeunload', (e) => {
 })
 onMounted(async () => {
     await getArticleById()
-    await getdraftCount()
-
-})
-
-onBeforeUnmount(() => {
-    delImages()
-    delCover()
-
+    await getDraftCount()
 })
 watch(() => route.params.id, (newId) => {
     if (newId) loadArticle(Number(newId))
 })
+// 首次输入文字时触发草稿创建
+watch(
+    () => [formData.title, formData.content, formData.description],
+    () => {
+        if (!formData.articleId && !draftPromise) {
+            ensureDraft()
+        }
+    }
+)
 </script>
 
 <style lang="scss" scoped>

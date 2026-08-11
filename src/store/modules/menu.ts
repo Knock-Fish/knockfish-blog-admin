@@ -1,5 +1,3 @@
-import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
 import { type AppRouteRecord } from '@/types'
 /**
  * 菜单状态管理

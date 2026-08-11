@@ -28,7 +28,7 @@
               <SvgIcon icon="mdi:code-tags" class="snippet-icon" />
               <span class="snippet-title">{{ snippet.title }}</span>
               <el-button type="danger" size="small" link class="delete-btn"
-                @click.stop="handleDel(snippet)">
+                @click.stop="handleDel(snippet)" v-permission="CodeSnippetPerm.DELETE">
                 <SvgIcon icon="mdi:delete">删除</SvgIcon>
               </el-button>
             </div>
@@ -71,7 +71,7 @@
               <SvgIcon icon="mdi:code-tags" class="snippet-icon" />
               <span class="snippet-title">{{ snippet.title }}</span>
               <el-button type="danger" size="small" link class="delete-btn"
-                @click.stop="handleDel(snippet)">
+                @click.stop="handleDel(snippet)" v-permission="CodeSnippetPerm.DELETE">
                 <SvgIcon icon="mdi:delete" />
               </el-button>
             </div>
@@ -103,10 +103,10 @@
           </div>
 
           <div class="editor-actions">
-            <el-button @click="handleClear()" size="small">
+            <el-button @click="handleClear()" size="small" v-permission="CodeSnippetPerm.ADD">
               新增
             </el-button>
-            <el-button type="primary" @click="handleSave" size="small">
+            <el-button type="primary" @click="handleSave" size="small" v-permission="CodeSnippetPerm.EDIT">
               保存
             </el-button>
           </div>
@@ -140,6 +140,7 @@
 
 <script setup lang="ts">
 import { CodeSnippetService } from "@/api/codeSnippetApi"
+import { CodeSnippetPerm } from '@/constants'
 import { CodeCategoryService } from "@/api/codeCategoryApi"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { MdEditor } from 'md-editor-v3'

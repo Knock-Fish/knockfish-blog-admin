@@ -8,36 +8,29 @@
             @page-size="getCategoryListData">
             <!-- 自定义头部 -->
             <template #header>
-                <div class="table-header">
-                    <DialogButton permission="category:add" @submit="handleAdd"
-                        @closed="clearData">
-                        新增分类
-                        <template #content>
-                            <DynamicForm v-model="formData"
-                                :form-items="formItems" />
-                        </template>
-                    </DialogButton>
-                    <div class="icon-list">
-                        <DataRefresh @click="getCategoryListData" />
-                        <FullScreenPage :target-ref="divRef" />
-                        <ExcelExport :table-data="tableData" />
-                    </div>
-                </div>
-            </template>
-            <!-- 自定义操作列 -->
-            <template #option="{ row }">
-                <DialogButton permission="category:edit"
-                    :button-props="editButtonProps" @click="getData(row)"
-                    @submit="handleUpdate" @closed="clearData">
-                    编辑
+                <DialogButton :permission="CategoryPerm.ADD" @submit="handleAdd"
+                    @closed="clearData">
+                    新增分类
                     <template #content>
                         <DynamicForm v-model="formData"
                             :form-items="formItems" />
                     </template>
                 </DialogButton>
-                <DialogButton permission="category:delete"
+            </template>
+            <!-- 自定义操作列 -->
+            <template #option="{ row }">
+                <DialogButton :permission="CategoryPerm.EDIT" :buttonBorder="false"
+                    :button-props="editButtonProps" @click="getData(row)"
+                    @submit="handleUpdate" @closed="clearData">
+                    <SvgIcon icon="ri:pencil-line" />
+                    <template #content>
+                        <DynamicForm v-model="formData"
+                            :form-items="formItems" />
+                    </template>
+                </DialogButton>
+                <DialogButton type="confirm" :buttonBorder="false" :permission="CategoryPerm.DELETE"
                     @click="handleDel(row)" :button-props="delButtonProps">
-                    删除
+                    <SvgIcon icon="ri:delete-bin-6-line" />
                 </DialogButton>
             </template>
         </PageTable>
@@ -45,27 +38,32 @@
 </template>
 
 <script setup lang='ts'>
+import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { CategoryPerm } from '@/constants'
 import { CategoryService } from '@/api/categoryApi'
-import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
+import { ElMessage, ElMessageBox, type ButtonProps } from "element-plus"
 type Category = Api.Category.CategoryInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
-const query = reactive<Category>({})
-const formRef = ref()
+const query = reactive<Category>({})    // 搜索关键词
+const formRef = ref()   // 表单DOM
 const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
-const tableData = ref<Category[]>([])
+const tableData = ref<Category[]>([])   // 表格数据
+const formData = reactive<Category>({}) // 表单数据
 const page = reactive({ // 分页参数
     total: 0,
     pageNum: 1,
     pageSize: 10
 })
+// --------------- 按钮配置 ---------------
 const editButtonProps = ref<ButtonProps>({
-    size: "small"
+    type: "primary",
+    plain: true
 })
 const delButtonProps = ref<ButtonProps>({
-    size: "small",
-    type: "danger"
+    type: "danger",
+    plain: true
 })
-const formData = reactive<Category>({})
+// --------------- 表单项配置 ---------------
 const formItems = ref([
     {
         type: 'Input',
@@ -82,6 +80,27 @@ const formItems = ref([
         }
     },
 ])
+// --------------- 表格项配置 ---------------
+const columns = reactive([
+    { type: 'index', label: '序号' },
+    { prop: 'categoryName', label: '类别', minWidth: '150' },
+    { prop: 'createTime', label: '创建时间', minWidth: '150' },
+    { prop: 'siteCount', label: '关联站点数量', minWidth: '150' },
+    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', permission: ['category:edit', 'category:delete'] }
+])
+useTableColumnPermission(columns)
+// --------------- 搜索栏配置 ---------------
+const searchList = [
+    {
+        prop: 'categoryName',
+        current: 'input',
+        label: "类别",
+        props: {
+            placeholder: "请输入类别"
+        }
+    }
+]
+/** 获取站点分类数据 */
 const getCategoryListData = async () => {
     const data: PaginatingParams<Category> = await CategoryService.getCategoryListData({
         ...query,
@@ -91,13 +110,7 @@ const getCategoryListData = async () => {
     tableData.value = data.list
     page.total = data.total
 }
-const columns = ref([
-    { type: 'index', label: '序号' },
-    { prop: 'categoryName', label: '类别', minWidth: '80' },
-    { prop: 'createTime', label: '创建时间', minWidth: '100' },
-    { prop: 'siteCount', label: '关联站点数量', minWidth: '70' },
-    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
-])
+/** 添加分类 */
 const handleAdd = async () => {
     await CategoryService.addCategory(formData)
     ElMessage({
@@ -106,9 +119,10 @@ const handleAdd = async () => {
     })
     getCategoryListData()
 }
+/** 删除分类 */
 const handleDel = async (row: Category) => {
     if (!row.categoryId) {
-        ElMessage.warning('无效的标签ID')
+        ElMessage.warning('无效的分类ID')
         return
     }
     try {
@@ -128,7 +142,7 @@ const handleDel = async (row: Category) => {
         ElMessage.info('已取消')
     }
 }
-/** 编辑 */
+/** 编辑分类 */
 const handleUpdate = async () => {
     await CategoryService.updateCategory(formData)
     ElMessage({
@@ -142,27 +156,17 @@ const getData = (row: Category) => {
     const { categoryId, categoryName } = row
     Object.assign(formData, { categoryId, categoryName })
 }
+/** 清除表单数据 */
 const clearData = () => {
-    // 清空formData数据
     Object.keys(formData).forEach((key) => {
         (formData[key as keyof Category] as any) = ""
     })
-    // 清除表单数据，重置表单校验
+    // 重置表单校验
     if (formRef.value) {
         formRef.value.resetForm()
     }
 }
-/** 搜索栏配置 */
-const searchList = [
-    {
-        prop: 'categoryName',
-        current: 'input',
-        label: "类别",
-        props: {
-            placeholder: "请输入类别"
-        }
-    }
-]
+
 /** 搜索重置 */
 const handleReset = () => {
     getCategoryListData()
@@ -187,16 +191,6 @@ onMounted(async () => {
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
-
-        .table-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            .icon-list {
-                display: flex;
-            }
-        }
     }
 }
 </style>

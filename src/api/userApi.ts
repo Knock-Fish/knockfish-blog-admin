@@ -1,6 +1,5 @@
 import request from "@/utils/http"
 export class UserService{
-    // 获取所有用户
     static getUserListData(params: Record<string, any>){
         return request.get<Api.User.UserListData>({
             url: "/api/user/page",
@@ -14,18 +13,31 @@ export class UserService{
             params
         })
     }
-    // 修改密码
+
     static passwordChange(data: Api.PasswordChange.Change){
         return request.put({
             url: "/api/user/password",
             data
         })
     }
-    // 更新用户信息
+
     static updateUser(data: Api.User.UserInfo){
         return request.put<Api.User.UserInfo>({
             url: "/api/user",
             data
+        })
+    }
+
+    static updateUserRoles(data: Api.User.UserRoleUpdate){
+        return request.put({
+            url: "/api/user/role",
+            data
+        })
+    }
+
+    static getUserRoles(userId: number){
+        return request.get<Api.User.UserRole[]>({
+            url: `/api/user/${userId}/roles`
         })
     }
 }

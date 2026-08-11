@@ -1,90 +1,132 @@
 <template>
     <div class="dashboard">
-        <Statistic />
+        <Statistic ref="statisticRef" />
         <div class="chart-list">
-            <div class="bar-chart">
+            <div class="bar-chart" v-loading="chartLoading">
                 <VChart :option="barOption" autoresize />
             </div>
-            <div class="line-chart">
+            <div class="line-chart" v-loading="chartLoading">
                 <VChart :option="lineOption" autoresize />
             </div>
         </div>
         <div class="tag-article">
             <div class="tag-cloud">
-                <TagCloud />
+                <TagCloud ref="tagCloudRef" />
             </div>
             <div class="article-latest">
-                <ArticleLatest />
+                <ArticleLatest ref="articleLatestRef" />
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang='ts'>
-import Statistic from "./widget/Statistic.vue"
-import ArticleLatest from "./widget/ArticleLatest.vue"
-import TagCloud from "./widget/TagCloud.vue"
-import VChart from 'vue-echarts'
-import 'echarts'
-const barOption = ref({
-    title: {
-        text: '月度文章发布数量统计',
-        left: 'center',
-        textStyle: { fontSize: 16 }
-    },
-    tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' }
-    },
-    grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-    },
-    xAxis: {
-        type: 'category',
-        data: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月']
-    },
-    yAxis: {
-        type: 'value',
-        name: '文章篇数'
-    },
-    series: [
-        {
-            name: '发布数量',
-            type: 'bar',  // 柱状图，想看趋势改成 line 即可
-            data: [28, 16, 35, 42, 38, 50, 45, 60, 52, 48, 55, 62],
-            barWidth: '45%',
-            itemStyle: {
-                color: '#409EFF'
+import { ref, onMounted, shallowRef } from 'vue';
+import Statistic from "./widget/Statistic.vue";
+import ArticleLatest from "./widget/ArticleLatest.vue";
+import TagCloud from "./widget/TagCloud.vue";
+import VChart from 'vue-echarts';
+import 'echarts';
+import { DashboardService, type ArticleTrend } from '@/api/dashboardApi';
+
+const statisticRef = shallowRef<InstanceType<typeof Statistic>>();
+const tagCloudRef = shallowRef<InstanceType<typeof TagCloud>>();
+const articleLatestRef = shallowRef<InstanceType<typeof ArticleLatest>>();
+
+const barOption = ref<any>(null);
+const lineOption = ref<any>(null);
+const chartLoading = ref(true);
+
+const initBarChart = (trend: ArticleTrend) => {
+    barOption.value = {
+        title: {
+            text: '月度文章发布数量统计',
+            left: 'center',
+            textStyle: { fontSize: 16 }
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: trend.labels
+        },
+        yAxis: {
+            type: 'value',
+            name: '文章篇数'
+        },
+        series: [
+            {
+                name: '发布数量',
+                type: 'bar',
+                data: trend.values,
+                barWidth: '45%',
+                itemStyle: {
+                    color: '#409EFF'
+                }
             }
+        ]
+    };
+};
+
+const initLineChart = (trend: ArticleTrend) => {
+    lineOption.value = {
+        title: {
+            text: '文章发布趋势',
+            textStyle: { fontSize: 14 }
+        },
+        xAxis: {
+            data: trend.labels.slice(-7),
+            axisLabel: { fontSize: 11 }
+        },
+        yAxis: {
+            axisLabel: { fontSize: 11 }
+        },
+        series: [{ type: 'line', data: trend.values.slice(-7) }],
+        grid: {
+            containLabel: true,
+            left: 10,
+            right: 10,
+            top: 40,
+            bottom: 10
         }
-    ]
-})
+    };
+};
 
-
-const lineOption = ref({
-    title: {
-        text: '折线图示例',
-        textStyle: { fontSize: 14 }
-    },
-    xAxis: {
-        data: ['周一', '周二', '周三', '周四', '周五'],
-        axisLabel: { fontSize: 11 }
-    },
-    yAxis: {
-        axisLabel: { fontSize: 11 }
-    },
-    series: [{ type: 'line', data: [120, 200, 150, 80, 70] }],
-    grid: {
-        containLabel: true,
-        left: 10,
-        right: 10,
-        top: 40,
-        bottom: 10
+const fetchChartsData = async () => {
+    chartLoading.value = true;
+    try {
+        const trend = await DashboardService.getArticleTrend({ period: 'monthly' });
+        initBarChart(trend);
+        initLineChart(trend);
+    } catch (error) {
+        console.error('Chart data fetch error:', error);
+        const mockLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+        const mockValues = [28, 16, 35, 42, 38, 50, 45, 60, 52, 48, 55, 62];
+        initBarChart({ labels: mockLabels, values: mockValues, period: 'monthly', year: new Date().getFullYear() });
+        initLineChart({ labels: mockLabels, values: mockValues, period: 'monthly', year: new Date().getFullYear() });
+    } finally {
+        chartLoading.value = false;
     }
-})
+};
+
+const refreshAll = () => {
+    statisticRef.value?.refresh();
+    tagCloudRef.value?.refresh();
+    articleLatestRef.value?.refresh();
+    fetchChartsData();
+};
+
+onMounted(() => {
+    fetchChartsData();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -129,7 +171,6 @@ const lineOption = ref({
     }
 }
 
-// 平板适配
 @media (max-width: 1024px) and (min-width: 769px) {
     .dashboard {
         padding: 0 12px;
@@ -139,7 +180,7 @@ const lineOption = ref({
 
             .bar-chart,
             .line-chart {
-                height: 350px; // 平板稍微降低高度
+                height: 350px;
             }
         }
 
@@ -149,26 +190,25 @@ const lineOption = ref({
     }
 }
 
-// 移动端适配
 @media (max-width: 768px) {
     .dashboard {
         padding: 0 12px;
 
         .chart-list {
-            flex-direction: column; // 改为垂直排列
+            flex-direction: column;
             gap: 12px;
             margin-top: 12px;
 
             .bar-chart,
             .line-chart {
                 width: 100%;
-                height: 280px; // 移动端降低高度
+                height: 280px;
                 flex: none;
             }
         }
 
         .tag-article {
-            flex-direction: column; // 改为垂直排列
+            flex-direction: column;
             gap: 12px;
             margin-top: 12px;
 
@@ -180,17 +220,16 @@ const lineOption = ref({
 
             .tag-cloud {
                 height: 400px;
-                order: 1; // 标签云在上方
+                order: 1;
             }
 
             .article-latest {
-                order: 2; // 最近文章在下方
+                order: 2;
             }
         }
     }
 }
 
-// 小屏手机适配（iPhone SE 等）
 @media (max-width: 480px) {
     .dashboard {
         padding: 0 10px;
@@ -212,14 +251,12 @@ const lineOption = ref({
     }
 }
 
-// 横屏适配
 @media (max-width: 896px) and (orientation: landscape) {
     .dashboard {
         .chart-list {
-
             .bar-chart,
             .line-chart {
-                height: 220px; // 横屏时降低高度
+                height: 220px;
             }
         }
     }

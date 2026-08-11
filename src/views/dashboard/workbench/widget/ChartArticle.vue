@@ -1,22 +1,25 @@
 <template>
-    <div class="article-chart">
+    <div class="article-chart" v-loading="loading">
         <VChart :option="articleOption" autoresize />
     </div>
 </template>
 
 <script setup lang='ts'>
-import VChart from 'vue-echarts'
-import 'echarts'
-const articleOption = {
+import { ref, onMounted } from 'vue';
+import VChart from 'vue-echarts';
+import 'echarts';
+import { DashboardService, type ArticleTrend } from '@/api/dashboardApi';
+
+const articleOption = ref<any>({
     title: { text: "月度发文量", left: "center" },
     tooltip: { trigger: "axis" },
     xAxis: { data: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"] },
     yAxis: { type: "value" },
     grid: {
-        top: 35,      // 顶边几乎贴死
-        left: 20,     // 左边极少
-        right: 20,    // 右边极少
-        bottom: 15,   // 底边极少
+        top: 35,
+        left: 20,
+        right: 20,
+        bottom: 15,
         containLabel: true
     },
     series: [{
@@ -34,7 +37,28 @@ const articleOption = {
             }
         }
     }]
-}
+});
+
+const loading = ref(true);
+
+const fetchData = async () => {
+    loading.value = true;
+    try {
+        const trend = await DashboardService.getArticleTrend({ period: 'monthly' });
+        articleOption.value.xAxis.data = trend.labels;
+        articleOption.value.series[0].data = trend.values;
+    } catch (error) {
+        console.error('ChartArticle fetch error:', error);
+    } finally {
+        loading.value = false;
+    }
+};
+
+onMounted(() => {
+    fetchData();
+});
+
+defineExpose({ refresh: fetchData });
 </script>
 
 <style lang="scss" scoped>

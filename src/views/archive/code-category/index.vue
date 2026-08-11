@@ -9,35 +9,31 @@
             @page-size="getCodeCategoryListData">
             <!-- 自定义头部 -->
             <template #header>
-                <div class="table-header">
-                    <DialogButton permission="code-category:add"
-                        @submit="handleAdd" @closed="clearData">
-                        新增分类
-                        <template #content>
-                            <DynamicForm ref="formRef" v-model="formData"
-                                :form-items="formItems" />
-                        </template>
-                    </DialogButton>
-                    <div class="icon-list">
-                        <DataRefresh @click="getCodeCategoryListData" />
-                        <FullScreenPage :target-ref="divRef" />
-                    </div>
-                </div>
-            </template>
-            <!-- 自定义操作列 -->
-            <template #option="{ row }">
-                <DialogButton permission="code-category:edit"
-                    :button-props="editButtonProps" @submit="handleUpdate"
-                    @click="getData(row)" @closed="clearData">
-                    编辑
+                <DialogButton :permission="CodeCategoryPerm.ADD"
+                    @submit="handleAdd" @closed="clearData">
+                    新增分类
                     <template #content>
                         <DynamicForm ref="formRef" v-model="formData"
                             :form-items="formItems" />
                     </template>
                 </DialogButton>
-                <DialogButton permission="code-category:delete"
+            </template>
+            <!-- 自定义操作列 -->
+            <template #option="{ row }">
+                <DialogButton :permission="CodeCategoryPerm.EDIT"
+                    :button-props="editButtonProps" @submit="handleUpdate"
+                    :buttonBorder="false"
+                    @click="getData(row)" @closed="clearData">
+                    <SvgIcon icon="ri:pencil-line" />
+                    <template #content>
+                        <DynamicForm ref="formRef" v-model="formData"
+                            :form-items="formItems" />
+                    </template>
+                </DialogButton>
+                <DialogButton  type="confirm" :permission="CodeCategoryPerm.DELETE"
+                    :buttonBorder="false"
                     :button-props="delButtonProps" @click="handleDel(row)">
-                    删除
+                    <SvgIcon icon="ri:delete-bin-6-line" />
                 </DialogButton>
             </template>
         </PageTable>
@@ -45,6 +41,8 @@
 </template>
 
 <script setup lang='ts'>
+import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { CodeCategoryPerm } from '@/constants'
 import { CodeCategoryService } from "@/api/codeCategoryApi"
 import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps } from "element-plus"
 
@@ -62,8 +60,14 @@ const page = reactive({
     pageSize: 10
 })
 const formData = reactive<Record<string, any>>({})
-const editButtonProps = ref<ButtonProps>({ size: "small" })
-const delButtonProps = ref<ButtonProps>({ size: "small", type: "danger" })
+const editButtonProps = ref<ButtonProps>({
+    type: "primary",
+    plain: true
+})
+const delButtonProps = ref<ButtonProps>({
+    type: "danger",
+    plain: true
+})
 
 // 表单配置
 const formItems = ref([
@@ -96,13 +100,14 @@ const formItems = ref([
     }
 ])
 
-const columns = ref([
+const columns = reactive([
     { type: 'index', label: '序号' },
-    { prop: 'codeCategoryName', label: '分类名称', minWidth: '120' },
-    { prop: 'snippetCount', label: '关联片段数量', minWidth: '100' },
-    { prop: 'createTime', label: '创建时间', minWidth: '160' },
-    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150' }
+    { prop: 'codeCategoryName', label: '分类名称', minWidth: '150' },
+    { prop: 'snippetCount', label: '关联片段数量', minWidth: '150' },
+    { prop: 'createTime', label: '创建时间', minWidth: '150' },
+    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', permission: ['code-category:edit', 'code-category:delete'] }
 ])
+useTableColumnPermission(columns)
 
 const getCodeCategoryListData = async () => {
     loading.value = true
@@ -212,16 +217,6 @@ onMounted(() => getCodeCategoryListData())
     .table {
         margin-top: 10px;
         flex: 1 1 auto;
-
-        .table-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-
-            .icon-list {
-                display: flex;
-            }
-        }
     }
 }
 </style>

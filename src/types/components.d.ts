@@ -11,7 +11,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    ArticleSkeleton: typeof import('./../components/skeletons/ArticleSkeleton.vue')['default']
     Avatar: typeof import('./../layouts/header-bar/widget/Avatar.vue')['default']
     BaseVchart: typeof import('./../components/base-vchart/index.vue')['default']
     Breadcrumb: typeof import('./../layouts/header-bar/widget/Breadcrumb.vue')['default']
@@ -50,6 +49,7 @@ declare module 'vue' {
     ElOption: typeof import('element-plus/es')['ElOption']
     ElPageHeader: typeof import('element-plus/es')['ElPageHeader']
     ElPagination: typeof import('element-plus/es')['ElPagination']
+    ElPopover: typeof import('element-plus/es')['ElPopover']
     ElRadio: typeof import('element-plus/es')['ElRadio']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElRow: typeof import('element-plus/es')['ElRow']
@@ -59,6 +59,7 @@ declare module 'vue' {
     ElStatistic: typeof import('element-plus/es')['ElStatistic']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     ElSwitch: typeof import('element-plus/es')['ElSwitch']
+    ElTable: typeof import('element-plus/es')['ElTable']
     ElTableColumn: typeof import('element-plus/es')['ElTableColumn']
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
@@ -69,7 +70,6 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     ExcelExport: typeof import('./../components/icon-btn/excel-export/index.vue')['default']
     Exception: typeof import('./../components/exception/index.vue')['default']
-    FileSkeleton: typeof import('./../components/skeletons/FileSkeleton.vue')['default']
     FullScreenPage: typeof import('./../components/icon-btn/full-screen-page/index.vue')['default']
     HeaderBar: typeof import('./../layouts/header-bar/index.vue')['default']
     MdEditor: typeof import('./../components/md-editor/index.vue')['default']
@@ -89,17 +89,16 @@ declare module 'vue' {
     SidebarMenu: typeof import('./../layouts/sidebar-menu/index.vue')['default']
     SvgIcon: typeof import('./../components/svg-icon/index.vue')['default']
     TabDropdown: typeof import('./../layouts/work-tab/widget/TabDropdown.vue')['default']
-    TableSkeleton: typeof import('./../components/skeletons/TableSkeleton.vue')['default']
+    TableColumnSetting: typeof import('./../components/icon-btn/table-column-setting/index.vue')['default']
+    TableSetting: typeof import('./../components/page-table/widget/TableSetting.vue')['default']
+    TableSkeleton: typeof import('./../components/page-table/widget/TableSkeleton.vue')['default']
     TabList: typeof import('./../layouts/work-tab/widget/TabList.vue')['default']
     Thinking: typeof import('./../components/chat-ai/Thinking.vue')['default']
     TreeMenu: typeof import('./../layouts/sidebar-menu/widget/TreeMenu.vue')['default']
-    TreeSkeleton: typeof import('./../components/skeletons/TreeSkeleton.vue')['default']
     Upload: typeof import('./../components/upload/index.vue')['default']
-    WangEditor: typeof import('./../components/wang-editor/index.vue')['default']
     WorkTab: typeof import('./../layouts/work-tab/index.vue')['default']
   }
   export interface GlobalDirectives {
-    vInfiniteScroll: typeof import('element-plus/es')['ElInfiniteScroll']
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }

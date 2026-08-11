@@ -162,6 +162,7 @@ onMounted(async () => {
 .page {
     @include page;
     .table {
+        height: 100%;
         .col-name {
             box-sizing: border-box;
             display: flex;

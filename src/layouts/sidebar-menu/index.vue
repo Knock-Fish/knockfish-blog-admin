@@ -1,7 +1,7 @@
 <template>
     <ElScrollbar>
         <ElMenu :default-active="activeMenu" :collapse="isCollapse"
-            :router="true" :collapse-transition="true">
+            :router="true" :collapse-transition="true" :unique-opened="true">
             <div class="logo">
                 <img :src="isDark ? dark : light" alt="logo" />
                 <p :style="{
@@ -15,6 +15,8 @@
 </template>
 
 <script setup lang='ts'>
+import { computed } from 'vue'
+import { useDark } from '@vueuse/core'
 import { useMenuStore } from "@/store/modules/menu"
 import { useRoute } from "vue-router"
 import { type AppRouteRecord } from '@/types'
@@ -24,7 +26,7 @@ const light = new URL("@/assets/svg/logo.light.svg", import.meta.url).href
 const dark = new URL("@/assets/svg/logo.dark.svg", import.meta.url).href
 const menuStore = useMenuStore()
 const isCollapse = computed(() => menuStore.isCollapse)
-const menuData: AppRouteRecord[] =  menuStore.menuList.filter(item => item.meta?.icon) || []
+const menuData = computed(() => menuStore.menuList.filter(item => item.meta?.icon) || [])
 const handleModal = () => {
     menuStore.setIsCollapse(!isCollapse.value)
 }

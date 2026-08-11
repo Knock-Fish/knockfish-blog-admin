@@ -167,7 +167,7 @@ const currentMessages = ref<MessageItem[]>([])
 // 流式请求实例
 const streamRequest = createStreamRequest()
 
-const chatApiUrl = `http://127.0.0.1:8000/qa/stream`
+const chatApiUrl = `http://127.0.0.1:8000/api/v1/chat`
 
 // 会话列表数据
 const timeBasedItems = ref<ConversationItem<{ id: string; label: string }>[]>([
@@ -231,10 +231,11 @@ const handleSend = async () => {
     // 发送流式请求
     await streamRequest.post(chatApiUrl, {
         data: {
-            question: message
+            message
         },
         timeout: 120000,
         onContent: (content) => {
+            console.log('收到内容：', content)
             const assistantMsg = currentMessages.value[assistantIndex]
             if (assistantMsg) {
                 assistantMsg.content += content
@@ -336,7 +337,7 @@ const toggleConversations = () => {
         }
 
         .bubble-list {
-            flex: 1;
+            // flex: 1;
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -429,7 +430,7 @@ const toggleConversations = () => {
     align-items: center;
     justify-content: center;
     transition: width 0.3s ease;
-    padding: 60px 0 20px 0;
+    padding: 0 0 20px 0;
     overflow: hidden;
 
     .welcome-wrapper {
