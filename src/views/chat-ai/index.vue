@@ -167,7 +167,7 @@ const currentMessages = ref<MessageItem[]>([])
 // 流式请求实例
 const streamRequest = createStreamRequest()
 
-const chatApiUrl = `http://127.0.0.1:8000/api/v1/chat`
+const chatApiUrl = `${import.meta.env.VITE_AGENT_BASE_URL || 'http://127.0.0.1:8000'}/api/v1/chat`
 
 // 会话列表数据
 const timeBasedItems = ref<ConversationItem<{ id: string; label: string }>[]>([
