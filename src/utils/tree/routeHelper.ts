@@ -10,7 +10,7 @@ const modules: Record<string, () => Promise<any>> = import.meta.glob('../../view
 export function buildDynamicRoutes(permissions: Permission[]): AppRouteRecord[] {
   // 1. 过滤出【页面路由】：type=MENU 且有 component
   const routePermissions = permissions.filter(
-    p => p.type === "MENU" && p.component && p.path && p.routeName
+    p => p.type === "menu" && p.component && p.path && p.routeName
   )
   // 2. 转换成路由结构
   const routes = routePermissions.map(p => {

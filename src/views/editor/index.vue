@@ -8,8 +8,8 @@
                 <span style="font-size: 14px;">
                     稿件状态：
                     <ElTag
-                        :type="formData.status === 'PUBLISH' ? 'success' : 'info'">
-                        {{ formData.status === 'PUBLISH' ? '已发布' : '草稿' }}
+                        :type="formData.status === 'publish' ? 'success' : 'info'">
+                        {{ formData.status === 'publish' ? '已发布' : '草稿' }}
                     </ElTag>
                 </span>
             </template>
@@ -279,7 +279,7 @@ const formData = reactive<Article>({
     cover: "",
     description: "",
     content: "",
-    status: 'DRAFT',
+    status: 'draft',
     tags: []
 })
 // 原始表单数据
@@ -288,7 +288,7 @@ const originalData = reactive<Article>({
     cover: "",
     description: "",
     content: '',
-    status: 'DRAFT',
+    status: 'draft',
     tags: []
 })
 const onUploadImg = async (files: File[], callback: (urls: string[]) => void) => {
@@ -340,7 +340,7 @@ const ensureDraft = (): Promise<number | undefined> => {
     if (draftPromise) return draftPromise
     draftPromise = (async () => {
         try {
-            formData.status = 'DRAFT'
+            formData.status = 'draft'
             const articleId = await ArticleService.addArticle(formData)
             formData.articleId = articleId
             return articleId
@@ -519,7 +519,7 @@ const loadMore = async (direction: ScrollbarDirection) => {
 //------------------------------ 发布/编辑文章 -----------------------------------
 /** 发布文章 */
 const handlePublish = async () => {
-    formData.status = 'PUBLISH'
+    formData.status = 'publish'
     await saveOrPublish()
 }
 /** 组件处于编辑则根据路由参数获取指定文章 */
@@ -539,7 +539,7 @@ const getDraftCount = async () => {
 const handleDraft = async () => {
     if (hasUnsavedChanges.value) {
         draftLoaded.value = false
-        formData.status = 'DRAFT'
+        formData.status = 'draft'
         await saveOrPublish()
         await getDraftCount()
     } else {
@@ -586,7 +586,7 @@ const delArticleDraft = async (article: Article) => {
             formData.cover = ""
             formData.description = ""
             formData.content = ""
-            formData.status = 'DRAFT'
+            formData.status = 'draft'
             formData.tags = []
             Object.assign(originalData, _.cloneDeep(formData))
             selectTagList.value = []

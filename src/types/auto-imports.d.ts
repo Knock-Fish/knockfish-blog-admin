@@ -7,6 +7,18 @@
 export {}
 declare global {
   const EffectScope: typeof import('vue').EffectScope
+  const ElButton: typeof import('element-plus/es').ElButton
+  const ElCheckbox: typeof import('element-plus/es').ElCheckbox
+  const ElCheckboxGroup: typeof import('element-plus/es').ElCheckboxGroup
+  const ElDatePicker: typeof import('element-plus/es').ElDatePicker
+  const ElInput: typeof import('element-plus/es').ElInput
+  const ElMessageBoxConfirm: typeof import('element-plus/es').ElMessageBoxConfirm
+  const ElRadio: typeof import('element-plus/es').ElRadio
+  const ElRadioGroup: typeof import('element-plus/es').ElRadioGroup
+  const ElSegmented: typeof import('element-plus/es').ElSegmented
+  const ElSelect: typeof import('element-plus/es').ElSelect
+  const ElSwitch: typeof import('element-plus/es').ElSwitch
+  const ElSwtich: typeof import('element-plus/es').ElSwtich
   const acceptHMRUpdate: typeof import('pinia').acceptHMRUpdate
   const asyncComputed: typeof import('@vueuse/core').asyncComputed
   const autoResetRef: typeof import('@vueuse/core').autoResetRef

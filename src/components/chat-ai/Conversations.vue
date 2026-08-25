@@ -151,10 +151,10 @@ const handleMenuCommand = (command: string, item: ConversationItem) => {
     }
 
     &.active {
-        background-color: var(--primary-color);
+        background-color: var(--active-color);
         
         .item-label span {
-            color: #fff;
+            color: var(--w-e-textarea-color);
         }
         
         .item-label svg {

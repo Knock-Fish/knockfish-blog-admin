@@ -75,7 +75,6 @@ import { TagService } from "@/api/tagApi"
 import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
 type Tag = Api.Tag.TagInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
-const userStore = useUserStore()
 const formRef = ref()
 const divRef = ref<HTMLElement | null>(null)
 const query = reactive<Tag>({})

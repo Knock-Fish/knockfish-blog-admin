@@ -1,14 +1,12 @@
 <template>
     <div class="main" :style="{ paddingLeft: menuWidth }">
-        <div>
-            <RouterView v-slot="{ Component }">
-                <Transition name="fade">
-                    <keep-alive :include="cacheList">
-                        <component :is="Component" />
-                    </keep-alive>
-                </Transition>
-            </RouterView>
-        </div>
+        <RouterView v-slot="{ Component }">
+            <Transition name="fade" mode="out-in">
+                <keep-alive :include="cacheList">
+                    <component :is="Component" />
+                </keep-alive>
+            </Transition>
+        </RouterView>
     </div>
 </template>
 
@@ -34,9 +32,13 @@ watch(() => route.name,
 
 <style lang="scss" scoped>
 .main {
+    position: relative;
     box-sizing: border-box;
-    padding-top: 95px;
     transition: padding-left 0.4s ease;
+    height: 100vh;
+    padding-top: 95px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .fade-enter-active,

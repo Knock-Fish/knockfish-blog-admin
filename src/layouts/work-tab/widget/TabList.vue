@@ -46,6 +46,7 @@ watch(
         tabStore.OpenedTab({
             path: matched[matchedEnd]?.path as string,
             title: matched[matchedEnd]?.meta.title as string,
+            name: matched[matchedEnd]?.name as string,
             isActive: true
         })
     },

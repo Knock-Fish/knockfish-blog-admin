@@ -126,11 +126,11 @@ const formData = reactive<Permission>({
     permissionName: '',
     permissionCode: '',
     parentId: 0,
-    type: 'API',
+    type: 'api',
     sortOrder: 0,
     hidden: 0,
     keepAlive: 0,
-    status: 'ENABLE'
+    status: 'enable'
 })
 
 const editButtonProps = ref<ButtonProps>({
@@ -236,9 +236,9 @@ const formItems = computed(() => [
         label: '权限类型',
         props: { placeholder: '请选择权限类型', multiple: false, clearable: true },
         options: [
-            { value: "MENU", label: "菜单" },
-            { value: "BUTTON", label: "按钮" },
-            { value: "API", label: "接口" },
+            { value: "menu", label: "菜单" },
+            { value: "button", label: "按钮" },
+            { value: "api", label: "接口" },
         ],
         rules: { required: true, message: '类型不能为空', trigger: 'blur' }
     },
@@ -368,11 +368,11 @@ const clearData = () => {
         permissionName: '',
         permissionCode: '',
         parentId: 0,
-        type: 'API',           // 枚举字段：保持默认值
+        type: 'api',           // 枚举字段：保持默认值
         sortOrder: 0,
         hidden: 0,             // 枚举字段：保持默认值
         keepAlive: 0,          // 枚举字段：保持默认值
-        status: 'ENABLE'       // 枚举字段：保持默认值
+        status: 'enable'       // 枚举字段：保持默认值
     })
     currentEditId.value = 0
     isPermissionCode.value = false

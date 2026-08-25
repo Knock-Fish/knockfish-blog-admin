@@ -4,6 +4,7 @@
 import { RoutesAlias } from "@/router/routesAlias"
 export interface Tab{
     title: string
+    name: string
     path: string
     fixedTab?: boolean
     isActive?: boolean

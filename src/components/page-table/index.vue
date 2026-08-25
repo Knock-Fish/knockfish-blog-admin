@@ -23,7 +23,9 @@
         <TableSkeleton v-if="loading" />
 
         <!-- 表格内容 -->
-        <ElTable v-else v-loading="loading" :data="tableData" height="100%"
+        <ElTable v-else v-loading="loading" :data="tableData"
+            :height="maxHeight ? undefined : '100%'"
+            :max-height="maxHeight"
             v-on="componentsEmit" :stripe="tableStripe" :border="tableBorder">
             <template v-for="item in columns" :key="item._uid || item.prop">
                 <!-- 选择列 -->
@@ -103,6 +105,7 @@ const porps = withDefaults(defineProps<{
     loading?: boolean    // 是否加载中
     stripe?: boolean    // 是否为斑马纹
     border?: boolean    // 是否带有纵向边框
+    maxHeight?: string | number
 }>(), {
     page: () => ({ total: 0, pageNum: 1, pageSize: 10 }),
     pagination: true,
@@ -128,6 +131,7 @@ const emit = defineEmits<{
     (e: 'currentPage', page: number): void
     (e: 'pageSize', size: number): void
     (e: 'row-click', row: any, column: any, event: MouseEvent): void
+    (e: 'selection-change', selection: any[]): void
     (e: 'refresh'): void
     (e: 'columns', columns: TableColumn[]): void
 }>()
@@ -136,7 +140,8 @@ const refresh = () => {
 }
 const componentsEmit = computed(() => {
     return {
-        rowClick: (row: any, column: any, event: MouseEvent) => emit('row-click', row, column, event)
+        rowClick: (row: any, column: any, event: MouseEvent) => emit('row-click', row, column, event),
+        selectionChange: (selection: any[]) => emit('selection-change', selection)
     }
 })
 /** 更新当前页面 */

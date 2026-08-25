@@ -7,6 +7,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import viteCompression from 'vite-plugin-compression'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default ({ mode }: { mode: string }) => {
   // 获取当前工作目录
@@ -65,6 +66,32 @@ export default ({ mode }: { mode: string }) => {
         ext: '.br',
         threshold: 10240,
         deleteOriginFile: false,
+      }),
+      // 渐进式应用
+      VitePWA({
+        registerType: 'autoUpdate', // 自动更新 Service Worker
+        includeAssets: ['favicon.ico'],
+        manifest: {
+          id: '/',
+          name: '鱼后台',       // 应用全名
+          short_name: 'FishBarnApp',      // 应用短名
+          description: '渐进式 Web 应用',
+          theme_color: '#409EFF',
+          background_color: '#ffffff',
+          display: 'standalone',     // 隐藏浏览器UI
+          icons: [
+            {
+              src: '/logo.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any'
+            },
+          ],
+        },
+        workbox: {
+          // 缓存策略配置
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        }
       })
     ],
 

@@ -68,7 +68,7 @@ declare namespace Api {
             linkUrl?: string
             description?: string
             avatar?: string
-            status?: 'HIDE' | 'DISPLAY'
+            status?: 'hide' | 'display'
             createTime?: string
         }
         type LinkListData = Api.Common.PaginatingParams<LinkInfo>
@@ -105,7 +105,7 @@ declare namespace Api {
             cover: string
             description?: string
             content: string
-            status: 'PUBLISH' | 'DRAFT'
+            status: 'publish' | 'draft'
             publishTime?: string
             updatedTime?: string
             userId?: number
@@ -163,7 +163,7 @@ declare namespace Api {
             permissionId: number
             permissionName: string
             permissionCode: string
-            type: "DIRECTORY" | "MENU" | "BUTTON" | "API"
+            type: "directory" | "menu" | "button" | "api"
             parentId: number
             routeName?: string
             path?: string | null
@@ -173,7 +173,7 @@ declare namespace Api {
             component?: string | null
             sortOrder: number
             createTime?: string
-            status: "ENABLE" | "DISABLE"
+            status: "enable" | "disable"
             children?: PermissionInfo[]
         }
         type PermissionListData = { list: Api.Permission.PermissionInfo[] }
@@ -237,6 +237,41 @@ declare namespace Api {
             referenceType?: string
             userId?: number
             createTime?: string
+        }
+    }
+    /** 甘特图任务类型 */
+    namespace GanttTask {
+        type TaskType = 'task' | 'milestone' | 'project'
+        type TaskStatus = 'todo' | 'doing' | 'done' | 'delay' | 'cancel'
+        /** 任务信息 */
+        interface TaskInfo {
+            task_id?: number
+            text?: string
+            start?: string
+            end?: string
+            progress?: number
+            type?: TaskType
+            status?: TaskStatus
+            owner?: string
+            description?: string
+            parent_id?: number | null
+            insert_after_id?: number | null
+            open?: number
+            sort_order?: number
+            create_time?: string
+            update_time?: string
+            children?: TaskInfo[]
+        }
+    }
+    /** 甘特图依赖连线类型 */
+    namespace GanttLink {
+        /** 连线信息 */
+        interface LinkInfo {
+            link_id?: number
+            source?: number
+            target?: number
+            type?: number
+            create_time?: string
         }
     }
 }

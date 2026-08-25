@@ -12,7 +12,7 @@
 //     component: string | null
 //     sortOrder: number
 //     createTime: string
-//     status: 'ENABLE' | 'DISABLE'
+//     status: 'enable' | 'disable'
 //     children?: Permission[]
 // }
 // export function buildPermissionTree(permissions: Permission[]): Permission[] {
@@ -21,7 +21,7 @@
 //     }
 
 //     // 1. 过滤出启用的权限
-//     const enabledPermissions = permissions.filter(p => p.status === 'ENABLE')
+//     const enabledPermissions = permissions.filter(p => p.status === 'enable')
 
 //     // 2. 创建 ID 映射
 //     const permissionMap = new Map<number, Permission>()

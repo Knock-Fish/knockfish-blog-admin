@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ElInput, ElSelect, ElOption, ElRadio, ElCheckbox, ElDatePicker, ElRadioGroup, ElCheckboxGroup, ElButton, ElSegmented } from 'element-plus'
+
 import type {
   FormInstance,
   FormItemRule,
@@ -70,6 +70,7 @@ import type {
   CheckboxGroupProps,
   ButtonProps,
   SegmentedProps,
+  SwitchProps
 } from 'element-plus'
 
 const componentMap: Record<string, any> = {
@@ -82,6 +83,7 @@ const componentMap: Record<string, any> = {
   ElDatePicker,
   ElButton,
   ElSegmented,
+  ElSwitch
 }
 
 const itemRefs = ref<Record<string, any>>({})
@@ -102,6 +104,7 @@ interface FormItem extends Partial<FormItemProps> {
   | DatePickerProps
   | ButtonProps
   | SegmentedProps
+  | SwitchProps
   slot?: string
   options?: SelectOptionProps
   | CheckboxOption

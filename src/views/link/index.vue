@@ -3,14 +3,16 @@
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData"
-            :page="page" slot-header="header" :loading="loading"
+            :full-target-ref="divRef" :page="page" slot-header="header"
+            :loading="loading" @refresh="getLinkListData"
             @current-page="getLinkListData" @page-size="getLinkListData">
             <template #header>
-                <DialogButton :permission="LinkPerm.ADD" @submit="handleAdd"
-                    @closed="clearData">
+                <!-- 新增弹窗：添加 ref="formRef" -->
+                <DialogButton :permission="LinkPerm.ADD"
+                    @submit="handleAdd" @closed="clearData">
                     新增友链
                     <template #content>
-                        <DynamicForm v-model="formData" :form-items="formItems">
+                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
                             <template #icon>
                                 <img v-if="formData.avatar" style="
                             position: absolute;
@@ -24,7 +26,6 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-
             </template>
             <template #linkInfo="{ row }">
                 <div class="link-item">
@@ -41,14 +42,20 @@
                 <a class="link-url" :href="row.linkUrl" target="_blank">{{
                     row.linkUrl }}</a>
             </template>
+            <template #status="{ row }">
+                <ElTag :type="row.status === 'display' ? 'success' : 'info'">
+                    {{row.status === 'display' ? "显示" : "隐藏" }}
+                </ElTag>
+            </template>
             <template #option="{ row }">
+                <!-- 编辑弹窗：移除 ref="formRef" -->
                 <DialogButton :permission="LinkPerm.EDIT" :buttonBorder="false"
                     :button-props="editButtonProps" :dialog-props="dialogProps"
-                    @click="getData(row)" @closed="clearData">
+                    @click="getData(row)" @submit="handleUpdate"
+                    @closed="clearData">
                     <SvgIcon icon="ri:pencil-line" />
                     <template #content>
-                        <DynamicForm ref="formRef" v-model="formData"
-                            :form-items="formItems">
+                        <DynamicForm v-model="formData" :form-items="formItems">
                             <template #icon>
                                 <img v-if="formData.avatar" style="
                             position: absolute;
@@ -62,8 +69,9 @@
                         </DynamicForm>
                     </template>
                 </DialogButton>
-                <DialogButton type="confirm" :buttonBorder="false" :permission="LinkPerm.DELETE"
-                    :button-props="delButtonProps" @click="handleDel(row)">
+                <DialogButton type="confirm" :buttonBorder="false"
+                    :permission="LinkPerm.DELETE" :button-props="delButtonProps"
+                    @click="handleDel(row)">
                     <SvgIcon icon="ri:delete-bin-6-line" />
                 </DialogButton>
             </template>
@@ -81,7 +89,7 @@ type Link = Api.Link.LinkInfo
 type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 
 const query = reactive<Link>({})    // 搜索关键词
-const formRef = ref()   // 表单DOM
+const formRef = ref()   // 表单DOM（现在指向新增弹窗内的表单）
 const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
 const tableData = ref<Link[]>([])   // 表格数据
 const formData = reactive<Link>({}) // 表单数据
@@ -126,7 +134,7 @@ const formItems = computed(() => [
     },
     {
         type: 'Input',
-        prop: 'icon',
+        prop: 'avatar',
         label: '图标',
         props: {
             placeholder: '请输入图标链接',
@@ -163,6 +171,15 @@ const formItems = computed(() => [
             message: '链接不能为空',
             trigger: 'blur'
         }
+    },
+    {
+        type: 'Switch',
+        prop: "status",
+        label: '是否显示',
+        props: {
+            activeValue: "display",
+            inactiveValue: "hide"
+        }
     }
 ])
 // --------------- 表格项配置 ---------------
@@ -170,6 +187,7 @@ const columns = reactive([
     { type: 'index', label: '序号' },
     { prop: 'linkName', label: '友链信息', slot: 'linkInfo', minWidth: '150', showOverflowTooltip: true },
     { slot: 'linkUrl', label: '链接', minWidth: '150', showOverflowTooltip: true },
+    { slot: 'status', label: '状态', minWidth: '150'},
     { prop: 'createTime', label: '创建时间', minWidth: '150' },
     { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', permission: ['link:edit', 'link:delete'] }
 ])
@@ -202,31 +220,37 @@ const getLinkListData = async () => {
 }
 /** 编辑前获取数据 */
 const getData = (row: Link) => {
-    const { linkName, description, avatar, linkUrl, linkId } = row
-    Object.assign(formData, { linkName, description, avatar, linkUrl, linkId })
+    const { linkName, description, avatar, linkUrl, linkId, status } = row
+    Object.assign(formData, { linkName, description, avatar, linkUrl, linkId, status })
 }
 /** 清除表单数据 */
 const clearData = () => {
+    // 清空formData数据
     Object.keys(formData).forEach((key) => {
         (formData[key as keyof Link] as any) = ""
     })
-    // 重置表单校验
+    // 重置新增弹窗的表单校验（formRef 指向新增弹窗内的表单）
     if (formRef.value) {
         formRef.value.resetForm()
     }
 }
 /** 添加友链 */
 const handleAdd = async () => {
-    if (formData.linkId) {
-        await LinkService.updateLink(formData)
-    } else {
-        await LinkService.addLink(formData)
-    }
+    await LinkService.addLink(formData)
     ElMessage({
         message: '提交成功',
         type: 'success',
     })
     getLinkListData()
+}
+/** 编辑友链 */
+const handleUpdate = async () => {
+    await LinkService.updateLink(formData)
+    ElMessage({
+        message: '编辑成功',
+        type: 'success',
+    })
+    await getLinkListData()
 }
 /** 删除友链 */
 const handleDel = async (row: Link) => {

@@ -55,10 +55,11 @@ export const useTabStore = defineStore("tabsStore", () => {
       console.warn('尝试跳转到无效路径的标签页')
       return
     }
-
+    console.log(tab)
     try {
       router.push({
-        path: tab.path
+        // path: tab.path
+        name: tab.name
       })
     } catch (error) {
       console.error('路由跳转失败:', error)

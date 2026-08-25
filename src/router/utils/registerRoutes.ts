@@ -31,12 +31,42 @@ function resolveComponent(componentPath: string): () => Promise<any> {
   return component
 }
 
+/** 规范化路径：去掉首尾 '/'，用于比较 */
+const normalizePath = (s: string | undefined | null) => (s ?? '').toString().replace(/^\/+|\/+$/g, '')
+
+/** 判断是否 chat-ai 路由（基于 path 或 component） */
+function isChatAiRoute(route: AppRouteRecord): boolean {
+  return (
+    normalizePath(route.path as string) === 'chat-ai' ||
+    normalizePath(typeof route.component === 'string' ? route.component : '') === 'chat-ai'
+  )
+}
+
+/**
+ * 对路由（递归 children）做业务级规范化：
+ * - chat-ai 路由追加可选 :sessionId 参数
+ * - chat-ai 路由固定 name = 'ChatAi'，供命名路由跳转
+ * 返回浅拷贝，不污染原对象
+ */
+function normalizeRoute(route: AppRouteRecord): AppRouteRecord {
+  const r = { ...route } as AppRouteRecord
+  if (isChatAiRoute(r)) {
+    r.path = 'chat-ai/:sessionId?'
+    r.name = 'ChatAi'
+  }
+  if (r.children && r.children.length > 0) {
+    r.children = r.children.map((c) => normalizeRoute(c))
+  }
+  return r
+}
+
 /**
  * 递归转换单条路由（替换component为懒加载函数，处理所有子路由）
- * @param route 原始路由配置
- * @returns 转换后的路由配置（浅拷贝，不修改原对象）
+ * @param route 原始路由配置（已通过 normalizeRoute 规范化）
+ * @returns 转换后的路由配置（浅拷贝）
  */
 function transformRoute(route: AppRouteRecord): AppRouteRecord {
+  // 此处的 route 已经是 normalizeRoute 的输出（chat-ai 路径/名称已修正）
   const transformed = { ...route } as AppRouteRecord
 
   // 替换组件为懒加载函数
@@ -53,19 +83,18 @@ function transformRoute(route: AppRouteRecord): AppRouteRecord {
 }
 
 /**
- * 递归收集路由树中所有路由名称
+ * 递归收集路由树中所有路由名称（基于 normalizeRoute 规范化后收集，保证 name 一致）
  * @param route 路由配置
  * @returns 路由名称数组
  */
 function collectRouteNames(route: AppRouteRecord): string[] {
   const names: string[] = []
-  if (route.name) names.push(route.name as string)
-  
-  if (route.children) {
-    route.children.forEach(child => {
-      names.push(...collectRouteNames(child))
-    })
+  const normalized = normalizeRoute(route)
+  const innerCollect = (r: AppRouteRecord) => {
+    if (r.name) names.push(r.name as string)
+    if (r.children) r.children.forEach(innerCollect)
   }
+  innerCollect(normalized)
   return names
 }
 
@@ -77,13 +106,16 @@ function collectRouteNames(route: AppRouteRecord): string[] {
  */
 export async function registerDynamicRoutes(router: Router, routes: AppRouteRecord[]) {
   routes.forEach(route => {
-    // 提前收集所有路由名，先去重再转换，避免无效计算
+    // 1) 业务规范化：chat-ai 路由统一 path + name（先于名称收集和转换，保证一致性）
+    const normalized = normalizeRoute(route)
+
+    // 2) 提前收集所有路由名，先去重再转换，避免无效计算
     const allNames = collectRouteNames(route)
     const hasRegistered = allNames.some(name => registeredRouteNames.has(name))
     if (hasRegistered) return
 
-    // 递归转换整棵路由树的组件
-    const transformedRoute = transformRoute(route)
+    // 3) 递归转换整棵路由树的组件（component 字符串 -> 懒加载函数）
+    const transformedRoute = transformRoute(normalized)
 
     // 按业务规则注册路由
     if (transformedRoute.children && transformedRoute.children.length > 0) {

@@ -53,7 +53,6 @@
 <script setup lang='ts'>
 import { MdPreview, MdCatalog } from 'md-editor-v3'
 import 'md-editor-v3/lib/preview.css'
-import { useRouter, useRoute } from "vue-router"
 import { ArticleService } from "@/api/articleApi"
 import { useWindowSize } from '@vueuse/core'
 import ArticleSkeleton from './widget/ArticleSkeleton.vue'

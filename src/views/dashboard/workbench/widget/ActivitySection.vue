@@ -59,7 +59,7 @@ const formatTime = (timeStr: string) => {
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-    
+
     if (minutes < 60) return `${minutes}分钟前`;
     if (hours < 24) return `${hours}小时前`;
     if (days < 7) return `${days}天前`;
@@ -108,8 +108,6 @@ defineExpose({ refresh: fetchActivities });
     border-radius: 12px;
     padding: 15px;
     border: 1px solid var(--border-color);
-    overflow-y: auto;
-    scrollbar-width: none;
 }
 
 .section-header {
@@ -132,9 +130,13 @@ defineExpose({ refresh: fetchActivities });
 
 .activity-list {
     margin-top: 20px;
-    :deep(.el-timeline){
+    overflow-y: auto;
+    scrollbar-width: none;
+    height: 500px;
+    :deep(.el-timeline) {
         padding-left: 0;
     }
+
     .activity-item {
         display: flex;
         align-items: center;

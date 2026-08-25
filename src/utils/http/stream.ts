@@ -21,6 +21,8 @@ export interface StreamRequestOptions {
     onSSEEvent?: (event: SSEEvent) => void
     /** 内容回调 (从 SSE 中提取 content) */
     onContent?: (content: string) => void
+    /** 响应头回调 (在状态码校验通过后立刻触发) */
+    onHeaders?: (headers: Headers) => void
     /** 错误回调 */
     onError?: (error: StreamError) => void
     /** 请求完成回调 */
@@ -110,6 +112,7 @@ class StreamRequest {
             onChunk,
             onSSEEvent,
             onContent,
+            onHeaders,
             onError,
             onFinally,
             withToken = true,
@@ -173,6 +176,13 @@ class StreamRequest {
                 }
                 onError?.(error)
                 return { success: false, fullText: this.fullText, error }
+            }
+
+            // 触发响应头回调
+            try {
+                onHeaders?.(response.headers)
+            } catch (_) {
+                /* ignore */
             }
 
             // 获取 Reader
