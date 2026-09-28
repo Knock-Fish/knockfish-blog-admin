@@ -1,0 +1,177 @@
+.chat-container {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 100px);
+    background-color: var(--card-color);
+    box-sizing: border-box;
+    overflow: hidden;
+
+    .chat-area {
+        width: 80%;
+        height: 100%;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        scrollbar-width: none;
+
+        >div {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .bubble-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 20px 0 160px 0;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .sender {
+            width: 100%;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            background-color: var(--card-color);
+            padding: 10px 0;
+        }
+    }
+}
+
+.conversations-wrapper {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-right: 1px solid var(--border-color);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.conversations-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 10px 0 10px;
+}
+
+.drawer-conversations-header {
+    padding: 0 0 12px 0;
+    border-bottom: 1px solid var(--border-color);
+
+    :deep(.el-button) {
+        width: 100%;
+    }
+}
+
+.conversations-drawer {
+    :deep(.el-drawer__header) {
+        margin-bottom: 0;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    :deep(.el-drawer__body) {
+        padding: 16px 12px;
+    }
+}
+
+.toggle-btn {
+    width: 32px;
+    font-size: 20px;
+    border: none !important;
+    background-color: var(--card-color);
+    border-left: none;
+    color: var(--icon-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 3px;
+
+    &:hover {
+        background-color: var(--hover-bg-color);
+        color: var(--text-color);
+    }
+
+    &.expanded {
+        border-radius: 50%;
+    }
+}
+
+.main-content {
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.3s ease;
+    padding: 0 0 20px 0;
+    overflow: hidden;
+
+    .welcome-wrapper {
+        width: 80%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 120px;
+    }
+
+    &.full-width {
+        width: 100%;
+    }
+
+    .btn-list {
+        display: flex;
+        box-sizing: border-box;
+        padding: 2px;
+        background-color: var(--card-color);
+        border: 1px solid var(--border-color);
+        border-radius: 100px;
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .04);
+        z-index: 1000;
+    }
+}
+
+.welcome-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+.welcome-subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #999;
+    margin-bottom: 40px;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+    transition: all 0.3s ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+    width: 0;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.slide-enter-to,
+.slide-leave-from {
+    width: 280px;
+    opacity: 1;
+}

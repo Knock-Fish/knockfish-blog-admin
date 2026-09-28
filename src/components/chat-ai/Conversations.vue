@@ -20,7 +20,7 @@
                         <SvgIcon icon="mdi:message-outline" size="16px" />
                         <span :title="showTooltip ? item.label : undefined">{{ item.label }}</span>
                     </div>
-                    <div v-if="showBuiltInMenu" class="item-actions">
+                    <div v-if="showBuiltInMenu" class="item-actions" @click.stop>
                         <ElDropdown trigger="click" @command="(cmd) => handleMenuCommand(cmd, item)">
                             <SvgIcon icon="mdi:dots-vertical" size="16px" />
                             <template #dropdown>
