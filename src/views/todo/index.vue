@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import GanttChart from '@comps/gantt-chart/index.vue'
 import type { GanttTask, GanttLink } from '@comps/gantt-chart/types'

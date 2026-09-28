@@ -38,14 +38,7 @@ if (document.readyState === 'complete') {
   window.addEventListener('load', hideLoading)
 }
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('SW registered:', registration);
-      })
-      .catch(error => {
-        console.error('SW registration failed:', error);
-      });
-  });
-}
+// Service Worker 注册交由 vite-plugin-pwa 自动处理（其 injectRegister 默认 'auto'，
+// 生产构建会注入注册、dev 模式不生成 sw.js）。这里不再手动 register('/sw.js')，
+// 否则 dev 下请求 /sw.js 会被 dev server 回退为 index.html（text/html），
+// 触发 "The script has an unsupported MIME type ('text/html')" 错误。
