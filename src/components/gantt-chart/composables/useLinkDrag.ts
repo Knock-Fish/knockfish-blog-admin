@@ -1,6 +1,6 @@
 import { reactive, type Ref, onBeforeUnmount } from 'vue'
 import dayjs from 'dayjs'
-import type { GanttTask } from '../components/gantt-chart/types'
+import type { GanttTask } from '../types'
 
 export interface UseLinkDragOptions {
   ganttWrapRef: Ref<HTMLDivElement | undefined>

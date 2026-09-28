@@ -1,6 +1,6 @@
 import { reactive, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import type { GanttTask } from '../components/gantt-chart/types'
+import type { GanttTask } from '../types'
 
 /** 右键菜单命令类型 */
 export type ContextMenuCommand = 'add-child' | 'add-after' | 'edit' | 'indent' | 'outdent' | 'delete'

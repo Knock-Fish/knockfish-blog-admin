@@ -2,7 +2,7 @@ import { ref, reactive } from 'vue'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import type { FormRules } from 'element-plus'
-import type { GanttTask, TaskDialogForm } from '../components/gantt-chart/types'
+import type { GanttTask, TaskDialogForm } from '../types'
 
 export interface UseTaskDialogOptions {
   getTaskById: (id: string) => GanttTask | undefined

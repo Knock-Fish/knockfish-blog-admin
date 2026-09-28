@@ -1,7 +1,7 @@
 import { ref, reactive, computed, nextTick, type Ref } from 'vue'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
-import type { ScaleType, GanttTask, TopHeaderGroup, SubHeaderCell } from '../components/gantt-chart/types'
+import type { ScaleType, GanttTask, TopHeaderGroup, SubHeaderCell } from '../types'
 
 try { dayjs.extend(isoWeek) } catch {}
 

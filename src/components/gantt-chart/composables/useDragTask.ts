@@ -1,6 +1,6 @@
 import { reactive, type Ref, onBeforeUnmount } from 'vue'
 import dayjs from 'dayjs'
-import type { GanttTask, DragMode, ScaleType, TaskStatus } from '../components/gantt-chart/types'
+import type { GanttTask, DragMode, ScaleType, TaskStatus } from '../types'
 
 /** 任务状态对应的主题色（用于任务条 --bar-color） */
 const STATUS_COLOR: Record<TaskStatus, string> = {

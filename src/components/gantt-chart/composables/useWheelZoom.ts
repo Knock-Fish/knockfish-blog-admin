@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import type { ScaleType } from '../components/gantt-chart/types'
+import type { ScaleType } from '../types'
 
 export interface UseWheelZoomOptions {
   ganttWrapRef: Ref<HTMLDivElement | undefined>

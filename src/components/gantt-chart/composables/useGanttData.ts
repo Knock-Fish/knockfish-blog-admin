@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
-import type { GanttTask, GanttLink, TaskStatus, TaskType } from '../components/gantt-chart/types'
+import type { GanttTask, GanttLink, TaskStatus, TaskType } from '../types'
 
 /** 任务状态对应的主题色（todo 灰 / doing 蓝 / done 绿 / delay 红 / cancel 浅灰） */
 const STATUS_COLOR: Record<TaskStatus, string> = {

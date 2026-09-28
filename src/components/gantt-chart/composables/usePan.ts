@@ -1,5 +1,5 @@
 import { reactive, type Ref, onBeforeUnmount } from 'vue'
-import type { ScaleType } from '../components/gantt-chart/types'
+import type { ScaleType } from '../types'
 
 export interface UsePanOptions {
   ganttWrapRef: Ref<HTMLDivElement | undefined>

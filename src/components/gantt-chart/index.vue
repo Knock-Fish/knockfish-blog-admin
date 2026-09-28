@@ -164,7 +164,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
@@ -180,20 +179,20 @@ import GanttLinkLayer from './widget/GanttLinkLayer.vue'
 import GanttTaskBar from './widget/GanttTaskBar.vue'
 import type { GanttTask, GanttLink, RenderedLink } from './types'
 
-import { useGanttData } from '@/composables/useGanttData'
-import { useTimeline } from '@/composables/useTimeline'
-import { useDragTask } from '@/composables/useDragTask'
-import { usePan } from '@/composables/usePan'
-import { useWheelZoom } from '@/composables/useWheelZoom'
-import { useLinkDrag } from '@/composables/useLinkDrag'
-import { useSplitter } from '@/composables/useSplitter'
-import { useContextMenu } from '@/composables/useContextMenu'
-import { useTaskDialog } from '@/composables/useTaskDialog'
-import { useTimelineExpand } from '@/composables/useTimelineExpand'
+import { useGanttData } from './composables/useGanttData'
+import { useTimeline } from './composables/useTimeline'
+import { useDragTask } from './composables/useDragTask'
+import { usePan } from './composables/usePan'
+import { useWheelZoom } from './composables/useWheelZoom'
+import { useLinkDrag } from './composables/useLinkDrag'
+import { useSplitter } from './composables/useSplitter'
+import { useContextMenu } from './composables/useContextMenu'
+import { useTaskDialog } from './composables/useTaskDialog'
+import { useTimelineExpand } from './composables/useTimelineExpand'
 
 const isDark = useDark()
 
-// ======================= Props 定义（父组件传入） =======================
+// Props 定义
 const props = withDefaults(
   defineProps<{
     /** 任务数据（父子层级结构），由父组件传入 */
@@ -207,7 +206,7 @@ const props = withDefaults(
   },
 )
 
-// ======================= Emits（暴露增删改事件给父组件） =======================
+// Emits（暴露增删改事件给父组件）
 const emit = defineEmits<{
   /** 新增任务：task 新任务对象，parentId 父任务 id（顶层为 null），insertAfterId 插入到该兄弟任务之后（追加末尾为 null） */
   (e: 'add-task', task: GanttTask, parentId: string | null, insertAfterId: string | null): void
@@ -221,11 +220,11 @@ const emit = defineEmits<{
   (e: 'delete-link', id: string): void
 }>()
 
-// ======================= 基础常量 =======================
+// 基础常量
 const rowHeight = ref(32)
 const initialized = ref(false)
 
-// ======================= 1. 任务数据管理（从 props 注入） =======================
+// 任务数据管理（从 props 注入）
 const {
   ganttTasks,
   ganttLinks,
@@ -262,7 +261,7 @@ watch(
   { deep: true },
 )
 
-// ======================= 包装 useGanttData 的增删改方法：本地修改 + emit 事件给父组件 =======================
+// 包装 useGanttData 的增删改方法：本地修改 + emit 事件给父组件
 // 新增任务：本地插入 + emit add-task
 function wrappedAddTask(task: GanttTask, parentId: string | null, insertAfterId: string | null = null) {
   addTask(task, parentId, insertAfterId)
@@ -291,7 +290,7 @@ function wrappedRemoveLink(id: string) {
   emit('delete-link', id)
 }
 
-// ======================= 2. 时间轴 =======================
+// 时间轴
 const timeline = useTimeline({
   flatTasks,
   rowHeight,
@@ -318,7 +317,7 @@ const ganttWrapRef = timeline.ganttWrapRef
 // 行背景渲染行数：基于 bodyHeight 计算，无数据时也填满可视区
 const rowCount = computed(() => Math.ceil(bodyHeight.value / rowHeight.value))
 
-// ======================= 3. 依赖连线渲染（在父组件中保留，依赖多个 composable） =======================
+// 依赖连线渲染
 const renderedLinks = computed<RenderedLink[]>(() => {
   const tasks = flatTasks.value
   const idxMap = flatTaskIndexMap.value
@@ -384,7 +383,7 @@ function onLinkClick(link: { id: string }) {
     .catch(() => {})
 }
 
-// ======================= 4. 任务条拖拽 =======================
+// 任务条拖拽
 const { drag, onBarMouseDown, getBarStyle } = useDragTask({
   selectedId,
   getTaskById,
@@ -399,7 +398,7 @@ const { drag, onBarMouseDown, getBarStyle } = useDragTask({
   },
 })
 
-// ======================= 5. 画布平移 =======================
+// 画布平移
 const { pan, onPanStart } = usePan({
   ganttWrapRef,
 })
@@ -436,14 +435,14 @@ function locateDate(date: string) {
   })
 }
 
-// ======================= 6. 滚轮缩放 =======================
+// 滚轮缩放
 const { onGanttWheel } = useWheelZoom({
   ganttWrapRef,
   columnWidths,
   currentScale,
 })
 
-// ======================= 7. 依赖连线拖拽 =======================
+// 依赖连线拖拽
 const { dragLink, onLinkMouseDown } = useLinkDrag({
   ganttWrapRef,
   getTaskById,
@@ -454,7 +453,7 @@ const { dragLink, onLinkMouseDown } = useLinkDrag({
   addLink: wrappedAddLink,
 })
 
-// ======================= 8. 分割条 =======================
+// 分割条
 const {
   splitter,
   SPLITTER_MIN,
@@ -465,7 +464,7 @@ const {
   onResized: () => fitView(),
 })
 
-// ======================= 9. 任务弹窗 =======================
+// 任务弹窗
 const {
   taskDialogVisible,
   taskDialogMode,
@@ -483,7 +482,7 @@ const {
   addTask: wrappedAddTask,
 })
 
-// ======================= 10. 右键菜单 =======================
+// 右键菜单
 const { contextMenu, openContextMenu, onContextClick } = useContextMenu({
   getTaskById,
   onAdd: (id, mode) => openAddDialog(id, mode),
@@ -491,7 +490,7 @@ const { contextMenu, openContextMenu, onContextClick } = useContextMenu({
   onDeleteById: handleDeleteTaskById,
 })
 
-// ======================= 11. 时间轴自动扩展 =======================
+// 时间轴自动扩展
 const { onScroll } = useTimelineExpand({
   ganttWrapRef,
   timelineStart,
@@ -500,7 +499,7 @@ const { onScroll } = useTimelineExpand({
   initialized,
 })
 
-// ======================= 删除任务弹窗 =======================
+// 删除任务弹窗
 const deleteDialog = reactive({
   visible: false,
   deleting: false,
@@ -536,7 +535,7 @@ function confirmDelete() {
   }
 }
 
-// ======================= 生命周期 =======================
+// 生命周期
 let resizeObserver: ResizeObserver | null = null
 let resizeTimer: ReturnType<typeof setTimeout> | null = null
 
