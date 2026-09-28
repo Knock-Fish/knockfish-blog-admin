@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, shallowRef, shallowReactive, computed, onMounted } from 'vue'
 import { ElButton, ElInput, ElSelect, ElOption } from 'element-plus'
-import axios from '@/utils/http/axios'
+import { springBootClient } from '@/utils/http'
 
 interface Article {
   id: number
@@ -32,13 +32,11 @@ const categories = shallowReactive<string[]>(['全部', '技术', '生活', '读
 const fetchArticles = async () => {
   loading.value = true
   try {
-    const res: any = await axios.get({
+    const res: any = await springBootClient.get({
       url: '/api/article/list',
       params: { page: 1, size: 100 },
-      cache: true,
-      ttl: 60000
     })
-    rawData.value = res.data?.list || []
+    rawData.value = res?.list || []
   } finally {
     loading.value = false
   }
@@ -48,7 +46,7 @@ const toggleStatus = async (id: number, status: number) => {
   const article = rawData.value.find(item => item.id === id)
   if (article) {
     article.status = status
-    await axios.put({
+    await springBootClient.put({
       url: `/api/article/${id}/status`,
       data: { status }
     })

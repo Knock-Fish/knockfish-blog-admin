@@ -1,108 +1,36 @@
-// 导出 axios 普通请求
-// export * from "./axios";
 /**
- * 基于 Axios 的封装，支持 RESTful 风格的 API 调用（GET/POST/PUT/DELETE）
+ * HTTP 层统一出口
+ * ------------------------------------------------------------------
+ * 设计：用 axios 工厂（createHttpClient）按「服务注册表（services）」配置，
+ * 为每个后端生成相互独立的请求客户端。所有客户端共用同一套拦截器
+ * （token 注入 / {code,msg,data} 解包 / 401 处理），与具体后端无关。
+ *
+ * 当前已登记（按各后端「主技术栈」命名）：
+ *   - springBootClient : 主后端（Spring Boot / Java）—— api/ 下各文件按具名导入使用
+ *   - fastApiClient    : Agent 服务（FastAPI / Python），已与主后端统一信封
+ *
+ * 默认导出是「客户端集合」{ springBootClient, fastApiClient }（便于一次性取用）；
+ * 业务代码推荐用具名导入，如 import { springBootClient } from '@/utils/http'。
+ *
+ * 新增一个后端：在 services.ts 登记一项 + 在此 createHttpClient 一次即可。
  */
-import axios from "axios"
-import type { InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from "axios"
-import { ApiStatus } from "./status"
-import { router } from '@/router/index'
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '@/store/modules/user'
-// 常量定义
-const REQUEST_TIMEOUT = 15000 // 请求超时时间(毫秒)
-const { VITE_API_URL } = import.meta.env
-// 创建axios实例
-const service = axios.create({
-    baseURL: VITE_API_URL,
-    timeout: REQUEST_TIMEOUT,
-})
-// 添加请求拦截器
-service.interceptors.request.use(
-    (request: InternalAxiosRequestConfig) => {
-        const { accessToken } = useUserStore()
-        // 设置 token
-        if (accessToken) {
-            // Bearer 是一种用于 HTTP 认证的身份验证机制
-            request.headers.set('Authorization', `Bearer ${accessToken}`)
-        }
-        // 根据请求数据类型设置 Content-Type
-        if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
-            request.headers.set('Content-Type', 'application/json')
-            request.data = JSON.stringify(request.data)
-        }
-        return request
-    },
-    (error) => {
-        return Promise.reject(error)
-    }
-)
-// 响应拦截器
-service.interceptors.response.use(
-    (response: AxiosResponse<Api.Http.BaseResponse>) => {
-        const res = response.data
-        if (res.code !== ApiStatus.success) {
-            // 处理业务状态码错误（如 403、500 等业务错误）
-            const errorMsg = res.msg || 'Error'
-            switch (res.code) {
-                case 403:
-                    ElMessage.error('没有权限访问该资源')
-                    router.push('/exception/403')
-                    break
-                case 500:
-                    ElMessage.error('服务器错误，请稍后重试')
-                    router.push('/exception/500')
-                    break
-                default:
-                    ElMessage.error(errorMsg)
-            }
-            return Promise.reject(new Error(errorMsg))
-        }
-        return res.data
-    },
-    (error) => {
-        if (error.status === 401) {
-            localStorage.clear()
-            router.push({ name: 'Login' })
-            ElMessage.error('登录信息过期，请重新登录')
-        }
-        return Promise.reject(error)
-    }
-)
-// 请求函数
-async function request<T = any>(config: AxiosRequestConfig): Promise<T> {
-    // 对 POST | PUT  请求特殊处理
-    if (config.method?.toUpperCase() === 'POST' ||
-        config.method?.toUpperCase() === 'PUT' ||
-        config.method?.toUpperCase() === 'DELETE') {
-        if (config.params && !config.data) {
-            config.data = config.params
-            config.params = undefined
-        }
-    }
-    const res = await service.request<Api.Http.BaseResponse<T>>(config)
-    return res as T
+export { createHttpClient } from './createClient'
+export { services } from './services'
+export type { HttpClient, HttpClientConfig } from './types'
+
+import { createHttpClient } from './createClient'
+import { services } from './services'
+
+/** 主后端 HTTP 客户端 */
+export const springBootClient = createHttpClient(services.springBoot)
+
+/** Agent 服务HTTP 客户端 */
+export const fastApiClient = createHttpClient(services.fastApi)
+
+export default {
+    springBootClient,
+    fastApiClient
 }
 
-// API 方法集合
-const api = {
-    get<T>(config: AxiosRequestConfig): Promise<T> {
-        return request<T>({ ...config, method: 'GET' })
-    },
-    post<T>(config: AxiosRequestConfig): Promise<T> {
-        return request<T>({ ...config, method: 'POST' })
-    },
-    put<T>(config: AxiosRequestConfig): Promise<T> {
-        return request<T>({ ...config, method: 'PUT' })
-    },
-    del<T>(config: AxiosRequestConfig): Promise<T> {
-        return request<T>({ ...config, method: 'DELETE' })
-    },
-    request<T>(config: AxiosRequestConfig): Promise<T> {
-        return request<T>({ ...config })
-    },
-}
-
-export default api
-// 导出流式请求
-export * from "./stream";
+// 流式请求封装（Fetch + ReadableStream）保持独立出口
+export * from './stream'
