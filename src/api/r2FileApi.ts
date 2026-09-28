@@ -1,8 +1,8 @@
-import request from "@/utils/http"
+import { springBootClient } from "@/utils/http"
 export class R2FileService {
     // 上传文件
     static uploadR2File(data: { file: File, type: string, userId: number, referenceId?: number }) {
-        return request.post<any>({
+        return springBootClient.post<any>({
             url: `/api/r2-file`,
             data,
             headers: {
@@ -12,33 +12,33 @@ export class R2FileService {
     }
     // 获取所有文件列表
     static getR2FileList() {
-        return request.get<Api.R2File.R2FileInfo[]>({
+        return springBootClient.get<Api.R2File.R2FileInfo[]>({
             url: "/api/r2-file"
         })
     }
     // 根据前缀获取文件列表
     static getR2FilePrefixList(params: { prefix: string }) {
-        return request.get<Api.R2File.R2FileInfo[]>({
+        return springBootClient.get<Api.R2File.R2FileInfo[]>({
             url: `/api/r2-file/prefix`,
             params
         })
     }
     // 获取指定文件信息
     static getFileInfo(params: { key: string }) {
-        return request.get<Api.R2File.R2FileInfo>({
+        return springBootClient.get<Api.R2File.R2FileInfo>({
             url: "/api/r2-file/info",
             params
         })
     }
     // 删除R2文件信息
     static delR2File(params: string) {
-        return request.del({
+        return springBootClient.del({
             url: `/api/r2-file?key=${params}`
         })
     }
     // 批量删除图片
     static batchDelR2File(params: string[]) {
-        return request.del({
+        return springBootClient.del({
             url: "/api/r2-file/batch-delete",
             params
         })

@@ -1,31 +1,31 @@
-import request from "@/utils/http"
+import { springBootClient } from "@/utils/http"
 export class CategoryService {
     static getCategoryListData(params: Record<string, any>){
-        return request.get<Api.Category.CategoryListData>({
+        return springBootClient.get<Api.Category.CategoryListData>({
             url: "/api/category/with-site-count",
             params
         })
     }
     // 获取分类选项
     static getCategoryOptions(){
-        return request.get<Api.Category.CategoryInfo[]>({
+        return springBootClient.get<Api.Category.CategoryInfo[]>({
             url: "/api/category/options"
         })
     }
     static addCategory(data: Api.Category.CategoryInfo){
-        return request.post({
+        return springBootClient.post({
             url: "/api/category",
             data
         })
     }
     static updateCategory(data: Api.Category.CategoryInfo){
-        return request.put({
+        return springBootClient.put({
             url: "/api/category",
             data
         })
     }
     static delCategory(params: number){
-        return request.del({
+        return springBootClient.del({
             url: `/api/category/${params}`
         })
     }

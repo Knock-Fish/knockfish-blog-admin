@@ -110,7 +110,7 @@ declare namespace Api {
             updatedTime?: string
             userId?: number
         }
-        interface ArticleData extends ArticleInfo{
+        interface ArticleData extends ArticleInfo {
             tags?: number[]
         }
         interface ArticleDetailInfo extends ArticleInfo {
@@ -169,7 +169,7 @@ declare namespace Api {
             path?: string | null
             hidden: number | boolean
             keepAlive: number | boolean
-            icon?: string  | null
+            icon?: string | null
             component?: string | null
             sortOrder: number
             createTime?: string
@@ -179,8 +179,8 @@ declare namespace Api {
         type PermissionListData = { list: Api.Permission.PermissionInfo[] }
     }
     /** 角色类型 */
-    namespace Role{
-        interface RoleInfo{
+    namespace Role {
+        interface RoleInfo {
             roleId: number
             roleName?: string
             description?: string
@@ -198,7 +198,7 @@ declare namespace Api {
             sort?: number
             createTime?: string
         }
-        interface NoteData extends NoteInfo{
+        interface NoteData extends NoteInfo {
         }
         type NoteListData = Api.Common.PaginatingParams<NoteInfo>
     }
@@ -226,8 +226,8 @@ declare namespace Api {
         type CodeCategoryListData = Api.Common.PaginatingParams<CodeCategoryInfo>
     }
     /** 资源引用 */
-    namespace FileReference{
-        interface FileReferenceInfo{
+    namespace FileReference {
+        interface FileReferenceInfo {
             fileId?: number
             fileName: string
             filePath: string
@@ -272,6 +272,38 @@ declare namespace Api {
             target?: number
             type?: number
             create_time?: string
+        }
+    }
+    /** Agent（FastAPI 博客问答服务）接口类型，对应 app/models/__init__.py 与 chat.py
+     *  注：字段统一驼峰，且与后端一一对应——Agent 后端已通过 Pydantic alias_generator=to_camel
+     *      直接序列化为驼峰（方案 B），前端无需再做 snake→camel 转换。
+     *  约定：响应模型驼峰（见 Api.Agent.*，继承 CamelModel）；请求模型仍为 snake（见 Agent ChatRequest 等）。 */
+    namespace Agent {
+        /** 会话（对应 Agent ThreadOut） */
+        interface Thread {
+            threadId: string            // UUID 字符串
+            userId: number              // 必填
+            title: string | null        // 未命名时为 null
+            lastMessage: string | null
+            messageCount: number
+            createdAt: string           // ISO
+            updatedAt: string
+        }
+        /** 会话消息（对应 Agent MessageOut） */
+        interface Message {
+            messageId: number
+            threadId: string
+            role: "user" | "assistant" | "tool"
+            content: string
+            toolCalls: unknown[] | null
+            toolCallId: string | null
+            tokens: number | null
+            createdAt: string
+        }
+        /** 一次性对话响应（对应 Agent ChatResponse） */
+        interface ChatReply {
+            reply: string
+            threadId: string
         }
     }
 }

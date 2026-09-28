@@ -1,4 +1,4 @@
-import request from "@/utils/http";
+import { springBootClient } from "@/utils/http";
 
 export interface DashboardOverview {
     totalVisits: number;
@@ -46,39 +46,39 @@ export interface ActivityItem {
 
 export class DashboardService {
     static getOverview() {
-        return request.get<DashboardOverview>({
+        return springBootClient.get<DashboardOverview>({
             url: "/api/dashboard/overview"
         });
     }
 
     static getArticleTrend(params?: { period?: string; year?: number }) {
-        return request.get<ArticleTrend>({
+        return springBootClient.get<ArticleTrend>({
             url: "/api/dashboard/article-trend",
             params
         });
     }
 
     static getLatestArticles(params?: { limit?: number }) {
-        return request.get<ArticleLatest[]>({
+        return springBootClient.get<ArticleLatest[]>({
             url: "/api/dashboard/latest-articles",
             params
         });
     }
 
     static getTagCloud() {
-        return request.get<TagCloudItem[]>({
+        return springBootClient.get<TagCloudItem[]>({
             url: "/api/dashboard/tag-cloud"
         });
     }
 
     static getCategoryStats() {
-        return request.get<TagCloudItem[]>({
+        return springBootClient.get<TagCloudItem[]>({
             url: "/api/dashboard/category-stats"
         });
     }
 
     static getActivities(params?: { limit?: number }) {
-        return request.get<ActivityItem[]>({
+        return springBootClient.get<ActivityItem[]>({
             url: "/api/dashboard/activities",
             params
         });
