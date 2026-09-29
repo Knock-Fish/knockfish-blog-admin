@@ -84,6 +84,7 @@ declare module 'vue' {
     GanttToolbar: typeof import('./../components/gantt-chart/widget/GanttToolbar.vue')['default']
     HeaderBar: typeof import('./../layouts/header-bar/index.vue')['default']
     MdEditor: typeof import('./../components/md-editor/index.vue')['default']
+    MermaidViewer: typeof import('./../components/chat-ai/MermaidViewer.vue')['default']
     PageContent: typeof import('./../layouts/page-content/index.vue')['default']
     PageTable: typeof import('./../components/page-table/index.vue')['default']
     Prompts: typeof import('./../components/chat-ai/Prompts.vue')['default']

@@ -1,6 +1,6 @@
 <template>
     <div class="bubble-item"
-        :class="[`placement-${placement}`, { 'is-markdown': isMarkdown }]">
+        :class="[`placement-${placement}`, { 'is-markdown': isMarkdown, 'has-mermaid': hasMermaid }]">
         <div class="bubble-avatar" v-if="showAvatar">
             <SvgIcon
                 :icon="placement === 'start' ? 'mdi:robot' : 'mdi:account-circle'"
@@ -8,7 +8,7 @@
         </div>
         <div class="bubble-content">
             <div class="bubble-text">
-                <div v-if="isMarkdown" v-html="renderedContent"
+                <div v-if="isMarkdown" v-html="renderedContent" ref="markdownRef"
                     class="markdown-content"></div>
                 <div v-else>{{ content }}</div>
             </div>
@@ -18,21 +18,35 @@
 
 <script setup lang='ts'>
 import { marked } from 'marked'
+import { registerMermaidRenderer, renderMermaidBlocks, unmountViewersIn } from './composables/useMermaid'
+
+// 注册 mermaid 的自定义 code renderer（全局 marked 单例，幂等）
+registerMermaidRenderer()
 
 const props = withDefaults(defineProps<{
     content?: string
     placement?: 'start' | 'end'
     isMarkdown?: boolean
     showAvatar?: boolean
+    /** 是否处于流式输出中，流式期间不渲染 mermaid，防止半成品语法频繁报错 */
+    isStreaming?: boolean
 }>(), {
     content: '',
     placement: 'start',
     isMarkdown: false,
-    showAvatar: false
+    showAvatar: false,
+    isStreaming: false
 })
+
+// v-html 渲染容器的引用，用于扫描 mermaid 占位块
+const markdownRef = ref<HTMLElement | null>(null)
 
 // 渲染后的内容（使用防抖）
 const renderedContent = ref('')
+
+// 内容中是否包含 mermaid 图表：含图表时让气泡撑满可用宽度。
+// 否则气泡默认「收缩适应内容」，其内部的图表卡片参照不到稳定父宽（会被内容原始宽度顶宽）。
+const hasMermaid = computed(() => renderedContent.value.includes('class="mermaid-block"'))
 let renderTimer: number | null = null
 let lastContent = ''
 
@@ -78,11 +92,29 @@ watch(() => props.content, (newContent) => {
     }
 }, { immediate: true })
 
-// 清理定时器
-onUnmounted(() => {
+// 渲染完成后（DOM 已更新）扫描并渲染 mermaid 占位块
+// 流式输出期间跳过，等 isStreaming 置否后再渲染，避免半成品语法频繁报错
+watch(renderedContent, () => {
+    if (!props.isStreaming) {
+        renderMermaidBlocks(markdownRef.value)
+    }
+}, { flush: 'post' })
+
+// 流式结束的瞬间补一次渲染（覆盖“内容已定但 isStreaming 刚翻转”的边界）
+watch(() => props.isStreaming, (streaming) => {
+    if (!streaming && props.isMarkdown) {
+        renderMermaidBlocks(markdownRef.value)
+    }
+}, { flush: 'post' })
+
+// 清理定时器 + 卸载本气泡内手动挂载的图表查看器
+// （v-html 里的组件树不由父树管理，不显式卸载会残留事件监听与 SVG DOM）
+// 用 onBeforeUnmount：此时子组件树尚未卸载，markdownRef 仍指向真实 DOM，能准确回收
+onBeforeUnmount(() => {
     if (renderTimer) {
         clearTimeout(renderTimer)
     }
+    unmountViewersIn(markdownRef.value)
 })
 </script>
 
@@ -128,6 +160,25 @@ onUnmounted(() => {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+// 含 mermaid 图表的消息：气泡撑满可用宽度，
+// 使图表卡片的 width:100% 参照到稳定父宽，而不被内容（原始 SVG 宽度）顶宽或超出。
+.bubble-item.has-mermaid {
+    .bubble-content {
+        flex: 1;
+        min-width: 0; // 解除 flex 默认 min-width:auto，允许收缩不溢出
+    }
+
+    .bubble-text {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    :deep(.markdown-content) {
+        width: 100%;
+        min-width: 0;
     }
 }
 
@@ -364,6 +415,45 @@ onUnmounted(() => {
 
     em {
         font-style: italic;
+    }
+
+    // Mermaid 图表块
+    // 注意：不要在这里限制 svg 的 max-width，MermaidViewer 内部用 transform 缩放，
+    // 外层的 max-width:100% 会与其叠加成双重缩放，把图表缩得极小。
+    .mermaid-block {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0; // 允许在 flex 容器内收缩，避免被内容（原始 SVG 宽度）顶宽
+        margin: 12px 0;
+    }
+
+    // 流式期间展示的 mermaid 源码（与默认代码块区分）
+    .mermaid-source {
+        background-color: #454545;
+        color: #ffffff;
+        padding: 12px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 0;
+
+        code {
+            background: none;
+            padding: 0;
+            color: inherit;
+            font-size: 0.9em;
+        }
+    }
+
+    // mermaid 语法错误时的回退展示
+    .mermaid-error {
+        background-color: #fff0f0;
+        color: #c0392b;
+        border: 1px solid #f5c6cb;
+        padding: 12px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 0;
+        font-size: 0.85em;
     }
 }
 </style>

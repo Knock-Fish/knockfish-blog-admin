@@ -64,7 +64,8 @@
                                 v-else-if="msg.role === 'assistant' && !msg.error"
                                 placement="start"
                                 :content="msg.content"
-                                :is-markdown="true" />
+                                :is-markdown="true"
+                                :is-streaming="!!msg.isLoading" />
 
                             <!-- 错误消息 -->
                             <Bubble v-if="msg.error" placement="start" :content="`${msg.error}`" />
@@ -124,6 +125,7 @@
 
 <script setup lang='ts'>
 import { BubbleList, Bubble, Thinking, Sender } from '@/components/chat-ai'
+import { preloadMermaid } from '@/components/chat-ai/composables/useMermaid'
 import { useChatLayout } from './composables/useChatLayout'
 import { useChatSession } from './composables/useChatSession'
 import { useChatMessages } from './composables/useChatMessages'
@@ -154,6 +156,15 @@ chat.bindSession({ activeKey })
 
 // 从消息层解构模板所需状态与方法
 const { currentMessages, inputContent, isThinking, bubbleListRef, senderRef, handleSend, handleAbort } = chat
+
+// 页面挂载后空闲预加载 mermaid 主包（1MB+），使首条图表无需等待 chunk 加载
+onMounted(() => {
+    const idle = (window as any).requestIdleCallback as
+        | ((cb: () => void) => void)
+        | undefined
+    if (idle) idle(() => preloadMermaid())
+    else preloadMermaid()
+})
 </script>
 
 <style lang="scss" scoped>

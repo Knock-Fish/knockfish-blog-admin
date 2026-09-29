@@ -41,10 +41,22 @@ export function useChatMessages() {
         threadResolver = fn
     }
 
-    /** 滚动到底部（等待 DOM 更新） */
+    /** 滚动到底部（等待 DOM 更新）：发消息 / 加载历史等「用户主动」场景，无条件到底 */
     function scrollToBottom() {
         setTimeout(() => {
             bubbleListRef.value?.scrollToBottom()
+        }, 50)
+    }
+
+    /**
+     * 流式输出期间的滚动跟随（等待 DOM 更新）。
+     * 只在用户本来就贴在底部时才跟随；若用户已上翻查看历史，则不打扰，
+     * 避免「流式输出时滚不动」——原先每次收到增量都无条件 scrollToBottom
+     * 会把用户的上翻瞬间拽回底部。
+     */
+    function followBottom() {
+        setTimeout(() => {
+            bubbleListRef.value?.followBottom()
         }, 50)
     }
 
@@ -121,7 +133,7 @@ export function useChatMessages() {
                 const assistantMsg = currentMessages.value[assistantIndex]
                 if (assistantMsg) {
                     assistantMsg.content += content
-                    scrollToBottom()
+                    followBottom() // 粘性跟随：用户上翻时不强行拽回底部
                 }
             },
             onError: (error: StreamError) => {

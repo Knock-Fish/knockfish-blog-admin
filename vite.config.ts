@@ -9,6 +9,37 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// ========== mermaid 相关的独占依赖（已确认项目其它依赖不共用）==========
+// katex / dompurify / @braintree/sanitize-url 不可列入：前两者为项目或 md-editor 直接依赖，
+// 后者被 marked 共用 —— 把它们排除出预缓存会影响其它功能离线可用。
+const MERMAID_ONLY_DEPS = [
+  'node_modules/mermaid',
+  'node_modules/elkjs',
+  'node_modules/cytoscape',
+  'node_modules/dagre',
+  'node_modules/@upsetjs/venn.js',
+  'node_modules/chevrotain',
+  'node_modules/langium',
+  'node_modules/@mermaid-js/parser',
+  'node_modules/roughjs',
+  'node_modules/khroma',
+  'node_modules/ts-dedent',
+  'node_modules/d3',
+]
+
+const isMermaidId = (id: string) => MERMAID_ONLY_DEPS.some((dep) => id.includes(dep))
+
+/**
+ * 判断 chunk 是否属于 mermaid 图型代码。
+ * 入口 mermaid.core.mjs 很小（约 50KB），真正昂贵的是它内部 37 个动态 import 的图型分片
+ * （elk ~1.4MB、cytoscape ~419KB 等）；既看 facadeModuleId（有明确入口的分片），
+ * 也看 moduleIds 全集（多个图型共用的共享分片）。
+ */
+const isMermaidChunk = (info: { facadeModuleId?: string | null; moduleIds?: string[] }) =>
+  [info.facadeModuleId, ...(info.moduleIds ?? [])]
+    .filter(Boolean)
+    .some((id) => isMermaidId(id as string))
+
 export default ({ mode }: { mode: string }) => {
   // 获取当前工作目录
   const root = process.cwd()
@@ -88,10 +119,28 @@ export default ({ mode }: { mode: string }) => {
             },
           ],
         },
-        workbox: {
-          // 缓存策略配置
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        }
+      workbox: {
+        // 缓存策略配置
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // mermaid 的图型分片（每种图一个动态 chunk，合计数 MB）不进预缓存清单：
+        // 它们只在真正出现该图型时才需要，放进 precache 会让安装 SW 时一次性下载全部。
+        globIgnores: ['assets/js/mermaid/**'],
+        runtimeCaching: [
+          {
+            // 按需使用时再拉取并缓存，兼顾「不拖累首装」与「二次访问/离线可用」
+            urlPattern: /\/assets\/js\/mermaid\/.*\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mermaid-chunks',
+              expiration: {
+                maxEntries: 120,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 天
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
+      }
       })
     ],
 
@@ -115,7 +164,10 @@ export default ({ mode }: { mode: string }) => {
         'vue-router',
         'pinia',
         'axios',
-        '@vueuse/core'
+        '@vueuse/core',
+        // mermaid 很大且含大量动态图型分片；不预构建的话，
+        // 首次 import('mermaid') 时才被发现 → 触发依赖重优化并整页 reload（表现为图表延迟出现）
+        'mermaid'
       ],
       exclude: ['echarts', 'xlsx'] // 排除预构建（这些库较大）
     },
@@ -169,7 +221,10 @@ export default ({ mode }: { mode: string }) => {
       },
       rollupOptions: {
         output: {
-          chunkFileNames: 'assets/js/[name]-[hash].js',
+          chunkFileNames: (chunkInfo) =>
+            isMermaidChunk(chunkInfo)
+              ? 'assets/js/mermaid/[name]-[hash].js' // 图型分片单独目录，便于 PWA globIgnores 排除
+              : 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
           manualChunks(id) {
