@@ -5,10 +5,9 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, onMounted } from 'vue';
-import VChart from 'vue-echarts';
-import 'echarts';
-import { DashboardService, type ArticleTrend } from '@/api/dashboardApi';
+import VChart from 'vue-echarts'
+import 'echarts'
+import { DashboardService, type ArticleTrend } from '@/api/dashboardApi'
 
 const articleOption = ref<any>({
     title: { text: "月度发文量", left: "center" },

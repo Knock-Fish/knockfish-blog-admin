@@ -67,7 +67,6 @@
 </template>
 
 <script setup lang='ts'>
-import { ref, watch } from 'vue'
 import TableSkeleton from './widget/TableSkeleton.vue'
 import DataRefresh from './widget/DataRefresh.vue'
 import ExcelExport from './widget/ExcelExport.vue'
