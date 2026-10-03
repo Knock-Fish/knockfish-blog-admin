@@ -10,6 +10,7 @@ declare global {
   const ElButton: typeof import('element-plus/es').ElButton
   const ElCheckbox: typeof import('element-plus/es').ElCheckbox
   const ElCheckboxGroup: typeof import('element-plus/es').ElCheckboxGroup
+  const ElColorPicker: typeof import('element-plus/es').ElColorPicker
   const ElDatePicker: typeof import('element-plus/es').ElDatePicker
   const ElInput: typeof import('element-plus/es').ElInput
   const ElMessageBoxConfirm: typeof import('element-plus/es').ElMessageBoxConfirm

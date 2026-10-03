@@ -4,17 +4,17 @@
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData"
-            :full-target-ref="divRef" @refresh="getTagListData" :page="page"
-            slot-header="header" @current-page="getTagListData"
-            @page-size="getTagListData">
+            :full-target-ref="divRef" @refresh="getList" :page="page"
+            :loading="loading" slot-header="header" @current-page="getList"
+            @page-size="getList">
             <!-- 自定义头部 -->
             <template #header>
-                <DialogButton :permission="TagPerm.ADD" @submit="handleAdd"
-                    @closed="clearData">
+                <DialogButton :permission="TagPerm.ADD" @click="openAdd"
+                    @submit="handleAdd" @closed="clearForm">
                     新增标签
                     <template #content>
-                        <DynamicForm ref="formRef" v-model="formData"
-                            :form-items="formItems">
+                        <DynamicForm :ref="(el: any) => setFormRef('add', el)"
+                            v-model="formData" :form-items="formItems">
                             <template #colorSlot>
                                 <div style="margin-left: 10px;">
                                     {{ formData.color || "暂无" }}
@@ -43,12 +43,13 @@
             <!-- 自定义操作列 -->
             <template #option="{ row }">
                 <DialogButton :permission="TagPerm.EDIT" :buttonBorder="false"
-                    :button-props="editButtonProps" :dialog-props="dialogProps"
-                    @click="getData(row)" @submit="handleUpdate"
-                    @closed="clearData">
+                    :button-props="editButtonProps" :dialog-props="{ destroyOnClose: true }"
+                    @click="openEdit(row)" @submit="handleUpdate"
+                    @closed="clearForm">
                     <SvgIcon icon="ri:pencil-line" />
                     <template #content>
-                        <DynamicForm v-model="formData" :form-items="formItems">
+                        <DynamicForm :ref="(el: any) => setFormRef('edit', el)"
+                            v-model="formData" :form-items="formItems">
                             <template #colorSlot>
                                 <div style="margin-left: 10px;">
                                     {{ formData.color || "暂无" }}
@@ -68,41 +69,37 @@
 </template>
 
 <script setup lang='ts'>
+import { onMounted, reactive, ref } from 'vue'
 import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { useCrudPage } from '@/composables/useCrudPage'
 import { TagPerm } from '@/constants'
-import { useUserStore } from "@/store/modules/user"
-import { TagService } from "@/api/tagApi"
-import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
+import { TagService } from '@/api/tagApi'
 type Tag = Api.Tag.TagInfo
-type PaginatingParams<T> = Api.Common.PaginatingParams<T>
-const formRef = ref()
+
 const divRef = ref<HTMLElement | null>(null)
-const query = reactive<Tag>({})
-const page = reactive({ // 分页参数
-    total: 0,
-    pageNum: 1,
-    pageSize: 10
+
+const {
+  query, formData, page, tableData, loading,
+  getList, clearForm, handleAdd, handleUpdate, handleDel,
+  handleSearch, handleReset, editButtonProps, delButtonProps,
+  setFormRef, openAdd, openEdit,
+} = useCrudPage<Tag>({
+  api: {
+    getList: TagService.getTagListData,
+    add: TagService.addTag,
+    update: TagService.updateTag,
+    del: TagService.delTag,
+  },
+  idKey: 'tagId',
+  editFields: (row) => ({ tagId: row.tagId, tagName: row.tagName, color: row.color }),
+  initialFormData: { color: '#f4f4f5' },
+  messages: {
+    delConfirm: '确定要删除该标签吗？删除后无法恢复！',
+    invalidId: '无效的标签ID',
+  },
 })
-const formData = reactive<Tag>({
-    color: '#f4f4f5'
-})
-const tableData = ref<Tag[]>([])
-const columns = reactive([
-    { type: 'index', label: '序号' },
-    { prop: 'tagName', label: '标签名称', minWidth: '150' },
-    { prop: 'color', label: '标签颜色', slot: 'color', minWidth: '150' },
-    { prop: 'createTime', label: '创建时间', minWidth: '150' },
-    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', show: true, permission: ['tag:edit', 'tag:delete'] }
-])
-useTableColumnPermission(columns)
-const editButtonProps = ref<ButtonProps>({
-    type: "primary",
-    plain: true
-})
-const delButtonProps = ref<ButtonProps>({
-    type: "danger",
-    plain: true
-})
+
+// --------------- 表单项配置 ---------------
 const formItems = ref([
     {
         type: 'Input',
@@ -129,71 +126,16 @@ const formItems = ref([
         },
     },
 ])
-const dialogProps = ref<DialogProps>({})
-const handleAdd = async () => {
-    await TagService.addTag(formData)
-    ElMessage({
-        message: '提交成功',
-        type: 'success',
-    })
-    getTagListData()
-}
-const handleDel = async (row: Tag) => {
-    if (!row.tagId) {
-        ElMessage.warning('无效的标签ID')
-        return
-    }
-    try {
-        await ElMessageBox.confirm('确定要删除该文章吗？删除后无法恢复！', '警告', {
-            confirmButtonText: '确定删除',
-            cancelButtonText: '取消',
-            type: 'warning',
-            appendTo: document.body,
-        })
-
-        // 确认后才执行
-        await TagService.delTag(row.tagId)
-        ElMessage.success('删除成功')
-        getTagListData()
-
-    } catch (error) {
-        ElMessage.info('已取消')
-    }
-}
-/** 编辑 */
-const handleUpdate = async () => {
-    await TagService.updateTag(formData)
-    ElMessage({
-        message: '编辑成功',
-        type: 'success',
-    })
-    await getTagListData()
-}
-const clearData = () => {
-    // 清空formData数据
-    Object.keys(formData).forEach((key) => {
-        (formData[key as keyof Tag] as any) = ""
-    })
-    // 清除表单数据，重置表单校验
-    if (formRef.value) {
-        formRef.value.resetForm()
-    }
-}
-const getTagListData = async () => {
-    const data: PaginatingParams<Tag> = await TagService.getTagListData({
-        ...query,
-        pageNum: page.pageNum,  // 当前页码
-        pageSize: page.pageSize,    // 每页条数
-    })
-    tableData.value = data.list
-    page.total = data.total
-}
-/** 编辑前获取数据 */
-const getData = (row: Tag) => {
-    const { tagId, tagName, color } = row
-    Object.assign(formData, { tagId, tagName, color })
-}
-/** 搜索栏配置 */
+// --------------- 表格项配置 ---------------
+const columns = reactive([
+    { type: 'index', label: '序号' },
+    { prop: 'tagName', label: '标签名称', minWidth: '150' },
+    { prop: 'color', label: '标签颜色', slot: 'color', minWidth: '150' },
+    { prop: 'createTime', label: '创建时间', minWidth: '150' },
+    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', show: true, permission: ['tag:edit', 'tag:delete'] }
+])
+useTableColumnPermission(columns)
+// --------------- 搜索栏配置 ---------------
 const searchList = [
     {
         prop: 'tagName',
@@ -204,17 +146,8 @@ const searchList = [
         }
     }
 ]
-/** 搜索 */
-const handleSearch = () => {
-    getTagListData()
-}
-/** 搜索重置 */
-const handleReset = () => {
-    getTagListData()
-}
-onMounted(async () => {
-    await getTagListData()
-})
+
+onMounted(getList)
 </script>
 
 <style lang="scss" scoped>

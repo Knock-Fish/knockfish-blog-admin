@@ -1,18 +1,19 @@
 <template>
-    <div ref="divRef" class="page">
+    <div class="page">
         <!-- 搜索栏 -->
         <SearchBar class="search" @submit="handleSearch" @reset="handleReset"
             :search-list="searchList" :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData"
             :page="page" slot-header="header" :loading="loading"
-            @current-page="getSiteListData" @page-size="getSiteListData">
+            @current-page="getList" @page-size="getList">
             <!-- 自定义头部 -->
             <template #header>
-                <DialogButton :permission="SitePerm.ADD" @submit="handleAdd"
-                    @closed="clearData">
+                <DialogButton :permission="SitePerm.ADD" @click="openAdd"
+                    @submit="handleAdd" @closed="clearForm">
                     新增站点
                     <template #content>
-                        <DynamicForm v-model="formData" :form-items="formItems">
+                        <DynamicForm :ref="(el: any) => setFormRef('add', el)"
+                            v-model="formData" :form-items="formItems">
                             <template #ico>
                                 <img style="
                             position: absolute;
@@ -44,13 +45,13 @@
             <!-- 自定义操作列 -->
             <template #option="{ row }">
                 <DialogButton :permission="SitePerm.EDIT" :buttonBorder="false"
-                    :button-props="editButtonProps" :dialog-props="dialogProps"
-                    @submit="handleUpdate" @click="getData(row)"
-                    @closed="clearData">
+                    :button-props="editButtonProps"
+                    :dialog-props="{ title: '站点信息', destroyOnClose: true }"
+                    @click="openEdit(row)" @submit="handleUpdate" @closed="clearForm">
                     <SvgIcon icon="ri:pencil-line" />
                     <template #content>
-                        <DynamicForm ref="formRef" v-model="formData"
-                            :form-items="formItems">
+                        <DynamicForm :ref="(el: any) => setFormRef('edit', el)"
+                            v-model="formData" :form-items="formItems">
                             <template #ico>
                                 <img style="
                             position: absolute;
@@ -75,340 +76,229 @@
 </template>
 
 <script setup lang='ts'>
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { useCrudPage } from '@/composables/useCrudPage'
 import { SitePerm } from '@/constants'
 import { SiteService } from "@/api/siteApi"
 import { CategoryService } from "@/api/categoryApi"
-import { ElMessage, ElMessageBox, type Action, type ButtonProps, type DialogProps, type DialogEmits } from "element-plus"
 type Site = Api.Site.SiteInfo
 type Category = Api.Category.CategoryInfo
-type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 interface CategoryOptions {
-    value: Category['categoryId'] | string  // 兼容 number 和 string
+    value: Category['categoryId']
     label: Category['categoryName']
 }
-const query = reactive<Site>({})
-const formRef = ref()
-const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
-const tableData = ref<Site[]>([])
-const loading = ref(true)
+
+const {
+  query, formData, page, tableData, loading,
+  getList, populateForm, clearForm, handleAdd, handleUpdate, handleDel,
+  handleSearch, handleReset, editButtonProps, delButtonProps,
+  setFormRef, openAdd, openEdit,
+} = useCrudPage<Site>({
+  api: {
+    getList: SiteService.getSiteListData,
+    add: SiteService.addSite,
+    update: SiteService.updateSite,
+    del: SiteService.delSite,
+  },
+  idKey: 'siteId',
+  // 编辑只回填需要的字段，排除 createTime / categoryName 等冗余字段，避免误提交
+  editFields: (row) => ({
+    siteId: row.siteId,
+    siteName: row.siteName,
+    description: row.description,
+    ico: row.ico,
+    siteUrl: row.siteUrl,
+    categoryId: row.categoryId,
+  }),
+  messages: {
+    delConfirm: '确定要删除该站点吗？删除后无法恢复！',
+    delConfirmButton: '确定删除',
+    invalidId: '无效的站点ID',
+  },
+})
+
+// --------------- 分类下拉选项（页面特有逻辑，保留在页面） ---------------
 const categoryOptions = ref<CategoryOptions[]>([])
-
-// 加载分类选项
 const loadCategoryOptions = () => {
-    CategoryService.getCategoryOptions().then((data) => {
-        categoryOptions.value = data.map(item => ({
-            value: String(item.categoryId),  // 统一转换为字符串
-            label: item.categoryName
-        }))
-    })
+  CategoryService.getCategoryOptions().then((data) => {
+    categoryOptions.value = data.map(item => ({
+      value: item.categoryId,  // 数值类型，与 editFields 回填的 categoryId 一致
+      label: item.categoryName,
+    }))
+  })
 }
-
 interface FormItemConfig {
-    type: string
-    prop?: string
-    label?: string
-    slot?: string
-    props?: Record<string, any>
-    rules?: Record<string, any>
-    options?: any[]
+  type: string
+  prop?: string
+  label?: string
+  slot?: string
+  props?: Record<string, any>
+  rules?: Record<string, any>
+  options?: any[]
 }
-
 // 基础表单配置
 const baseFormItems: FormItemConfig[] = [
-    {
-        type: 'Input',
-        prop: 'siteName',
-        label: '名称',
-        slot: "ico",
-        props: {
-            placeholder: '请输入站点名称',
-            style: {
-                width: '80%'
-            }
-        },
-        rules: {
-            required: true,
-            message: '名称不能为空',
-            trigger: 'blur'
-        }
+  {
+    type: 'Input',
+    prop: 'siteName',
+    label: '名称',
+    slot: "ico",
+    props: {
+      placeholder: '请输入站点名称',
+      style: {
+        width: '80%'
+      }
     },
-    {
-        type: 'Input',
-        prop: 'ico',
-        label: '图标',
-        props: {
-            placeholder: '请输入图标链接',
-        },
-        rules: {
-            required: true,
-            message: '图标链接不能为空',
-            trigger: 'blur'
-        }
-    },
-    {
-        type: 'Input',
-        prop: 'description',
-        label: '描述',
-        props: {
-            type: 'textarea',
-            placeholder: '请输入描述',
-        },
-        rules: {
-            required: true,
-            message: '描述不能为空',
-            trigger: 'blur'
-        }
-    },
-    {
-        type: 'Input',
-        prop: 'siteUrl',
-        label: '链接',
-        props: {
-            placeholder: '请输入链接',
-        },
-        rules: {
-            required: true,
-            message: '名称不能为空',
-            trigger: 'blur'
-        }
-    },
-    {
-        type: 'Select',
-        prop: 'categoryId',
-        label: '所属分类',
-        props: {
-            placeholder: '请选择分类',
-            clearable: true,
-        },
-        rules: {
-            required: true,
-            message: '类别不能为空',
-            trigger: 'change'
-        }
+    rules: {
+      required: true,
+      message: '名称不能为空',
+      trigger: 'blur'
     }
+  },
+  {
+    type: 'Input',
+    prop: 'ico',
+    label: '图标',
+    props: {
+      placeholder: '请输入图标链接',
+    },
+    rules: {
+      required: true,
+      message: '图标链接不能为空',
+      trigger: 'blur'
+    }
+  },
+  {
+    type: 'Input',
+    prop: 'description',
+    label: '描述',
+    props: {
+      type: 'textarea',
+      placeholder: '请输入描述',
+    },
+    rules: {
+      required: true,
+      message: '描述不能为空',
+      trigger: 'blur'
+    }
+  },
+  {
+    type: 'Input',
+    prop: 'siteUrl',
+    label: '链接',
+    props: {
+      placeholder: '请输入链接',
+    },
+    rules: {
+      required: true,
+      message: '名称不能为空',
+      trigger: 'blur'
+    }
+  },
+  {
+    type: 'Select',
+    prop: 'categoryId',
+    label: '所属分类',
+    props: {
+      placeholder: '请选择分类',
+      clearable: true,
+    },
+    rules: {
+      required: true,
+      message: '类别不能为空',
+      trigger: 'change'
+    }
+  }
 ]
+// 动态表单配置：把分类选项注入到 categoryId 表单项
+const formItems = ref<FormItemConfig[]>(
+  baseFormItems.map(item =>
+    item.prop === 'categoryId'
+      ? { ...item, options: categoryOptions.value }
+      : item
+  )
+)
+// 选项加载完后，刷新 formItems 让 Select 拿到最新 options
+watch(categoryOptions, (val) => {
+  formItems.value = baseFormItems.map(item =>
+    item.prop === 'categoryId' ? { ...item, options: val } : item
+  )
+}, { immediate: false })
 
-// 动态表单配置
-const formItems = computed<FormItemConfig[]>(() => {
-    return baseFormItems.map(item => {
-        if (item.prop === 'categoryId') {
-            return {
-                ...item,
-                options: categoryOptions.value
-            }
-        }
-        return item
-    })
-})
-
-const page = reactive({ // 分页参数
-    total: 0,
-    pageNum: 1,
-    pageSize: 10
-})
-const formData = reactive<Record<string, any>>({})
-const editButtonProps = ref<ButtonProps>({
-    type: "primary",
-    plain: true
-})
-const delButtonProps = ref<ButtonProps>({
-    type: "danger",
-    plain: true
-})
-const dialogProps = ref<DialogProps>({
-    title: "站点信息"
-})
 const columns = reactive([
-    { type: 'index', label: '序号' },
-    { prop: 'siteName', label: '站点名称', slot: 'ico', minWidth: '150', showOverflowTooltip: true },
-    { slot: 'siteUrl', label: 'URL', minWidth: '180', showOverflowTooltip: true },
-    { prop: 'createTime', label: '创建时间', minWidth: '150' },
-    { prop: 'categoryName', label: '所属分类', minWidth: '150' },
-    { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', permission: ['site:edit', 'site:delete'] }
+  { type: 'index', label: '序号' },
+  { prop: 'siteName', label: '站点名称', slot: 'ico', minWidth: '150', showOverflowTooltip: true },
+  { slot: 'siteUrl', label: 'URL', minWidth: '180', showOverflowTooltip: true },
+  { prop: 'createTime', label: '创建时间', minWidth: '150' },
+  { prop: 'categoryName', label: '所属分类', minWidth: '150' },
+  { prop: 'action', label: '操作', fixed: 'right', slot: 'option', minWidth: '150', permission: ['site:edit', 'site:delete'] }
 ])
 useTableColumnPermission(columns)
-const getSiteListData = async () => {
-    loading.value = true
-    try {
-        const data: PaginatingParams<Site> = await SiteService.getSiteListData({
-            ...query,
-            pageNum: page.pageNum,  // 当前页码
-            pageSize: page.pageSize,    // 每页条数
-        })
-        tableData.value = data.list
-        page.total = data.total
-    } finally {
-        loading.value = false
-    }
-}
-/** 编辑前获取数据 */
-const getData = (row: Site) => {
-    // 清空之前的表单数据
-    Object.keys(formData).forEach(key => {
-        delete formData[key]
-    })
-    // 设置编辑数据，只设置需要的字段
-    // categoryId 统一转换为字符串，确保与 options.value 类型一致
-    Object.assign(formData, {
-        siteId: row.siteId,
-        siteName: row.siteName,
-        description: row.description,
-        ico: row.ico,
-        siteUrl: row.siteUrl,
-        categoryId: String(row.categoryId)
-    })
-}
-const clearData = () => {
-    // 清除表单数据，重置表单校验
-    if (formRef.value) {
-        formRef.value.resetForm()
-    }
-    // 清空formData数据
-    Object.keys(formData).forEach(key => {
-        formData[key] = ''
-    })
-    delete formData.siteId
-}
-const clearAllData = () => {
-    Object.keys(formData).forEach(key => {
-        delete formData[key]
-    })
-}
-/** 编辑 */
-const handleUpdate = async () => {
-    // 确保 categoryId 是有效值
-    if (!formData.categoryId) {
-        ElMessage.warning('请选择所属分类')
-        return
-    }
-    await SiteService.updateSite({
-        siteId: formData.siteId,
-        siteName: formData.siteName,
-        description: formData.description,
-        ico: formData.ico,
-        siteUrl: formData.siteUrl,
-        categoryId: formData.categoryId
-    })
-    ElMessage({
-        message: '编辑成功',
-        type: 'success',
-    })
-    getSiteListData()
-}
-const handleAdd = async () => {
-    // 确保 categoryId 是有效值
-    if (!formData.categoryId) {
-        ElMessage.warning('请选择所属分类')
-        return
-    }
-    await SiteService.addSite({
-        siteName: formData.siteName,
-        description: formData.description,
-        ico: formData.ico,
-        siteUrl: formData.siteUrl,
-        categoryId: formData.categoryId
-    })
-    ElMessage({
-        message: '提交成功',
-        type: 'success',
-    })
-    clearAllData()
-    getSiteListData()
-}
-const handleDel = async (row: Site) => {
-    if (!row.siteId) {
-        ElMessage.warning('无效的站点ID')
-        return
-    }
 
-    try {
-        await ElMessageBox.confirm('确定要删除该站点吗？删除后无法恢复！', '警告', {
-            confirmButtonText: '确定删除',
-            cancelButtonText: '取消',
-            type: 'warning',
-            appendTo: document.body,
-        })
-
-        // 确认后才执行
-        await SiteService.delSite(row.siteId)
-        ElMessage.success('删除成功')
-        getSiteListData()
-
-    } catch (error) {
-        ElMessage.info('已取消')
-    }
-}
-/** 搜索 */
-const handleSearch = () => {
-    getSiteListData()
-}
 /** 搜索栏配置 */
 const searchList = [
-    {
-        prop: 'siteName',
-        current: 'input',
-        label: "站点名称",
-        props: {
-            placeholder: "请输入站点名称"
-        }
-    },
-    {
-        prop: 'categoryName',
-        current: 'input',
-        label: "所属分类",
-        props: {
-            placeholder: "请输入分类"
-        }
+  {
+    prop: 'siteName',
+    current: 'input',
+    label: "站点名称",
+    props: {
+      placeholder: "请输入站点名称"
     }
+  },
+  {
+    prop: 'categoryName',
+    current: 'input',
+    label: "所属分类",
+    props: {
+      placeholder: "请输入分类"
+    }
+  }
 ]
-/** 搜索重置 */
-const handleReset = () => {
-    getSiteListData()
-}
+
 onMounted(async () => {
-    await getSiteListData()
-    loadCategoryOptions()
+  await getList()
+  loadCategoryOptions()
 })
 </script>
 
 <style lang="scss" scoped>
 .page {
-    @include page;
+  @include page;
 
-    .search {
-        flex: 0 0 auto;
-    }
+  .search {
+    flex: 0 0 auto;
+  }
 
-    .table {
-        margin-top: 10px;
-        flex: 1 1 auto;
-    }
+  .table {
+    margin-top: 10px;
+    flex: 1 1 auto;
+  }
 }
 
 .site {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 
-    img {
-        width: 30px;
-        height: 30px;
-        /* vertical-align: middle; */
+  img {
+    width: 30px;
+    height: 30px;
+    /* vertical-align: middle; */
+  }
+
+  .info {
+    margin-left: 10px;
+
+    .site-name {
+      font-size: 13px;
+      font-weight: bold;
     }
 
-    .info {
-        margin-left: 10px;
-
-        .site-name {
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .description {
-            font-size: 11px;
-            color: #5f7f9e;
-        }
+    .description {
+      font-size: 11px;
+      color: #5f7f9e;
     }
+  }
 
 }
 </style>

@@ -4,15 +4,15 @@
             :search-list="searchList" :keyword="query" />
         <PageTable class="table" :columns="columns" :table-data="tableData"
             :full-target-ref="divRef" :page="page" slot-header="header"
-            :loading="loading" @refresh="getLinkListData"
-            @current-page="getLinkListData" @page-size="getLinkListData">
+            :loading="loading" @refresh="getList"
+            @current-page="getList" @page-size="getList">
             <template #header>
-                <!-- 新增弹窗：添加 ref="formRef" -->
                 <DialogButton :permission="LinkPerm.ADD"
-                    @submit="handleAdd" @closed="clearData">
+                    @click="openAdd" @submit="handleAdd" @closed="clearForm">
                     新增友链
                     <template #content>
-                        <DynamicForm ref="formRef" v-model="formData" :form-items="formItems">
+                        <DynamicForm :ref="(el: any) => setFormRef('add', el)"
+                            v-model="formData" :form-items="formItems">
                             <template #icon>
                                 <img v-if="formData.avatar" style="
                             position: absolute;
@@ -48,14 +48,14 @@
                 </ElTag>
             </template>
             <template #option="{ row }">
-                <!-- 编辑弹窗：移除 ref="formRef" -->
                 <DialogButton :permission="LinkPerm.EDIT" :buttonBorder="false"
-                    :button-props="editButtonProps" :dialog-props="dialogProps"
-                    @click="getData(row)" @submit="handleUpdate"
-                    @closed="clearData">
+                    :button-props="editButtonProps" :dialog-props="editDialogProps"
+                    @click="openEdit(row)" @submit="handleUpdate"
+                    @closed="clearForm">
                     <SvgIcon icon="ri:pencil-line" />
                     <template #content>
-                        <DynamicForm v-model="formData" :form-items="formItems">
+                        <DynamicForm :ref="(el: any) => setFormRef('edit', el)"
+                            v-model="formData" :form-items="formItems">
                             <template #icon>
                                 <img v-if="formData.avatar" style="
                             position: absolute;
@@ -80,41 +80,47 @@
 </template>
 
 <script setup lang='ts'>
+import { onMounted, reactive, ref } from 'vue'
 import { useTableColumnPermission } from '@/composables/useTableColumnPermission'
+import { useCrudPage } from '@/composables/useCrudPage'
 import { LinkPerm } from '@/constants'
-import { LinkService } from "@/api/linkApi"
-import { ElMessage, ElMessageBox, type ButtonProps, type DialogProps } from "element-plus"
-
+import { LinkService } from '@/api/linkApi'
 type Link = Api.Link.LinkInfo
-type PaginatingParams<T> = Api.Common.PaginatingParams<T>
 
-const query = reactive<Link>({})    // 搜索关键词
-const formRef = ref()   // 表单DOM（现在指向新增弹窗内的表单）
-const divRef = ref<HTMLElement | null>(null)    // 根标签DOM
-const tableData = ref<Link[]>([])   // 表格数据
-const formData = reactive<Link>({}) // 表单数据
-const loading = ref<boolean>(true)   // 是否加载
-const page = reactive({ // 分页参数
-    total: 0,
-    pageNum: 1,
-    pageSize: 10
+const divRef = ref<HTMLElement | null>(null)
+
+const {
+  query, formData, page, tableData, loading,
+  getList, clearForm, handleAdd, handleUpdate, handleDel,
+  handleSearch, handleReset, editButtonProps, delButtonProps,
+  setFormRef, openAdd, openEdit,
+} = useCrudPage<Link>({
+  api: {
+    getList: LinkService.getLinkListData,
+    add: LinkService.addLink,
+    update: LinkService.updateLink,
+    del: LinkService.delLink,
+  },
+  idKey: 'linkId',
+  editFields: (row) => ({
+    linkId: row.linkId,
+    linkName: row.linkName,
+    description: row.description,
+    avatar: row.avatar,
+    linkUrl: row.linkUrl,
+    status: row.status,
+  }),
+  messages: {
+    delConfirm: '确定要删除该友链吗？删除后无法恢复！',
+    invalidId: '无效的友链ID',
+  },
 })
 
-// --------------- 按钮配置 ---------------
-const editButtonProps = ref<ButtonProps>({
-    type: "primary",
-    plain: true
-})
-const delButtonProps = ref<ButtonProps>({
-    type: "danger",
-    plain: true
-})
-// --------------- 模态框配置 ---------------
-const dialogProps = ref<DialogProps>({
-    title: "友链信息"
-})
+// 编辑弹窗：标题 + 关闭时销毁内容（每行一个编辑实例，避免同名 ref 抢占导致校验/重置指错）
+const editDialogProps = { title: '友链信息', destroyOnClose: true }
+
 // --------------- 表单项配置 ---------------
-const formItems = computed(() => [
+const formItems = ref([
     {
         type: 'Input',
         prop: 'linkName',
@@ -203,91 +209,8 @@ const searchList = [
         }
     }
 ]
-/** 获取友链数据 */
-const getLinkListData = async () => {
-    loading.value = true
-    try {
-        const data: PaginatingParams<Link> = await LinkService.getLinkListData({
-            ...query,
-            pageNum: page.pageNum,
-            pageSize: page.pageSize,
-        })
-        tableData.value = data.list
-        page.total = data.total
-    } finally {
-        loading.value = false
-    }
-}
-/** 编辑前获取数据 */
-const getData = (row: Link) => {
-    const { linkName, description, avatar, linkUrl, linkId, status } = row
-    Object.assign(formData, { linkName, description, avatar, linkUrl, linkId, status })
-}
-/** 清除表单数据 */
-const clearData = () => {
-    // 清空formData数据
-    Object.keys(formData).forEach((key) => {
-        (formData[key as keyof Link] as any) = ""
-    })
-    // 重置新增弹窗的表单校验（formRef 指向新增弹窗内的表单）
-    if (formRef.value) {
-        formRef.value.resetForm()
-    }
-}
-/** 添加友链 */
-const handleAdd = async () => {
-    await LinkService.addLink(formData)
-    ElMessage({
-        message: '提交成功',
-        type: 'success',
-    })
-    getLinkListData()
-}
-/** 编辑友链 */
-const handleUpdate = async () => {
-    await LinkService.updateLink(formData)
-    ElMessage({
-        message: '编辑成功',
-        type: 'success',
-    })
-    await getLinkListData()
-}
-/** 删除友链 */
-const handleDel = async (row: Link) => {
-    if (!row.linkId) {
-        ElMessage.warning('无效的友链ID')
-        return
-    }
 
-    try {
-        await ElMessageBox.confirm('确定要删除该友链吗？删除后无法恢复！', '警告', {
-            confirmButtonText: '确定删除',
-            cancelButtonText: '取消',
-            type: 'warning',
-            appendTo: document.body,
-        })
-
-        await LinkService.delLink(row.linkId)
-        ElMessage.success('删除成功')
-        getLinkListData()
-
-    } catch (error) {
-        ElMessage.info('已取消')
-    }
-}
-/** 搜索 */
-const handleSearch = () => {
-    getLinkListData()
-}
-
-/** 重置 */
-const handleReset = () => {
-    getLinkListData()
-}
-
-onMounted(async () => {
-    await getLinkListData()
-})
+onMounted(getList)
 </script>
 
 <style lang="scss" scoped>
