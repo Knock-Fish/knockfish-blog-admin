@@ -68,6 +68,7 @@ import type {
   RadioGroupProps,
   DatePickerProps,
   CheckboxGroupProps,
+  ColorPickerProps,
   ButtonProps,
   SegmentedProps,
   SwitchProps
@@ -80,6 +81,7 @@ const componentMap: Record<string, any> = {
   ElRadioGroup,
   ElCheckbox,
   ElCheckboxGroup,
+  ElColorPicker,
   ElDatePicker,
   ElButton,
   ElSegmented,
@@ -102,6 +104,7 @@ interface FormItem extends Partial<FormItemProps> {
   | CheckboxGroupProps
   | RadioGroupProps
   | DatePickerProps
+  | ColorPickerProps
   | ButtonProps
   | SegmentedProps
   | SwitchProps
