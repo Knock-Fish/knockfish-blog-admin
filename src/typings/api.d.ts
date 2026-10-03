@@ -144,6 +144,20 @@ declare namespace Api {
             userId: number
             roleIds?: number[]
         }
+        /** 新增用户请求体（对应后端 UserCreateDTO，@Valid）。
+         *  后端源码不在本仓库，字段按 UserInfo + 新增必填项推断；
+         *  若 UserCreateDTO 强制要求 password，前端新增表单已加密码项。 */
+        interface UserCreate {
+            username: string
+            password?: string
+            nickname?: string
+            email?: string
+            avatar?: string
+            description?: string
+            githubUrl?: string
+            bilibiliUrl?: string
+            roleIds?: number[]
+        }
         type UserListData = Api.Common.PaginatingParams<UserInfo>
     }
     /** R2文件类型 */
