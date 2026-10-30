@@ -39,4 +39,11 @@ export class NoteService {
             url: `/api/note/unbindUnused/${noteId}`
         })
     }
+    // 切换笔记显示/隐藏（只改状态，不覆盖正文）
+    static updateNoteStatus(data: { noteId: number; status: Api.Note.NoteStatus }) {
+        return springBootClient.put({
+            url: "/api/note/status",
+            data
+        })
+    }
 }

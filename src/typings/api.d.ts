@@ -82,7 +82,8 @@ declare namespace Api {
             ico?: string
             siteUrl?: string
             createTime?: string
-            categoryId?: number
+            /** 后端 SiteVO.categoryId 为 String（分类选项接口返回的却是 Long），前端按字符串处理 */
+            categoryId?: string
             categoryName?: string
         }
         type SiteListData = Api.Common.PaginatingParams<SiteInfo>
@@ -205,11 +206,14 @@ declare namespace Api {
     }
     /** 笔记类型 */
     namespace Note {
+        /** 笔记展示状态：display-显示 hide-隐藏 */
+        type NoteStatus = 'display' | 'hide'
         interface NoteInfo {
             noteId?: number
             noteTitle?: string
             noteContent?: string
             sort?: number
+            status?: NoteStatus
             createTime?: string
         }
         interface NoteData extends NoteInfo {

@@ -14,6 +14,12 @@
               </el-button>
           </template>
           <!-- 自定义操作列 -->
+          <template #status="{ row }">
+            <ElSwitch :model-value="row.status ?? 'display'" active-value="display"
+              inactive-value="hide" :loading="statusLoading.includes(row.noteId!)"
+              :disabled="!canEditNote" :title="row.status === 'hide' ? '点击设为显示' : '点击设为隐藏'"
+              @change="(val) => handleStatusChange(row, val)" />
+          </template>
           <template #option="{ row }">
             <el-button type="primary" size="small" link
               @click="handleEdit(row)" v-permission="NotePerm.EDIT">
@@ -79,10 +85,33 @@ const isEditor = ref<boolean>(false)
 const columns = reactive([
   { type: "index", label: "序号" },
   { prop: "noteTitle", label: "笔记标题", minWidth: "150", showOverflowTooltip: true },
+  { prop: "status", label: "显示状态", slot: "status", minWidth: "120" },
   { prop: "createTime", label: "创建时间", minWidth: "160" },
   { prop: "action", label: "操作", fixed: "right", slot: "option", minWidth: "150", permission: ['note:edit', 'note:delete'] }
 ])
 useTableColumnPermission(columns)
+
+// --------------- 显示/隐藏切换 ---------------
+// 无编辑权限时开关置灰，避免点出 403
+const canEditNote = computed(() => userStore.permissions?.includes(NotePerm.EDIT))
+// 正在提交的笔记 id，用于单行 loading，防止连点重复请求
+const statusLoading = ref<number[]>([])
+const handleStatusChange = async (row: Note, val: string | number | boolean) => {
+  const noteId = row.noteId
+  if (!noteId || statusLoading.value.includes(noteId)) return
+  const next = val === "display" ? "display" : "hide"
+  statusLoading.value.push(noteId)
+  try {
+    await NoteService.updateNoteStatus({ noteId, status: next })
+    row.status = next
+    ElMessage.success(next === "display" ? "已设为显示" : "已设为隐藏")
+  } catch {
+    // 失败不改 row.status，开关自动回到原状态
+    ElMessage.error("设置失败，请稍后重试")
+  } finally {
+    statusLoading.value = statusLoading.value.filter(id => id !== noteId)
+  }
+}
 /** 确保笔记已创建（上传图片时触发：首次上传即创建空笔记获取 noteId 供图片关联） */
 let notePromise: Promise<number | undefined> | null = null
 let isPlaceholder = false  // 标记是否为 ensureNote 创建的占位笔记（用于 onBack 清理判断）
