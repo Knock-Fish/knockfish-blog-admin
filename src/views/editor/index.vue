@@ -215,8 +215,10 @@
                         <div class="draft-actions">
                             <ElButton text type="danger" size="small"
                                 class="delete-btn"
+                                :loading="isDeletingDraft(draft.articleId)"
+                                :disabled="isDeletingDraft(draft.articleId)"
                                 @click.stop="delArticleDraft(draft)">
-                                🗑️
+                                <span v-if="!isDeletingDraft(draft.articleId)">🗑️</span>
                             </ElButton>
                         </div>
                     </div>
@@ -265,6 +267,7 @@ const tagTemp = ref<Tag[]>([])  // 存储临时已选择的标签
 const draftCount = ref<number>(0)   // 草稿数量
 const draftList = ref<Article[]>([])    // 草稿列表
 const draftLoaded = ref<boolean>(false) // 草稿是否已经加载
+const deletingIds = ref<number[]>([])   // 正在删除中的草稿ID，用于按钮 loading 与防重复提交
 const tagLoaded = ref<boolean>(false)   // 标签数据是否已经加载过（用于缓存）
 const hasUnsavedChanges = computed(() => !_.isEqual(originalData, formData))
 // 分页参数
@@ -533,8 +536,13 @@ const getArticleById = async () => {
 //------------------------------ 草稿操作 -----------------------------------
 /** 获取草稿数量 */
 const getDraftCount = async () => {
-    draftCount.value = await ArticleService.getDraftCount()
+    const count = await ArticleService.getDraftCount()
+    // 兜底：后端返回 null / 异常值时不让角标出现 NaN 或负数
+    draftCount.value = Math.max(0, Number(count) || 0)
 }
+/** 判断某条草稿是否正在删除中 */
+const isDeletingDraft = (articleId?: number) =>
+    !!articleId && deletingIds.value.includes(articleId)
 /** 保存草稿 */
 const handleDraft = async () => {
     if (hasUnsavedChanges.value) {
@@ -552,6 +560,15 @@ const getArticleDraftList = async () => {
     const data = await ArticleService.getDraftList()
     draftList.value = data
 }
+/** 刷新草稿列表与数量（均以服务端为准，避免本地累减导致角标算错） */
+const refreshDraftState = async () => {
+    const [listRes] = await Promise.allSettled([
+        getArticleDraftList(),
+        getDraftCount(),
+    ])
+    // 列表拉取成功才标记为已加载；失败则下次打开抽屉重新拉
+    if (listRes?.status === 'fulfilled') draftLoaded.value = true
+}
 /** 打开抽屉获取草稿 */
 const handleDrawer = async () => {
     drawer.value = true
@@ -560,12 +577,34 @@ const handleDrawer = async () => {
         draftLoaded.value = true
     }
 }
+/** 清空当前正在编辑的草稿内容 */
+const clearEditingArticle = () => {
+    formData.articleId = undefined
+    formData.title = ""
+    formData.cover = ""
+    formData.description = ""
+    formData.content = ""
+    formData.status = 'draft'
+    formData.tags = []
+    Object.assign(originalData, _.cloneDeep(formData))
+    selectTagList.value = []
+    tagTemp.value = []
+}
+
 /** 删除草稿 */
 const delArticleDraft = async (article: Article) => {
-    if (!article.articleId) {
+    const articleId = article.articleId
+    if (!articleId) {
         ElMessage.warning('无效的文章ID')
         return
     }
+    // 请求未返回前重复点击直接忽略：之前没有这层保护，
+    // 连点会让同一草稿被多次删除、draftCount 被多次扣减（角标出现 -2）
+    if (isDeletingDraft(articleId)) return
+
+    const isEditingThis = formData.articleId === articleId
+
+    // 1. 确认阶段（取消则静默返回，不提示「已取消」以免与删除失败混淆）
     try {
         await ElMessageBox.confirm('确定要删除该文章吗？删除后无法恢复！', '警告', {
             confirmButtonText: '确定删除',
@@ -573,42 +612,39 @@ const delArticleDraft = async (article: Article) => {
             type: 'warning',
             appendTo: document.body,
         })
-        if (formData.articleId === article.articleId) {
+        if (isEditingThis) {
             await ElMessageBox.confirm('当前文章正处于编辑，确定要删除该文章吗？', '警告', {
                 confirmButtonText: '确定删除',
                 cancelButtonText: '取消',
                 type: 'warning',
                 appendTo: document.body,
             })
-            // 清空当前正在编辑的文章
-            formData.articleId = undefined
-            formData.title = ""
-            formData.cover = ""
-            formData.description = ""
-            formData.content = ""
-            formData.status = 'draft'
-            formData.tags = []
-            Object.assign(originalData, _.cloneDeep(formData))
-            selectTagList.value = []
-            tagTemp.value = []
-            router.replace({
-                name: "Publish",
-            })
         }
-
-        // 确认后才执行
-        await ArticleService.delArticle(article.articleId)
-        ElMessage.success('删除成功')
-        draftCount.value -= 1
-        draftLoaded.value = false
-        getArticleDraftList()
-
-    } catch (error) {
-        ElMessage.info('已取消')
+    } catch {
+        return
     }
+
+    // 2. 删除阶段：置为 deleting 状态，按钮显示 loading 且不可再点
+    deletingIds.value.push(articleId)
+    try {
+        await ArticleService.delArticle(articleId)
+    } catch {
+        ElMessage.error('删除失败，请重试')
+        return
+    } finally {
+        deletingIds.value = deletingIds.value.filter(id => id !== articleId)
+    }
+
+    // 3. 删除成功后同步编辑区、列表与数量
+    if (isEditingThis) clearEditingArticle()
+    ElMessage.success('删除成功')
+    await refreshDraftState()
+    if (isEditingThis) router.replace({ name: "Publish" })
 }
 /** 选择草稿进行编辑 */
 const handleSelectDraft = async (draft: Article) => {
+    // 删除中的草稿不允许被选中，否则会打开一条正在被删除的文章
+    if (isDeletingDraft(draft.articleId)) return
     // 检查是否有未保存的内容
     if (!_.isEqual(originalData, formData)) {
         try {

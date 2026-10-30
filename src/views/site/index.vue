@@ -83,10 +83,10 @@ import { SitePerm } from '@/constants'
 import { SiteService } from "@/api/siteApi"
 import { CategoryService } from "@/api/categoryApi"
 type Site = Api.Site.SiteInfo
-type Category = Api.Category.CategoryInfo
 interface CategoryOptions {
-    value: Category['categoryId']
-    label: Category['categoryName']
+    /** 统一用字符串：站点列表返回的 categoryId 是 String，与 options 的数字类型需归一 */
+    value: string
+    label: string
 }
 
 const {
@@ -111,6 +111,14 @@ const {
     siteUrl: row.siteUrl,
     categoryId: row.categoryId,
   }),
+  // 提交前把 categoryId 还原成后端 DTO 需要的 Long（数字）
+  buildPayload: (form) => {
+    const id = (form as any).categoryId
+    return {
+      ...form,
+      categoryId: id === undefined || id === null || id === '' ? null : Number(id),
+    }
+  },
   messages: {
     delConfirm: '确定要删除该站点吗？删除后无法恢复！',
     delConfirmButton: '确定删除',
@@ -120,13 +128,17 @@ const {
 
 // --------------- 分类下拉选项（页面特有逻辑，保留在页面） ---------------
 const categoryOptions = ref<CategoryOptions[]>([])
-const loadCategoryOptions = () => {
-  CategoryService.getCategoryOptions().then((data) => {
-    categoryOptions.value = data.map(item => ({
-      value: item.categoryId,  // 数值类型，与 editFields 回填的 categoryId 一致
-      label: item.categoryName,
+// 后端 /api/category/options 的 categoryId 是 Long（JSON 数字），
+// 而 /api/site/with-category 返回的 categoryId 是 String。
+// ElSelect 用严格相等匹配 option，类型不一致就匹配不到 label、只回显原始 id，故统一转字符串
+const loadCategoryOptions = async () => {
+  const data = await CategoryService.getCategoryOptions()
+  categoryOptions.value = (data || [])
+    .filter(item => item.categoryId !== undefined && item.categoryId !== null)
+    .map(item => ({
+      value: String(item.categoryId),
+      label: item.categoryName ?? '',
     }))
-  })
 }
 interface FormItemConfig {
   type: string
@@ -257,8 +269,7 @@ const searchList = [
 ]
 
 onMounted(async () => {
-  await getList()
-  loadCategoryOptions()
+  await Promise.all([getList(), loadCategoryOptions()])
 })
 </script>
 
