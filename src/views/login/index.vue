@@ -68,13 +68,13 @@ const formData = reactive<LoginParasm>({
 const onVerifySuccess = () => {
     isVerified.value = true
     verifyTips.value = '验证成功'
-    ElMessage.success('验证成功')
 }
 
+// 失败反馈交给滑块自身的抖动动画 + 文案复位，
+// 不再弹 ElMessage：滑块每次 touchend/mouseup 都会触发校验，频繁点击会堆积大量弹框
 const onVerifyFail = () => {
     isVerified.value = false
     verifyTips.value = '向右拖动滑块进行验证'
-    ElMessage.error('验证失败，请重试')
 }
 
 const handleLogin = async () => {
