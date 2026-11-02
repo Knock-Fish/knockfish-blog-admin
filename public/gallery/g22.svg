@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" width="1600" height="1200" role="img" aria-label="雨后街道">
+  <defs>
+    <linearGradient id="sky-g22" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#f5c3b8" />
+      <stop offset="100%" stop-color="#f9e9e3" />
+    </linearGradient>
+    <radialGradient id="glow-g22" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff4f0" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#fff4f0" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="hill-g22" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8a4f43" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#8a4f43" stop-opacity="0.85" />
+    </linearGradient>
+    <radialGradient id="vig-g22" cx="50%" cy="45%" r="72%">
+      <stop offset="55%" stop-color="#8a4f43" stop-opacity="0" />
+      <stop offset="100%" stop-color="#8a4f43" stop-opacity="0.4" />
+    </radialGradient>
+    <filter id="grain-g22">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+    </filter>
+  </defs>
+  <rect width="1600" height="1200" fill="url(#sky-g22)" />
+  <rect width="1600" height="1200" fill="url(#vig-g22)" />
+  <circle cx="960" cy="450" r="374" fill="url(#glow-g22)" />
+  <circle cx="960" cy="450" r="144" fill="#fff4f0" fill-opacity="0.9" />
+  <path d="M0 1200 L0 720 Q 200 840 400 720 Q 600 759 800 720 Q 1000 590 1200 720 Q 1400 715 1600 720 L1600 1200 Z" fill="url(#hill-g22)" fill-opacity="0.5" />
+  <path d="M0 1200 L0 876 Q 200 840 400 876 Q 600 792 800 876 Q 1000 933 1200 876 Q 1400 945 1600 876 L1600 1200 Z" fill="#8a4f43" fill-opacity="0.55" />
+  <path d="M0 1200 L0 1044 Q 200 1008 400 1044 Q 600 1089 800 1044 Q 1000 1068 1200 1044 Q 1400 993 1600 1044 L1600 1200 Z" fill="#8a4f43" fill-opacity="0.78" />
+  <rect width="1600" height="1200" filter="url(#grain-g22)" opacity="0.07" />
+</svg>

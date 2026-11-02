@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" width="1200" height="1200" role="img" aria-label="玻璃与光">
+  <defs>
+    <linearGradient id="sky-g13" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#d8c9f2" />
+      <stop offset="100%" stop-color="#f0e9fb" />
+    </linearGradient>
+    <radialGradient id="glow-g13" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f8f4ff" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#f8f4ff" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="hill-g13" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5a4a80" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#5a4a80" stop-opacity="0.85" />
+    </linearGradient>
+    <radialGradient id="vig-g13" cx="50%" cy="45%" r="72%">
+      <stop offset="55%" stop-color="#5a4a80" stop-opacity="0" />
+      <stop offset="100%" stop-color="#5a4a80" stop-opacity="0.4" />
+    </radialGradient>
+    <filter id="grain-g13">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+    </filter>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#sky-g13)" />
+  <rect width="1200" height="1200" fill="url(#vig-g13)" />
+  <circle cx="540" cy="360" r="374" fill="url(#glow-g13)" />
+  <circle cx="540" cy="360" r="144" fill="#f8f4ff" fill-opacity="0.9" />
+  <path d="M0 1200 L0 720 Q 150 588 300 720 Q 450 734 600 720 Q 750 848 900 720 Q 1050 673 1200 720 L1200 1200 Z" fill="url(#hill-g13)" fill-opacity="0.5" />
+  <path d="M0 1200 L0 876 Q 150 944 300 876 Q 450 934 600 876 Q 750 793 900 876 Q 1050 839 1200 876 L1200 1200 Z" fill="#5a4a80" fill-opacity="0.55" />
+  <path d="M0 1200 L0 1044 Q 150 1061 300 1044 Q 450 991 600 1044 Q 750 1041 900 1044 Q 1050 1098 1200 1044 L1200 1200 Z" fill="#5a4a80" fill-opacity="0.78" />
+  <rect width="1200" height="1200" filter="url(#grain-g13)" opacity="0.07" />
+</svg>

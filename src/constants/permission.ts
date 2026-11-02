@@ -57,6 +57,14 @@ export const FilePerm = {
   VIEW: 'blog:file:view',
 } as const
 
+// ========== 图库模块 ==========
+export const GalleryPerm = {
+  MANAGE: 'blog:gallery:manage',
+  VIEW: 'blog:gallery:view',
+  UPLOAD: 'blog:gallery:upload',
+  DELETE: 'blog:gallery:delete',
+} as const
+
 // ========== 账户管理模块 ==========
 export const AccountPerm = {
   MANAGE: 'blog:account:manage',
@@ -132,6 +140,7 @@ export const PermCode = {
   ...ChatPerm,
   ...LinkPerm,
   ...FilePerm,
+  ...GalleryPerm,
   ...AccountPerm,
   ...UserPerm,
   ...RolePerm,

@@ -20,6 +20,7 @@ export const RoutesAlias = {
     Link : '/link',  // 友链
     FileList: '/file-list', // 文件
     FileDetail: '/file-detail', // 文件详情
+    Gallery: '/gallery',    // 图库
     User: '/account/user',  // 用户
     Role: '/account/role',  // 角色
     Permission: '/account/permission',   // 权限

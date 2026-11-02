@@ -1,0 +1,50 @@
+/**
+ * 图库页设计变量（局部作用域，挂在 .gallery-page 下，不污染全局）
+ * 命名统一 --g- 前缀，避免与 element-plus / 项目全局变量冲突。
+ */
+.gallery-page {
+  --g-surface: #ffffff;
+  --g-surface-soft: rgba(255, 255, 255, 0.78);
+  --g-surface-glass: rgba(255, 255, 255, 0.82);
+  --g-text: #3b3343;
+  --g-text-sub: #8b7f99;
+  --g-primary: #a98ae8;
+  --g-primary-strong: #8e6ad8;
+  --g-primary-soft: #ece2fb;
+  --g-primary-soft-2: #f4ecfd;
+  --g-border: rgba(169, 138, 232, 0.18);
+  --g-danger: #d9607a;
+  --g-danger-soft: rgba(217, 96, 122, 0.12);
+  --g-shadow-sm: 0 4px 20px rgba(180, 150, 200, 0.14);
+  --g-shadow-md: 0 16px 38px rgba(168, 138, 205, 0.28);
+  --g-mask: rgba(246, 240, 250, 0.92);
+  --g-overlay-from: rgba(255, 255, 255, 0.96);
+  /* 分段控件：轨道底色 + 选中胶囊底色 */
+  --g-seg-track: rgba(169, 138, 232, 0.1);
+  --g-seg-active: #ffffff;
+  --g-radius: 20px;
+  --g-radius-sm: 12px;
+  --g-gap: 16px;
+  --g-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+html.dark .gallery-page {
+  --g-surface: #1c1824;
+  --g-surface-soft: rgba(32, 27, 42, 0.72);
+  --g-surface-glass: rgba(28, 24, 36, 0.86);
+  --g-text: #ece7f4;
+  --g-text-sub: #9d94ad;
+  --g-primary: #b9a1f5;
+  --g-primary-strong: #c9b6ff;
+  --g-primary-soft: rgba(169, 138, 232, 0.18);
+  --g-primary-soft-2: rgba(169, 138, 232, 0.1);
+  --g-border: rgba(185, 161, 245, 0.2);
+  --g-danger: #f08da2;
+  --g-danger-soft: rgba(240, 141, 162, 0.16);
+  --g-shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.36);
+  --g-shadow-md: 0 16px 38px rgba(0, 0, 0, 0.5);
+  --g-mask: rgba(18, 16, 23, 0.9);
+  --g-overlay-from: rgba(28, 24, 36, 0.94);
+  --g-seg-track: rgba(255, 255, 255, 0.06);
+  --g-seg-active: rgba(255, 255, 255, 0.14);
+}

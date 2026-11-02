@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1650" width="1100" height="1650" role="img" aria-label="春樱落雨">
+  <defs>
+    <linearGradient id="sky-g15" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#b8d4e6" />
+      <stop offset="100%" stop-color="#e4eff6" />
+    </linearGradient>
+    <radialGradient id="glow-g15" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#eff8fd" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#eff8fd" stop-opacity="0" />
+    </radialGradient>
+    <linearGradient id="hill-g15" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#38617b" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#38617b" stop-opacity="0.85" />
+    </linearGradient>
+    <radialGradient id="vig-g15" cx="50%" cy="45%" r="72%">
+      <stop offset="55%" stop-color="#38617b" stop-opacity="0" />
+      <stop offset="100%" stop-color="#38617b" stop-opacity="0.4" />
+    </radialGradient>
+    <filter id="grain-g15">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
+      <feColorMatrix type="saturate" values="0" />
+    </filter>
+  </defs>
+  <rect width="1100" height="1650" fill="url(#sky-g15)" />
+  <rect width="1100" height="1650" fill="url(#vig-g15)" />
+  <circle cx="715" cy="413" r="343" fill="url(#glow-g15)" />
+  <circle cx="715" cy="413" r="132" fill="#eff8fd" fill-opacity="0.9" />
+  <path d="M0 1650 L0 990 Q 138 1166 275 990 Q 413 925 550 990 Q 688 830 825 990 Q 963 1096 1100 990 L1100 1650 Z" fill="url(#hill-g15)" fill-opacity="0.5" />
+  <path d="M0 1650 L0 1205 Q 138 1090 275 1205 Q 413 1154 550 1205 Q 688 1332 825 1205 Q 963 1222 1100 1205 L1100 1650 Z" fill="#38617b" fill-opacity="0.55" />
+  <path d="M0 1650 L0 1436 Q 138 1431 275 1436 Q 413 1510 550 1436 Q 688 1420 825 1436 Q 963 1365 1100 1436 L1100 1650 Z" fill="#38617b" fill-opacity="0.78" />
+  <rect width="1100" height="1650" filter="url(#grain-g15)" opacity="0.07" />
+</svg>
