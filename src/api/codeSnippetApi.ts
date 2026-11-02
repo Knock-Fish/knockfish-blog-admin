@@ -5,34 +5,34 @@ export class CodeSnippetService {
         const { categoryId, ...otherParams } = params
         const id = categoryId === null || categoryId === undefined ? 0 : categoryId
         return springBootClient.get<Api.CodeSnippet.CodeSnippetListData>({
-            url: `/api/code-snippet/list/${id}`,
+            url: `/api/front/code-snippet/list/${id}`,
             params: otherParams
         })
     }
     // 添加代码片段
     static addCodeSnippet(data: Api.CodeSnippet.CodeSnippetInfo) {
         return springBootClient.post({
-            url: "/api/code-snippet",
+            url: "/api/admin/code-snippet",
             data
         })
     }
     // 编辑代码片段
     static updateCodeSnippet(data: Api.CodeSnippet.CodeSnippetInfo) {
         return springBootClient.put({
-            url: "/api/code-snippet",
+            url: "/api/admin/code-snippet",
             data
         })
     }
     // 删除代码片段
     static delCodeSnippet(params: number) {
         return springBootClient.del({
-            url: `/api/code-snippet/${params}`
+            url: `/api/admin/code-snippet/${params}`
         })
     }
     // 获取代码片段详情
     static getCodeSnippetDetail(params: number) {
         return springBootClient.get<Api.CodeSnippet.CodeSnippetInfo>({
-            url: `/api/code-snippet/${params}`
+            url: `/api/front/code-snippet/${params}`
         })
     }
 }

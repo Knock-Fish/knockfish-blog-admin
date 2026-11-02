@@ -2,14 +2,14 @@ import { springBootClient } from "@/utils/http"
 export class UserService{
     static getUserListData(params: Record<string, any>){
         return springBootClient.get<Api.User.UserListData>({
-            url: "/api/user/page",
+            url: "/api/admin/user/page",
             params
         })
     }
 
     static getUserInfo(params: Api.User.UserInfo){
         return springBootClient.get<Api.User.UserInfo>({
-            url: "/api/user",
+            url: "/api/front/user",
             params
         })
     }
@@ -17,7 +17,7 @@ export class UserService{
     /** 新增用户（对应后端 POST /api/user，createUser） */
     static addUser(data: Api.User.UserCreate){
         return springBootClient.post({
-            url: "/api/user",
+            url: "/api/admin/user",
             data
         })
     }
@@ -27,34 +27,34 @@ export class UserService{
      *  需在后端补一个删除映射后才能生效（见对话说明）。 */
     static delUser(userId: number){
         return springBootClient.del({
-            url: `/api/user/${userId}`
+            url: `/api/admin/user/${userId}`
         })
     }
 
     static passwordChange(data: Api.PasswordChange.Change){
         return springBootClient.put({
-            url: "/api/user/password",
+            url: "/api/admin/user/password",
             data
         })
     }
 
     static updateUser(data: Api.User.UserInfo){
         return springBootClient.put<Api.User.UserInfo>({
-            url: "/api/user",
+            url: "/api/admin/user",
             data
         })
     }
 
     static updateUserRoles(data: Api.User.UserRoleUpdate){
         return springBootClient.put({
-            url: "/api/user/role",
+            url: "/api/admin/user/role",
             data
         })
     }
 
     static getUserRoles(userId: number){
         return springBootClient.get<Api.User.UserRole[]>({
-            url: `/api/user/${userId}/roles`
+            url: `/api/admin/user/${userId}/roles`
         })
     }
 }

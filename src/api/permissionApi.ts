@@ -3,38 +3,38 @@ export class PermissionService {
     // 获取权限信息
     static getPermissionListData(){
         return springBootClient.get<Api.Permission.PermissionListData>({
-            url: "/api/permission"
+            url: "/api/admin/permission"
         })
     }
     // 获取用户的权限
     static getUserPermissions(params: number){
         return springBootClient.get<Api.Permission.PermissionListData>({
-            url: `/api/permission/user/${params}`
+            url: `/api/admin/permission/user/${params}`
         })
     }
     // 获取角色的权限
     static getRolePermissions(params: number){
         return springBootClient.get<Api.Permission.PermissionListData>({
-            url: `/api/permission/role/${params}`
+            url: `/api/admin/permission/role/${params}`
         })
     }
     // 获取角色的权限ids
     static getRolePermissionIds(params: number){
         return springBootClient.get<{list: number[]}>({
-            url: `/api/permission/role/ids/${params}`
+            url: `/api/admin/permission/role/ids/${params}`
         })
     }
     // 添加权限信息
     static addPermission(data: Api.Permission.PermissionInfo){
         return springBootClient.post({
-            url: "/api/permission",
+            url: "/api/admin/permission",
             data
         })
     }
     // 删除权限信息
     static delPermission(params: number){
         return springBootClient.del({
-            url: `/api/permission/${params}`
+            url: `/api/admin/permission/${params}`
         })
     }
 }

@@ -117,8 +117,8 @@ const {
 } = useCrudPage<User>({
   api: {
     getList: UserService.getUserListData,
-    // 后端已提供 POST /api/user（createUser）；删除端点（DELETE /api/user/{id}）后端尚未提供，
-    // 前端 delUser 已补，但点击删除会 404，需后端补齐 @DeleteMapping 后生效。
+    // 删除走 DELETE /api/admin/user/{id}；后端会拒绝删除当前登录账号与超级管理员，
+    // 失败原因通过 ElMessage 透出（useCrudPage 统一处理）。
     add: (data) => UserService.addUser(data as Api.User.UserCreate),
     update: UserService.updateUser,
     del: UserService.delUser,
