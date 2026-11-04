@@ -11,7 +11,7 @@
           :key="current.id"
           class="photo"
           :class="{ loaded }"
-          :src="current.src"
+          :src="current.preview || current.src"
           :alt="current.title"
           @load="loaded = true"
         />
@@ -56,7 +56,7 @@ function preloadNeighbors() {
   if (!total) return
   for (const offset of [-1, 1]) {
     const photo = props.photos[(index.value + offset + total) % total]
-    if (photo) new Image().src = photo.src
+    if (photo) new Image().src = photo.preview || photo.src
   }
 }
 

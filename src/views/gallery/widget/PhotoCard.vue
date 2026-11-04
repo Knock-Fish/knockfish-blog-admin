@@ -17,6 +17,7 @@
       />
 
       <span v-if="photo.local" class="badge">待入库</span>
+      <span v-if="photo.nsfw" class="badge nsfw">nsfw</span>
 
       <div class="overlay">
         <span class="title">{{ photo.title }}</span>
@@ -26,7 +27,26 @@
       <div class="actions">
         <button type="button" class="act" title="查看大图" @click.stop="emit('select')">⤢</button>
         <button type="button" class="act" title="复制图片地址" @click.stop="emit('copy')">⧉</button>
-        <button type="button" class="act danger" title="移除（模拟）" @click.stop="emit('remove')">✕</button>
+        <button
+          type="button"
+          class="act"
+          :class="{ on: photo.nsfw }"
+          :title="photo.nsfw ? '取消敏感标记' : '标记为敏感（前台列表模糊）'"
+          @click.stop="emit('toggleNsfw')"
+        >◐</button>
+        <button
+          v-if="mode !== 'trash'"
+          type="button"
+          class="act"
+          :class="{ on: mode === 'hidden' }"
+          :title="mode === 'hidden' ? '取消隐藏（前台恢复展示）' : '隐藏（前台不展示，后台仍可见）'"
+          @click.stop="emit('toggleHidden')"
+        >{{ mode === 'hidden' ? '⊕' : '⊖' }}</button>
+        <template v-if="mode === 'trash'">
+          <button type="button" class="act" title="恢复到图库" @click.stop="emit('restore')">↺</button>
+          <button type="button" class="act danger" title="彻底删除（不可恢复）" @click.stop="emit('purge')">🗑</button>
+        </template>
+        <button v-else type="button" class="act danger" title="移入回收站" @click.stop="emit('remove')">✕</button>
       </div>
     </div>
   </article>
@@ -43,12 +63,18 @@ const props = defineProps<{
   photo: GalleryPhoto
   box?: MasonryBox
   index: number
+  /** normal 正常图库 / hidden 已隐藏 / trash 回收站 */
+  mode?: 'normal' | 'hidden' | 'trash'
 }>()
 
 const emit = defineEmits<{
   select: []
   copy: []
   remove: []
+  toggleNsfw: []
+  toggleHidden: []
+  restore: []
+  purge: []
   naturalSize: [id: string, width: number, height: number]
 }>()
 
@@ -159,6 +185,24 @@ const cardStyle = computed<CSSProperties>(
   white-space: nowrap;
 }
 
+.badge.nsfw {
+  left: auto;
+  right: 12px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  color: #fff;
+  background: rgba(245, 158, 11, 0.92);
+  transition: opacity 0.2s ease;
+}
+
+/* 右上角被 .actions 占用：悬浮时角标淡出，让位给按钮组 */
+.card:hover .badge.nsfw {
+  opacity: 0;
+}
+
 .actions {
   position: absolute;
   top: 10px;
@@ -201,6 +245,13 @@ const cardStyle = computed<CSSProperties>(
   color: var(--g-danger);
   background: var(--g-danger-soft);
 }
+
+/* 已标记敏感：按钮常亮 */
+.act.on {
+  color: #fff;
+  background: rgba(245, 158, 11, 0.9);
+}
+
 
 @keyframes g-card-in {
   from {

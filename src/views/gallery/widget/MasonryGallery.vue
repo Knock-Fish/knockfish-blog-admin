@@ -6,9 +6,14 @@
       :photo="photo"
       :box="layout.boxes[photo.id]"
       :index="index"
+      :mode="mode"
       @select="emit('select', index)"
       @copy="emit('copy', photo)"
       @remove="emit('remove', photo)"
+      @toggle-nsfw="emit('toggleNsfw', photo)"
+      @toggle-hidden="emit('toggleHidden', photo)"
+      @restore="emit('restore', photo)"
+      @purge="emit('purge', photo)"
       @natural-size="(id: string, width: number, height: number) => emit('naturalSize', id, width, height)"
     />
   </div>
@@ -21,12 +26,16 @@ import { useMasonry } from '../composables/useMasonry'
 import type { GalleryPhoto } from '../types'
 import { ratioOf } from '../utils/photo'
 
-const props = defineProps<{ photos: GalleryPhoto[] }>()
+const props = defineProps<{ photos: GalleryPhoto[]; mode?: 'normal' | 'hidden' | 'trash' }>()
 
 const emit = defineEmits<{
   select: [index: number]
   copy: [photo: GalleryPhoto]
   remove: [photo: GalleryPhoto]
+  toggleNsfw: [photo: GalleryPhoto]
+  toggleHidden: [photo: GalleryPhoto]
+  restore: [photo: GalleryPhoto]
+  purge: [photo: GalleryPhoto]
   naturalSize: [id: string, width: number, height: number]
 }>()
 

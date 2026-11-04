@@ -1,7 +1,7 @@
 <template>
   <button type="button" class="upload" :disabled="busy" @click="pick">
     <span class="glyph">{{ busy ? '◌' : '⬆' }}</span>
-    {{ busy ? '上传中…' : '上传图片' }}
+    {{ busy ? (text || '上传中…') : '上传图片' }}
   </button>
   <input ref="input" class="file" type="file" accept="image/*" multiple @change="onChange" />
 </template>
@@ -9,7 +9,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-defineProps<{ busy?: boolean }>()
+defineProps<{ busy?: boolean; text?: string }>()
 
 const emit = defineEmits<{ files: [files: File[]] }>()
 
